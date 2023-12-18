@@ -149,6 +149,8 @@ def cmd():
             sys.exit(0)
         except SystemExit:
             os._exit(0)
+    except pika.exceptions.ConnectionClosedByBroker:
+        logger.critical("Broker closed conneciton. Exiting...")
 
 
 if __name__ == "__main__":
