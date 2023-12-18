@@ -14,7 +14,17 @@ erDiagram
     Notebook {
         string filename PK
         string inExercise FK
-        json cells
+    }
+    
+    SubExercise {
+        integer id PK
+        string innotebook FK
+    }
+    
+    Cell {
+        string cellId PK
+        integer maxScore
+        integer subExercise FK
     }
     
     GradingProcess {
@@ -32,4 +42,7 @@ erDiagram
     Exercise ||--|{ Notebook: contains
     GradingProcess ||--|{ Exercise: for
     GradingProcess ||--|| Grading: hasGrade
+    
+    Notebook ||--|{ SubExercise: hasExercises
+    SubExercise ||--|{ Cell: hasCells
 ```

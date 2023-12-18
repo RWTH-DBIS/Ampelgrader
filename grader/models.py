@@ -24,8 +24,24 @@ class GradingProcess(models.Model):
 class Notebook(models.Model):
     filename = models.CharField(max_length=255, primary_key=True)
     inExercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
-    cells = models.JSONField(verbose_name="Cells definitions")
+
+
 
 class Grading(models.Model):
     processId = models.OneToOneField(GradingProcess, on_delete=models.CASCADE)
     points = models.IntegerField()
+
+"""
+Describes a subexercise in the Notebook (such as 2). This defines the coarsness of the grading presented to the studies
+For each of these SubExercises, the studen will see how good they were
+"""
+class SubExercise(models.Model):
+    inNotebook = models.ForeignKey(Notebook, on_delete=models.CASCADE)
+
+"""
+Describes a single cell in a notebook and its maxscore and to which subexercise it belongs
+"""
+class Cell(models.Model):
+    cellId = models.CharField(max_length=255, primary_key=True)
+    maxScore = models.IntegerField()
+    subExercise = models.ForeignKey(SubExercise, on_delete=models.CASCADE)
