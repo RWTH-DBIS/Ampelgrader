@@ -1,4 +1,6 @@
 import os
+import sys
+import typing
 from sys import argv
 import pika
 import logging
@@ -10,40 +12,46 @@ from nbgrader.coursedir import CourseDirectory
 
 from nbblackbox_common import NBBBGradingRequest, NBBBGradingResponse
 COURSE_DIRECTORY = os.environ.get("COURSE_DIRECTORY", "/course")
-DUMMY_STUDENT_ID="0"
+DUMMY_STUDENT_ID="d"
 
 RABBITMQ_HOST = os.environ.get("RABBITMQ_HOST", "localhost")
 RABBITMQ_QUEUE = os.environ.get("RABBITMQ_QUEUE", "grading")
 RABBITMQ_RSP_QUEUE = os.environ.get("RABBITMQ_RSP_QUEUE", "grading_rsp")
 
-API = NbGraderAPI(coursedir=CourseDirectory(dir=COURSE_DIRECTORY))
+# How to initialise the CourseDirectory is nowhere documented. using the root flag to set the according attribute seems to work
+API = NbGraderAPI(coursedir=CourseDirectory(root=str(COURSE_DIRECTORY)))
 
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def dump_notebook(raw_notebook: str, for_assignment: str):
+logger.setLevel(logging.INFO)
+def dump_notebook(notebooks: typing.Dict[str, str], for_assignment: str):
     """Dumps the notebook into the submission folder for the given assignment of the dummy student"""
-    PATH = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID / for_assignment / "sub.ipynb"
-    logging.info(f"Dumping the notebook into {PATH}")
-    with PATH.open("w") as f:
-        f.write(raw_notebook)
+    path = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID / for_assignment
+    # create folder at the path for the assignment, if not exist yet
+    path.mkdir(exist_ok=True)
+    # create path which specifies where the notebook will be dumped
+    for notebook in notebooks.keys():
+        sub_path = path / pathlib.Path(notebook)
+        logging.info(f"Dumping the notebook into {sub_path}")
+        with sub_path.open("w") as f:
+            f.write(notebooks[notebook])
 
 def main():
     """Main Loop"""
+    logger.info("NBWorker started")
+    logger.info(f"Using Course Directory: {API.coursedir.root}")
     con = pika.BlockingConnection(pika.ConnectionParameters(RABBITMQ_HOST))
     channel = con.channel()
-
+    # setup queues to be durable, so they outlive container stop
     channel.queue_declare(queue=RABBITMQ_QUEUE, durable=True)
     channel.queue_declare(queue=RABBITMQ_RSP_QUEUE, durable=True)
     channel.basic_consume(queue=RABBITMQ_QUEUE, on_message_callback=callback)
     # do not allow prefetching of any messages
     channel.basic_qos(prefetch_count=1)
 
-    logging.info("Waiting for assignments to grade...")
-    try:
-        channel.start_consuming()
-    except KeyboardInterrupt:
-        logger.info("Interrupted. Shut down...")
+    logger.info("Waiting for assignments to grade...")
+    channel.start_consuming()
+
 
 def unsuccessful_grading(ch, method, id):
     """
@@ -70,10 +78,13 @@ def callback(ch, method, properties, body):
     # Delete any old submission present
     # ...do we just delete the file in the submitted folder or do we access the notebook via Gradebook?
     # also check if the assignment exist
-    if API.get_assignment(gq.assignment) is None:
+    # overwrite released so there is no database request whether the release of the assignment was generated
+    if API.get_assignment(gq.assignment, released=[gq.assignment]) is None:
         # seems to return None if assignment does not exist: https://nbgrader.readthedocs.io/en/stable/_modules/nbgrader/apps/api.html#NbGraderAPI.get_assignment
         logger.error(f"Grading for Assignment {gq.assignment} was requested but assignment was not found!")
         unsuccessful_grading(ch, method, gq.id)
+        return
+
 
     # dump the notebook
     dump_notebook(gq.notebook, gq.assignment)
@@ -83,9 +94,11 @@ def callback(ch, method, properties, body):
     # force: grade even if it is already autograded
     # create: create new student in the database if not already exist
     grading_result = API.autograde(gq.assignment, DUMMY_STUDENT_ID, force=True, create=True)
-    if not grading_result.success:
-       logger.error(f"Grading error: {grading_result.error}")
-       logger.error("Log of Notebook:" + str(grading_result.log))
+    if not grading_result["success"]:
+       logger.error(f"Grading error: {grading_result['error']}")
+       logger.error(f"Log of Notebook:{str(grading_result['log'])}")
+       unsuccessful_grading(ch, method, gq.id)
+       return
     else:
         logger.info(f"Finished grading")
 
@@ -114,13 +127,29 @@ def callback(ch, method, properties, body):
 
 
 def cmd():
-    if argv[1] == "init":
-        # Do initialisation
-        GRADEBOOK = API.gradebook()
-        GRADEBOOK.add_student(DUMMY_STUDENT_ID)
-        GRADEBOOK.close()
-    else:
+    GRADEBOOK = API.gradebook
+    GRADEBOOK.add_student(DUMMY_STUDENT_ID)
+    GRADEBOOK.close()
+    # create the folder if not exist with all parents
+    PATH = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID
+    PATH.mkdir(parents=True, exist_ok=True)
+    # nbgrader will not work if the assignments are not in the database
+    # it seems to be necessary to generate the assignments, so that nbgrade is correctly initialised
+    # therefore we do that for every assignment present
+    SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(API.coursedir.source_directory)
+    # we assume every directory is an assignment
+    for assi in SOURCE_PATH.iterdir():
+        if assi.is_dir():
+            logger.info(f"Generate Assignment {assi.name}...")
+            API.generate_assignment(assi.name)
+    try:
         main()
+    except KeyboardInterrupt:
+        try:
+            sys.exit(0)
+        except SystemExit:
+            os._exit(0)
+
 
 if __name__ == "__main__":
     cmd()

@@ -8,8 +8,15 @@ class NBBBGradingRequest:
     id: int
     """The assignment that is requested to grade"""
     assignment: str
-    """Raw json of the notebook to grade"""
-    notebook: str
+    """Raw json for the student notebooks to grade.
+        Key: Notebook file name
+        Value: Raw content of the notebook
+        The filename needs to be the same as it was in the assignment, otherwise NBGrade wont be able to 
+        find the notebook for grading. Therefore we include the filename here.
+        Note that the NBWorker is not able to process more than one notebook at this time,
+        but fixing this would be relatively straightforward, albeit not needed at the moment.
+    """
+    notebook: typing.Dict[str, str]
 
     def dump(self) -> str:
         return json.dumps({
@@ -21,7 +28,7 @@ class NBBBGradingRequest:
     @classmethod
     def load(cls, data: str):
         o = json.loads(data)
-        return cls(o["id"], o["assignment"])
+        return cls(o["id"], o["assignment"], o["notebook"])
 
 @dataclass
 class NBBBGradingResponse:
