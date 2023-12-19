@@ -36,13 +36,38 @@ erDiagram
     
     Grading {
         uuid processid FK
+        string cellId
         integer grade
     }
     
-    Exercise ||--|{ Notebook: contains
-    GradingProcess ||--|{ Exercise: for
-    GradingProcess ||--|| Grading: hasGrade
+    ErrorLog {
+        uuid processid FK,PK
+        string log
+    }
     
-    Notebook ||--|{ SubExercise: hasExercises
+    WorkerAssignment {
+        uuid worker_id PK
+        date assigned_at
+        uuid process FK
+    }
+    
+    StudentNotebook {
+        BLOB data
+        string notebook FK
+        uuid process FK
+    }
+        
+    Exercise ||--|| Notebook: has
+    GradingProcess }|--|| Exercise: for
+    GradingProcess ||--|{ Grading: hasGrading
+    GradingProcess ||--o| ErrorLog: hasError
+    
+    Grading ||--|| Cell: hasGrade
+
+    Notebook ||--o{ SubExercise: hasExercises
     SubExercise ||--|{ Cell: hasCells
+
+    GradingProcess ||--o| WorkerAssignment: assigned
+    StudentNotebook }o--|| Notebook: upload
+    StudentNotebook |o--|| GradingProcess: process
 ```
