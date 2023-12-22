@@ -19,11 +19,16 @@ POSTGRES_PORT = os.environ.get('POSTGRES_PORT', 5432)
 POSTGRES_USER = os.environ.get('POSTGRES_USER', 'postgres')
 POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD', '')
 POSTGRES_DB = os.environ.get('POSTGRES_DB', '')
+# For models see the models.py in the grader app
+# There, we especially force django to set the field and database name
+
 
 WAITING_TIME = int(os.environ.get('WAITING_TIME', '5'))
-
+"""The time waited in seconds between database access to check for pending jobs"""
 COURSE_DIRECTORY = os.environ.get("COURSE_DIRECTORY", "/course")
 DUMMY_STUDENT_ID="d"
+"""A dummy student id, the only student in this system. THeir submissions is always overwritten with each new grading job"""
+
 
 WORKER_ID = uuid.uuid4()
 
