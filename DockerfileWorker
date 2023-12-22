@@ -1,11 +1,7 @@
 FROM python:3.10
-
 RUN mkdir /course /course/source
-
-COPY nbblackbox_common/ nbblackbox_common/
-RUN pip install nbblackbox_common@file:///nbblackbox_common
 
 COPY nbworker/ nbworker_src/
 RUN pip install nbworker@file:///nbworker_src
 
-CMD nbworker
+CMD ["nbworker"]

@@ -5,9 +5,11 @@ from sys import argv
 import logging
 import pathlib
 import psycopg2
+import psycopg2.extras
 import time
 import uuid
 import datetime
+import signal
 
 from nbgrader.apps import NbGraderAPI
 from nbgrader.coursedir import CourseDirectory
@@ -18,12 +20,15 @@ POSTGRES_USER = os.environ.get('POSTGRES_USER', 'postgres')
 POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD', '')
 POSTGRES_DB = os.environ.get('POSTGRES_DB', '')
 
-WAITING_TIME = os.environ.get('WAITING_TIME', '5')
+WAITING_TIME = int(os.environ.get('WAITING_TIME', '5'))
 
 COURSE_DIRECTORY = os.environ.get("COURSE_DIRECTORY", "/course")
 DUMMY_STUDENT_ID="d"
 
 WORKER_ID = uuid.uuid4()
+
+# https://stackoverflow.com/questions/51105100/psycopg2-cant-adapt-type-uuid
+psycopg2.extras.register_uuid()
 
 # How to initialise the CourseDirectory is nowhere documented. using the root flag to set the according attribute seems to work
 API = NbGraderAPI(coursedir=CourseDirectory(root=str(COURSE_DIRECTORY)))
@@ -31,7 +36,7 @@ API = NbGraderAPI(coursedir=CourseDirectory(root=str(COURSE_DIRECTORY)))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-def dump_notebook(notebooks: typing.Dict[str, str], for_assignment: str):
+def dump_notebook(notebooks: typing.Dict[str, bytes], for_assignment: str):
     """Dumps the notebook into the submission folder for the given assignment of the dummy student"""
     path = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID / for_assignment
     # create folder at the path for the assignment, if not exist yet
@@ -40,25 +45,37 @@ def dump_notebook(notebooks: typing.Dict[str, str], for_assignment: str):
     for notebook in notebooks.keys():
         sub_path = path / pathlib.Path(notebook)
         logging.info(f"Dumping the notebook into {sub_path}")
-        with sub_path.open("w") as f:
+        with sub_path.open("wb") as f:
             f.write(notebooks[notebook])
 
 def main():
     """Main Loop"""
-    logger.info("NBWorker started")
+    logger.info(f"NBWorker started with worker id {WORKER_ID}")
     logger.info(f"Using Course Directory: {API.coursedir.root}")
     logger.info(f"Connecting to database...")
     conn = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, port=POSTGRES_PORT)
     cur = conn.cursor()
-    while True:
+    # register a kill method
+    class Killswitch:
+        """A small class which is used for signal handling and termination of the main loop"""
+        def __init__(self):
+            self.running = True
+        def kill(self, *kwargs):
+            logger.info("Received term signal. Exiting...")
+            self.running = False
+    k = Killswitch()
+    signal.signal(signal.SIGINT, k.kill)
+    signal.signal(signal.SIGTERM, k.kill)
+    while k.running:
         time.sleep(WAITING_TIME)
+        logger.info("Checking for ungraded assignments...")
         # check if there are free tasks in the form of unhandled grading processes
         cur.execute("""
         SELECT identifier, requested_at, for_exercise FROM gradingprocess WHERE 
             identifier NOT IN (SELECT process FROM errorlog)
             AND identifier NOT IN (SELECT process FROM grading)
             AND identifier NOT IN (SELECT process FROM workerassignment)
-            SORT BY requested_at DESC;
+            ORDER BY requested_at DESC;
         """)
         if cur.rowcount > 0:
             available_job = cur.fetchone()
@@ -66,9 +83,9 @@ def main():
             assignment = available_job[2]
             # assign ourselves to the job
             cur.execute("""
-            INSERT INTO workerassignment 
+            INSERT INTO workerassignment (worker_id, process, assigned_at)
                 VALUES(%s,%s,%s);
-            """, (WORKER_ID, id, datetime.datetime.now()))
+            """, (WORKER_ID, process_id, datetime.datetime.now()))
             # try committing the transaction
             try:
                 conn.commit()
@@ -81,7 +98,7 @@ def main():
                 cur.execute("""
                    SELECT data, notebook FROM
                    studentnotebook WHERE process = %s; 
-                """)
+                """, [process_id])
                 if cur.rowcount == 0:
                     # we shouldnt be here
                     cur.execute("""
@@ -91,7 +108,9 @@ def main():
                     continue
                 (notebook_data, notebook_filename) = cur.fetchone()
                 try:
-                    result = grade({notebook_filename: notebook_data}, assignment, process_id)
+                    # psycopg returns a memory view, therefore we convert it to a bytestring via .tobytes()
+                    result = grade({notebook_filename: notebook_data.tobytes()}, assignment, process_id)
+                    logger.info(f"Achieved result: {str(result)}")
                 except RuntimeError as err:
                     logger.error("Grading error!")
                     cur.execute("""
@@ -100,17 +119,29 @@ def main():
                     conn.commit()
                     continue
                 else:
-                    params = [(process_id, cell_id, result[cell_id]) for cell_id in result.keys()]
+                    params = [(process_id, result[cell_id], assignment, notebook_filename, cell_id) for cell_id in result.keys()]
+                    # We need the correct pk of the cell, as grading has a foreign key on the pk
+                    # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
+                    # for this we join the cell on subexercise on notebook on exercise
+                    # and compare the cell_id in the cell table which holds the cell id as in the
+                    # notebook
                     cur.executemany("""
-                    INSERT INTO grading(process,cell_id,points)
-                    VALUES(%s,%s,%s);
+                    INSERT INTO grading(process,cell,points)
+                        SELECT %s, Cell.id, %s FROM Cell 
+                            JOIN subexercise ON cell.id=subexercise.id
+                            JOIN notebook ON subexercise.in_notebook=notebook.filename
+                            JOIN exercise ON notebook.in_exercise=exercise.identifier
+                        WHERE exercise.identifier=%s
+                            AND notebook.filename=%s
+                            AND cell.cell_id=%s
                     """, params)
-                    conn.commit()
+        else:
+            logger.debug("No job found!")
+        conn.commit()
+        logger.debug("Waiting...")
 
 
-
-
-def grade(notebook: typing.Dict[str, str], assignment: str, id: str) -> typing.Dict[str, str]:
+def grade(notebook: typing.Dict[str, bytes], assignment: str, id: str) -> typing.Dict[str, str]:
     """
     Return: Dict with points for each cell in the notebook
     Raises an exception if something goes wrong
@@ -154,6 +185,7 @@ def grade(notebook: typing.Dict[str, str], assignment: str, id: str) -> typing.D
             cell_point_dict[gr.cell_id] = gr.auto_score
         logger.info(f"Notebook achieved {nb.score}/{nb.max_score}")
 
+    return cell_point_dict
 
 
 def cmd():
