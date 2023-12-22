@@ -182,7 +182,11 @@ def grade(notebook: typing.Dict[str, bytes], assignment: str, id: str) -> typing
         # we assume only one notebook, therefore just take the first one
         nb = sb.notebooks[0]
         for gr in nb.grades:
-            cell_point_dict[gr.cell_id] = gr.auto_score
+            # the name corrosponds to the field "grade_id" in the
+            # nbgrader metadata in the cell
+            # this is the only thing accessible
+            # cell.id is a database pk without any real world connections
+            cell_point_dict[gr.cell.name] = gr.auto_score
         logger.info(f"Notebook achieved {nb.score}/{nb.max_score}")
 
     return cell_point_dict
