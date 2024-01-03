@@ -124,16 +124,17 @@ def main():
                     conn.commit()
                     continue
                 else:
-                    params = [(process_id, result[cell_id], assignment, notebook_filename, cell_id) for cell_id in result.keys()]
+                    params = ((process_id, result[cell_id], assignment, notebook_filename, cell_id) for cell_id in result.keys())
+                    logger.info("Inserting result into the database...")
                     # We need the correct pk of the cell, as grading has a foreign key on the pk
                     # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
                     # for this we join the cell on subexercise on notebook on exercise
                     # and compare the cell_id in the cell table which holds the cell id as in the
                     # notebook
-                    cur.executemany("""
+                    psycopg2.extras.execute_batch(cur, """
                     INSERT INTO grading(process,cell,points)
-                        SELECT %s, Cell.id, %s FROM Cell 
-                            JOIN subexercise ON cell.id=subexercise.id
+                        SELECT %s, cell.id, %s FROM cell 
+                            JOIN subexercise ON cell.sub_exercise=subexercise.id
                             JOIN notebook ON subexercise.in_notebook=notebook.filename
                             JOIN exercise ON notebook.in_exercise=exercise.identifier
                         WHERE exercise.identifier=%s
