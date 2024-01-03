@@ -1,0 +1,6 @@
+<h1>Autocreation of exercise {{ exercise_identifier }}</h1>
+<form enctype="multipart/form-data" action="/grader/autocreation" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit">
+</form>

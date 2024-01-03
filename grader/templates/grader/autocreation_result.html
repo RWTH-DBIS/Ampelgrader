@@ -1,0 +1,14 @@
+<h1>Autocreation summary</h1>
+{% for subexercise in result %}
+    <div class="subexercise-summary">
+        <h3>{{ subexercise.identifier }}</h3>
+        <p>cells:</p>
+        <ul>
+            {% for cell in subexercise.cells %}
+                <li>
+                {{ cell.identifier }}: {{ cell.points }} points
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endfor %}

@@ -1,0 +1,212 @@
+import typing
+import django.http as http
+import re
+
+from collections import defaultdict
+
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.db import transaction
+
+from grader.models import *
+
+
+def ping(request: http.HttpRequest):
+    return http.HttpResponse(b"pong")
+
+
+def login(request: http.HttpRequest):
+    return render(request, "grader/login.html", {})
+
+
+def show_results(request: http.HttpRequest, processId: str):
+    gq = GradingProcess.objects.get(identifier=processId)
+    if gq is None:
+        raise http.Http404("Not found")
+    grading = Grading.objects.get(gradingProcess=gq)
+    if grading is None:
+        raise http.Http404("Grading process not finished")
+
+
+"""
+Grading Request handling
+"""
+from .forms import NoteBookForm
+
+
+def request_grading(request: http.HttpRequest, for_exercise: str):
+    try:
+        ex = Exercise.objects.get(identifier=for_exercise)
+    except ObjectDoesNotExist:
+        return http.HttpResponseNotFound("Exercise not found")
+    if request.method == "GET":
+        return render(
+            request,
+            "grader/request.html",
+            {"form": NoteBookForm(), "for_exercise": for_exercise},
+        )
+    if request.method != "POST":
+        return http.HttpResponseNotAllowed("Method not allowed")
+    DUMMY_EMAIL = "deleteme@example.org"
+    # todo: extract settings from settings and if DEBUG=False, requiere user authentication and use the according email adress
+    user_email = DUMMY_EMAIL
+    # check if exercise grading is allowed atm
+    if not ex.running():
+        return http.HttpResponseForbidden(
+            "At this time, no grading for this Exercise is provided."
+        )
+    # check if user has already a submission running
+    with transaction.atomic():
+        gp = GradingProcess.objects.raw(
+            """
+        SELECT identifier, email FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM grading) AND identifier NOT IN (SELECT process FROM errorlog)
+        AND email = %s LIMIT 1
+        """,
+            [user_email],
+        )
+        # .exist() does not exist for RawQuerySet(lul)
+        if len(list(gp)) > 0:
+            return http.HttpResponseForbidden(
+                "A grading was already requested by this student."
+            )
+    form = NoteBookForm(request.POST, request.FILES)
+    # check if the form is correct
+    if form.is_valid():
+        # extract the binary file data of the notebook
+        notebook_data = request.FILES["notebook"].read()
+        # get the filename of the user provided notebook and check of existance of a notebook with this file
+        notebook_filename = request.FILES["notebook"].name
+        # TODO notebooks exist in the context of exercises, therefore we need to check for the correct exercise here rather than just selection depending on notebook_filename
+        nb = Notebook.objects.filter(filename=notebook_filename)
+
+        if not nb.exists():
+            return http.HttpResponseForbidden("Invalid filename")
+
+        valid_nb = nb.first()
+        # we have all the data we need to create the grading process
+        with transaction.atomic():
+            new_gp = GradingProcess(email=user_email, for_exercise=ex)
+            new_gp.save()
+            new_sn = StudentNotebook(
+                data=notebook_data, process=new_gp, notebook=valid_nb
+            )
+            new_sn.save()
+            # we are done
+        return HttpResponseRedirect("/grader/successful_request")
+    else:
+        return http.HttpResponseBadRequest("Invalid form")
+
+
+def successful_request(request: http.HttpRequest):
+    return http.HttpResponse("Grading was requested. You will hear from us.")
+
+
+"""
+Administration utilities
+"""
+from json import loads
+from .forms import AutoCreationForm
+
+
+def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, int]]:
+    """
+    Parses a jupyter notebook to extract the association between subexercises and cell ids.
+    Raises value error if the given notebook dict has an unexpected format
+    Parameter:
+        nb: A parsed jupyter notebook json
+    Returns:
+        A dictionary containing for each subexercise identifier present a dicitionary containing
+        for each cell id (nbgraders grade id) the number of points achievable
+    """
+    subexercise_identifier_re = re.compile("""\A#subexercise:(\w+)""")
+    if "cells" not in nb:
+        raise ValueError(
+            "Given dict does not contain the necessary top-level 'cells' field"
+        )
+    res = defaultdict(lambda: dict())
+    cells_array: typing.List[typing.Dict] = nb["cells"]
+
+    # filter to extract only solution cells:
+    def _filter(cell: typing.Dict) -> bool:
+        try:
+            # if a cell does not correspond to the expected format, we will automatically discard it
+            return bool(cell["metadata"]["nbgrader"]["grade"])
+        except KeyError:
+            return False
+
+    for cell in filter(_filter, cells_array):
+        try:
+            if cell["cell_type"] == "code":
+                for l in cell["source"]:
+                    str_l = str(l)
+                    m = subexercise_identifier_re.search(str_l)
+                    if m is not None:
+                        cell_id = cell["metadata"]["nbgrader"]["grade_id"]
+                        max_points = int(cell["metadata"]["nbgrader"]["points"])
+                        sub_exericse_identifier = m.group(1)
+                        res[sub_exericse_identifier][cell_id] = max_points
+        except KeyError as e:
+            raise ValueError("Given dict has invalid format. Key error: " + str(e))
+    return res
+
+
+def autoprocess_notebook(request: http.HttpRequest):
+    """
+    use the notebook form to create a new exercise associated with a notebook and some subexercises for the notebook with the cells.
+    Automatically extracts the correct subexercises from comments in the exercise solution cells with the following format:
+        #subexercise:'RDF building'
+    """
+    # TODO check for admin privileges
+    if request.method == "GET":
+        return render(request, "grader/autocreation.html", {"form": AutoCreationForm()})
+    if request.method != "POST":
+        return http.HttpResponseNotAllowed("Method not allowed")
+    form = AutoCreationForm(request.POST, request.FILES)
+    if form.is_valid():
+        notebook_file_name = request.FILES["notebook"].name
+        notebook_data = request.FILES["notebook"].read()
+        exercise_identifier = form.cleaned_data["exercise_identifier"]
+        subexercise_dict = parse_notebook(loads(notebook_data))
+        with transaction.atomic():
+            # create the database entries
+            ex = Exercise(
+                exercise_identifier,
+                start_date=form.cleaned_data["start_date"],
+                stop_date=form.cleaned_data["stop_date"],
+            )
+            ex.save()
+            nb = Notebook(filename=notebook_file_name, in_exercise=ex)
+            nb.save()
+            for subexercise_ident in subexercise_dict.keys():
+                sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
+                sbe.save()
+                for cell_id in subexercise_dict[subexercise_ident]:
+                    cell = Cell(
+                        cell_id=cell_id,
+                        sub_exercise=sbe,
+                        max_score=subexercise_dict[subexercise_ident][cell_id],
+                    )
+                    cell.save()
+
+        # transform the result into a structure easier to use in django template engine:
+        # you cannot straigthforward use variables content as keys to access a dictionary
+        context_list = list()
+        for subexercise_identifier in subexercise_dict.keys():
+            h = {"identifier": subexercise_identifier, "cells": []}
+            for cell in subexercise_dict[subexercise_identifier].keys():
+                h["cells"].append(
+                    {
+                        "identifier": cell,
+                        "points": subexercise_dict[subexercise_identifier][cell],
+                    }
+                )
+            context_list.append(h)
+        return render(
+            request,
+            "grader/autocreation_result.html",
+            {"exercise_identifier": exercise_identifier, "result": context_list},
+        )
+    else:
+        return http.HttpResponseBadRequest("Invalid form")
