@@ -1,5 +1,5 @@
 # NB Blackbox data model
-
+**This is for overview only, when in doubt always refer to the schema defined in grader/model.py**
 ```mermaid
 ---
 title: NB Blackbox ER
