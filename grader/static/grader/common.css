@@ -1,0 +1,13 @@
+.exercise {
+    border: 2px cornflowerblue;
+    display: flex;
+    margin: 1em;
+}
+
+.inactive {
+    pointer-events: none;
+    cursor: default;
+    text-decoration: none;
+    color: darkgray;
+}
+
