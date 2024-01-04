@@ -1,7 +1,7 @@
 <h1>Result</h1>
 You have achieved the following points:
 <ul>
-    {% for ex in subexercises %}
-        <li>{{ex.0/ex.1}}</li>
+    {% for ex in result %}
+        <li>{{ ex.label }} achieved {{ex.score}} of max {{ ex.max_score}}</li>
     {% endfor %}
 </ul>

@@ -1,3 +1,4 @@
+import datetime
 import typing
 import django.http as http
 import re
@@ -7,7 +8,7 @@ from collections import defaultdict
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db import transaction
+from django.db import transaction, connection
 
 from grader.models import *
 
@@ -20,13 +21,30 @@ def login(request: http.HttpRequest):
     return render(request, "grader/login.html", {})
 
 
-def show_results(request: http.HttpRequest, processId: str):
-    gq = GradingProcess.objects.get(identifier=processId)
+def show_results(request: http.HttpRequest, for_process: str):
+    gq = GradingProcess.objects.get(identifier=for_process)
     if gq is None:
-        raise http.Http404("Not found")
-    grading = Grading.objects.get(gradingProcess=gq)
-    if grading is None:
-        raise http.Http404("Grading process not finished")
+        return http.HttpResponseNotFound("Not found")
+    grading = Grading.objects.filter(process=gq)
+    if not grading.exists():
+        return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
+    result = list()
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        SELECT subexercise.label, SUM(grading.points) as achieved, SUM(cell.max_score) as max_points FROM grading 
+            JOIN cell ON grading.cell = cell.id
+            JOIN subexercise ON cell.sub_exercise = subexercise.id
+            WHERE
+                grading.process = %s 
+            GROUP BY subexercise.label
+        """, [str(gq.identifier)])
+        for row in cursor.fetchall():
+            result.append({
+                "label": row[0],
+                "score": row[1],
+                "max_score": row[2]
+            })
+    return render(request, "grader/result.html", {"result": result})
 
 
 """
@@ -34,10 +52,24 @@ Grading Request handling
 """
 from .forms import NoteBookForm
 
+def show_exercises(request):
+    context_exercises = list()
+
+    for ex in Exercise.objects.all():
+        context_exercises.append({
+            "identifier": ex.identifier,
+            "active": ex.running()
+        })
+
+    return render(request, "grader/exercise_overview.html", {"exercises": context_exercises})
+
 
 def request_grading(request: http.HttpRequest, for_exercise: str):
     try:
         ex = Exercise.objects.get(identifier=for_exercise)
+        # first of all, check whether it is currently allowed to process this
+        if not ex.running():
+            return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     if request.method == "GET":
@@ -51,11 +83,6 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     DUMMY_EMAIL = "deleteme@example.org"
     # todo: extract settings from settings and if DEBUG=False, requiere user authentication and use the according email adress
     user_email = DUMMY_EMAIL
-    # check if exercise grading is allowed atm
-    if not ex.running():
-        return http.HttpResponseForbidden(
-            "At this time, no grading for this Exercise is provided."
-        )
     # check if user has already a submission running
     with transaction.atomic():
         gp = GradingProcess.objects.raw(
