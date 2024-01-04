@@ -75,17 +75,21 @@ def main():
         time.sleep(WAITING_TIME)
         logger.info("Checking for ungraded assignments...")
         # check if there are free tasks in the form of unhandled grading processes
+        # use the FOR UPDATE to lock the row found so that no other worker can select it inbetween
+        # selecting and inserting into worker assignments
+        # SKIP LOCK ensures that instead of waiting for unlock,
+        # we just skip that row
         cur.execute("""
-        SELECT identifier, requested_at, for_exercise FROM gradingprocess WHERE 
+        SELECT gradingprocess.identifier, gradingprocess.requested_at, gradingprocess.for_exercise FROM gradingprocess WHERE 
             identifier NOT IN (SELECT process FROM errorlog)
             AND identifier NOT IN (SELECT process FROM grading)
             AND identifier NOT IN (SELECT process FROM workerassignment)
-            ORDER BY requested_at DESC;
-        """)
+            ORDER BY requested_at DESC LIMIT 1 FOR UPDATE SKIP LOCKED;
+        """, (WORKER_ID, datetime.datetime.now()))
         if cur.rowcount > 0:
             available_job = cur.fetchone()
             process_id = available_job[0]
-            assignment = available_job[2]
+            assignment = available_job[1]
             # assign ourselves to the job
             cur.execute("""
             INSERT INTO workerassignment (worker_id, process, assigned_at)
@@ -107,7 +111,7 @@ def main():
                 if cur.rowcount == 0:
                     # we shouldnt be here
                     cur.execute("""
-                    INSERT INTO errolog(process,log) VALUES(%s,%s);
+                    INSERT INTO errolog(process, log) VALUES(%s,%s);
                     """, (process_id, "No uploaded notebook found"))
                     conn.commit()
                     continue
