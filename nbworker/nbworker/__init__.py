@@ -14,19 +14,19 @@ import signal
 from nbgrader.apps import NbGraderAPI
 from nbgrader.coursedir import CourseDirectory
 
-POSTGRES_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = os.environ.get('POSTGRES_PORT', 5432)
-POSTGRES_USER = os.environ.get('POSTGRES_USER', 'postgres')
-POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD', '')
-POSTGRES_DB = os.environ.get('POSTGRES_DB', '')
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = os.environ.get("POSTGRES_PORT", 5432)
+POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "")
+POSTGRES_DB = os.environ.get("POSTGRES_DB", "")
 # For models see the models.py in the grader app
 # There, we especially force django to set the field and database name
 
 
-WAITING_TIME = int(os.environ.get('WAITING_TIME', '5'))
+WAITING_TIME = int(os.environ.get("WAITING_TIME", "5"))
 """The time waited in seconds between database access to check for pending jobs"""
 COURSE_DIRECTORY = os.environ.get("COURSE_DIRECTORY", "/course")
-DUMMY_STUDENT_ID="d"
+DUMMY_STUDENT_ID = "d"
 """A dummy student id, the only student in this system. THeir submissions is always overwritten with each new grading job"""
 
 
@@ -41,9 +41,13 @@ API = NbGraderAPI(coursedir=CourseDirectory(root=str(COURSE_DIRECTORY)))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
 def dump_notebook(notebooks: typing.Dict[str, bytes], for_assignment: str):
     """Dumps the notebook into the submission folder for the given assignment of the dummy student"""
-    path = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID / for_assignment
+    path = (
+        pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID / for_assignment
+    )
     # create folder at the path for the assignment, if not exist yet
     path.mkdir(exist_ok=True)
     # create path which specifies where the notebook will be dumped
@@ -53,21 +57,32 @@ def dump_notebook(notebooks: typing.Dict[str, bytes], for_assignment: str):
         with sub_path.open("wb") as f:
             f.write(notebooks[notebook])
 
+
 def main():
     """Main Loop"""
     logger.info(f"NBWorker started with worker id {WORKER_ID}")
     logger.info(f"Using Course Directory: {API.coursedir.root}")
     logger.info(f"Connecting to database...")
-    conn = psycopg2.connect(host=POSTGRES_HOST, dbname=POSTGRES_DB, user=POSTGRES_USER, password=POSTGRES_PASSWORD, port=POSTGRES_PORT)
+    conn = psycopg2.connect(
+        host=POSTGRES_HOST,
+        dbname=POSTGRES_DB,
+        user=POSTGRES_USER,
+        password=POSTGRES_PASSWORD,
+        port=POSTGRES_PORT,
+    )
     cur = conn.cursor()
+
     # register a kill method
     class Killswitch:
         """A small class which is used for signal handling and termination of the main loop"""
+
         def __init__(self):
             self.running = True
+
         def kill(self, *kwargs):
             logger.info("Received term signal. Exiting...")
             self.running = False
+
     k = Killswitch()
     signal.signal(signal.SIGINT, k.kill)
     signal.signal(signal.SIGTERM, k.kill)
@@ -79,22 +94,28 @@ def main():
         # selecting and inserting into worker assignments
         # SKIP LOCK ensures that instead of waiting for unlock,
         # we just skip that row
-        cur.execute("""
+        cur.execute(
+            """
         SELECT gradingprocess.identifier, gradingprocess.requested_at, gradingprocess.for_exercise FROM gradingprocess WHERE 
             identifier NOT IN (SELECT process FROM errorlog)
             AND identifier NOT IN (SELECT process FROM grading)
             AND identifier NOT IN (SELECT process FROM workerassignment)
             ORDER BY requested_at DESC LIMIT 1 FOR UPDATE SKIP LOCKED;
-        """, (WORKER_ID, datetime.datetime.now()))
+        """,
+            (WORKER_ID, datetime.datetime.now()),
+        )
         if cur.rowcount > 0:
             available_job = cur.fetchone()
             process_id = available_job[0]
             assignment = available_job[1]
             # assign ourselves to the job
-            cur.execute("""
+            cur.execute(
+                """
             INSERT INTO workerassignment (worker_id, process, assigned_at)
                 VALUES(%s,%s,%s);
-            """, (WORKER_ID, process_id, datetime.datetime.now()))
+            """,
+                (WORKER_ID, process_id, datetime.datetime.now()),
+            )
             # try committing the transaction
             try:
                 conn.commit()
@@ -104,38 +125,62 @@ def main():
                 # commit successful, get necessary info from the db
                 # and grade
                 # get uploaded notebook
-                cur.execute("""
+                cur.execute(
+                    """
                    SELECT data, notebook FROM
                    studentnotebook WHERE process = %s; 
-                """, [process_id])
+                """,
+                    [process_id],
+                )
                 if cur.rowcount == 0:
                     # we shouldnt be here
-                    cur.execute("""
+                    cur.execute(
+                        """
                     INSERT INTO errolog(process, log) VALUES(%s,%s);
-                    """, (process_id, "No uploaded notebook found"))
+                    """,
+                        (process_id, "No uploaded notebook found"),
+                    )
                     conn.commit()
                     continue
                 (notebook_data, notebook_filename) = cur.fetchone()
                 try:
                     # psycopg returns a memory view, therefore we convert it to a bytestring via .tobytes()
-                    result = grade({notebook_filename: notebook_data.tobytes()}, assignment, process_id)
+                    result = grade(
+                        {notebook_filename: notebook_data.tobytes()},
+                        assignment,
+                        process_id,
+                    )
                     logger.info(f"Achieved result: {str(result)}")
                 except RuntimeError as err:
                     logger.error("Grading error!")
-                    cur.execute("""
+                    cur.execute(
+                        """
                     INSERT INTO errorlog(process,log) VALUES(%s,%s);
-                    """, (process_id, f"Error through grading: {str(err)}"))
+                    """,
+                        (process_id, f"Error through grading: {str(err)}"),
+                    )
                     conn.commit()
                     continue
                 else:
-                    params = ((process_id, result[cell_id], assignment, notebook_filename, cell_id) for cell_id in result.keys())
+                    params = (
+                        (
+                            process_id,
+                            result[cell_id],
+                            assignment,
+                            notebook_filename,
+                            cell_id,
+                        )
+                        for cell_id in result.keys()
+                    )
                     logger.info("Inserting result into the database...")
                     # We need the correct pk of the cell, as grading has a foreign key on the pk
                     # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
                     # for this we join the cell on subexercise on notebook on exercise
                     # and compare the cell_id in the cell table which holds the cell id as in the
                     # notebook
-                    psycopg2.extras.execute_batch(cur, """
+                    psycopg2.extras.execute_batch(
+                        cur,
+                        """
                     INSERT INTO grading(process,cell,points)
                         SELECT %s, cell.id, %s FROM cell 
                             JOIN subexercise ON cell.sub_exercise=subexercise.id
@@ -144,20 +189,23 @@ def main():
                         WHERE exercise.identifier=%s
                             AND notebook.filename=%s
                             AND cell.cell_id=%s
-                    """, params)
+                    """,
+                        params,
+                    )
         else:
             logger.debug("No job found!")
         conn.commit()
         logger.debug("Waiting...")
 
 
-def grade(notebook: typing.Dict[str, bytes], assignment: str, id: str) -> typing.Dict[str, str]:
+def grade(
+    notebook: typing.Dict[str, bytes], assignment: str, id: str
+) -> typing.Dict[str, str]:
     """
     Return: Dict with points for each cell in the notebook
     Raises an exception if something goes wrong
     """
     logging.info("Received assignment to grade")
-
 
     # Delete any old submission present
     # ...do we just delete the file in the submitted folder or do we access the notebook via Gradebook?
@@ -165,9 +213,10 @@ def grade(notebook: typing.Dict[str, bytes], assignment: str, id: str) -> typing
     # overwrite released so there is no database request whether the release of the assignment was generated
     if API.get_assignment(assignment, released=[assignment]) is None:
         # seems to return None if assignment does not exist: https://nbgrader.readthedocs.io/en/stable/_modules/nbgrader/apps/api.html#NbGraderAPI.get_assignment
-        logger.error(f"Grading for Assignment {assignment} was requested but assignment was not found!")
+        logger.error(
+            f"Grading for Assignment {assignment} was requested but assignment was not found!"
+        )
         raise RuntimeError("Assignment does not exist!")
-
 
     # dump the notebook
     dump_notebook(notebook, assignment)
@@ -176,11 +225,13 @@ def grade(notebook: typing.Dict[str, bytes], assignment: str, id: str) -> typing
     logger.info(f"Start grading for assignment {assignment}")
     # force: grade even if it is already autograded
     # create: create new student in the database if not already exist
-    grading_result = API.autograde(assignment, DUMMY_STUDENT_ID, force=True, create=True)
+    grading_result = API.autograde(
+        assignment, DUMMY_STUDENT_ID, force=True, create=True
+    )
     if not grading_result["success"]:
-       logger.error(f"Grading error: {grading_result['error']}")
-       logger.error(f"Log of Notebook:{str(grading_result['log'])}")
-       raise RuntimeError(f"Grading failed:{str(grading_result['error'])}")
+        logger.error(f"Grading error: {grading_result['error']}")
+        logger.error(f"Log of Notebook:{str(grading_result['log'])}")
+        raise RuntimeError(f"Grading failed:{str(grading_result['error'])}")
     else:
         logger.info(f"Finished grading")
 
@@ -212,7 +263,9 @@ def cmd():
     # nbgrader will not work if the assignments are not in the database
     # it seems to be necessary to generate the assignments, so that nbgrade is correctly initialised
     # therefore we do that for every assignment present
-    SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(API.coursedir.source_directory)
+    SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+        API.coursedir.source_directory
+    )
     # we assume every directory is an assignment
     for assi in SOURCE_PATH.iterdir():
         if assi.is_dir():
