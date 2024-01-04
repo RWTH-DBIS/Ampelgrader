@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
+from django.conf import settings
 
 from grader.models import *
 
@@ -53,6 +54,8 @@ Grading Request handling
 from .forms import NoteBookForm
 
 def show_exercises(request):
+    if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
+        return http.HttpResponseRedirect("../login")
     context_exercises = list()
 
     for ex in Exercise.objects.all():
@@ -65,6 +68,8 @@ def show_exercises(request):
 
 
 def request_grading(request: http.HttpRequest, for_exercise: str):
+    if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
+        return http.HttpResponseRedirect("../login")
     try:
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
@@ -80,9 +85,9 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         )
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
-    DUMMY_EMAIL = "deleteme@example.org"
-    # todo: extract settings from settings and if DEBUG=False, requiere user authentication and use the according email adress
-    user_email = DUMMY_EMAIL
+
+    user_email = request.user.email if not settings.DEBUG else "donotusemeinproduction@example.org"
+
     # check if user has already a submission running
     with transaction.atomic():
         gp = GradingProcess.objects.raw(
@@ -185,7 +190,10 @@ def autoprocess_notebook(request: http.HttpRequest):
     Automatically extracts the correct subexercises from comments in the exercise solution cells with the following format:
         #subexercise:'RDF building'
     """
-    # TODO check for admin privileges
+    if not request.user.is_authenticated:
+        return http.HttpResponseRedirect("login")
+    if not request.user.is_staff:
+        return http.HttpResponseForbidden("Staff only")
     if request.method == "GET":
         return render(request, "grader/autocreation.html", {"form": AutoCreationForm()})
     if request.method != "POST":

@@ -3,4 +3,7 @@
     {% csrf_token %}
     {{ form }}
     <input type="submit" value="Submit">
+    <div>
+        If the grading is done, an email will be sent to {{ request.user.email }}
+    </div>
 </form>

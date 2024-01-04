@@ -2,7 +2,7 @@
 <link rel="stylesheet" type="text/css" href="{% static 'grader/common.css' %}">
 <h1>Exercises</h1>
 {% for ex in exercises %}
-    <a href="request/{{ ex.identifier }}">
+    <a href="{{ ex.identifier }}">
     <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
         <h2>{{ ex.identifier }}</h2>
     </div>

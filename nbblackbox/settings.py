@@ -141,10 +141,14 @@ OIDC_RP_CLIENT_ID = "dbis-nbgrader-blackbox"
 OIDC_RP_CLIENT_SECRET = "KYUvsLeAzJMEyOKw8kwr96HROjdoDAbP"
 
 # AUTH endpoint with hint to only use the rwth aachen login provider
+#OIDC_RP_SIGN_ALGO="RS256"
 OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/auth"
 OIDC_OP_TOKEN_ENDPOINT = "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/token"
 OIDC_OP_USER_ENDPOINT = "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/userinfo"
 # necessary to show only rwth sso
 OIDC_AUTH_REQUEST_EXTRA_PARAMS={"kc_idp_hint":"rwth-aachen"}
-LOGIN_REDIRECT_URL = "/grade/ping"
+LOGIN_REDIRECT_URL = "/grade/request"
 
+#leave the not Debug pull down to force user auth in non-debug deployment
+ALLOW_ANONYMOUS_GRADING = False
+NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
