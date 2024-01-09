@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
-from os import environ
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,22 +23,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-+$y%c8zle#gry7(aj$fj^*%_(uubho(+w9%ibph#h#hic&4b00"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = os.getenv("NBBB_DEBUG", "false").lower() == "true"
+ALLOWED_HOSTS = os.getenv("NBBB_ALLOWED_HOSTS", "").split(",")
+if DEBUG:
+    print("-------YOU ARE RUNNING IN DEBUG MODE-------")
+    ALLOWED_HOSTS = []
 
 # Application definition
 
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
-    'mozilla_django_oidc', # the oidc auth app
+    "mozilla_django_oidc",  # the oidc auth app
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "grader"
+    "grader",
 ]
 
 MIDDLEWARE = [
@@ -76,17 +77,17 @@ WSGI_APPLICATION = "nbblackbox.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-   # "default": {
-   #     "ENGINE": "django.db.backends.sqlite3",
-   #     "NAME": BASE_DIR / "db.sqlite3",
-   # }
+    # "default": {
+    #     "ENGINE": "django.db.backends.sqlite3",
+    #     "NAME": BASE_DIR / "db.sqlite3",
+    # }
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "grader",
-        "USER": "grader",
-        "PASSWORD": "secret",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "USER": os.getenv("NBBB_DB_USER", "grader"),
+        "PASSWORD": os.getenv("NBBB_DB_PASSWD", "secret"),
+        "HOST": os.getenv("NBBB_DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("NBBB_DB_PORT", "5432"),
     }
 }
 
@@ -110,9 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+    "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
     # necessary for logging in via local admin password
-    'django.contrib.auth.backends.ModelBackend'
+    "django.contrib.auth.backends.ModelBackend",
 )
 
 # Internationalization
@@ -137,18 +138,20 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-OIDC_RP_CLIENT_ID = "dbis-nbgrader-blackbox"
-OIDC_RP_CLIENT_SECRET = "KYUvsLeAzJMEyOKw8kwr96HROjdoDAbP"
+OIDC_RP_CLIENT_ID = os.getenv("OIDC_RP_CLIENT_ID")
+OIDC_RP_CLIENT_SECRET = os.getenv("OIDC_RP_CLIENT_SECRET")
 
 # AUTH endpoint with hint to only use the rwth aachen login provider
-#OIDC_RP_SIGN_ALGO="RS256"
-OIDC_OP_AUTHORIZATION_ENDPOINT = "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/auth"
-OIDC_OP_TOKEN_ENDPOINT = "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/token"
-OIDC_OP_USER_ENDPOINT = "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/userinfo"
+OIDC_RP_SIGN_ALGO = os.getenv("OIDC_RP_SIGN_ALGO")
+OIDC_OP_JWKS_ENDPOINT = os.getenv("OIDC_OP_JWKS_ENDPOINT")
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.getenv("OIDC_OP_AUTHORIZATION_ENDPOINT")
+OIDC_OP_TOKEN_ENDPOINT = os.getenv("OIDC_OP_TOKEN_ENDPOINT")
+OIDC_OP_USER_ENDPOINT = os.getenv("OIDC_OP_USER_ENDPOINT")
 # necessary to show only rwth sso
-OIDC_AUTH_REQUEST_EXTRA_PARAMS={"kc_idp_hint":"rwth-aachen"}
-LOGIN_REDIRECT_URL = "/grade/request"
+OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"kc_idp_hint": "rwth-aachen"}
 
-#leave the not Debug pull down to force user auth in non-debug deployment
+LOGIN_REDIRECT_URL = "/grader/request/"
+
+# leave the not Debug pull down to force user auth in non-debug deployment
 ALLOW_ANONYMOUS_GRADING = False
 NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)

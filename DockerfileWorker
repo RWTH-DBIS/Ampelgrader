@@ -1,4 +1,5 @@
 FROM python:3.10
+LABEL authors="Laurenz Neumann"
 RUN mkdir /course /course/source
 COPY nbworker/ nbworker_src/
 RUN pip install nbworker@file:///nbworker_src

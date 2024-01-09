@@ -1,0 +1,56 @@
+version: "3.8"
+services:
+  nbblackbox_main:
+    depends_on:
+      nbblackbox_postgres:
+        condition: service_healthy
+    image: nbblackbox_main
+    ports:
+      - "80:80"
+    environment:
+      NBBB_DB_HOST: "database"
+      NBBB_DB_PASSWD: "secret"
+      NBBB_DB_USER: "grader"
+      OIDC_RP_CLIENT_ID: "dbis-nbgrader-blackbox"
+      OIDC_RP_CLIENT_SECRET: "KYUvsLeAzJMEyOKw8kwr96HROjdoDAbP"
+      OIDC_RP_SIGN_ALGO: "RS256"
+      OIDC_OP_JWKS_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/certs"
+      OIDC_OP_AUTHORIZATION_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/auth"
+      OIDC_OP_TOKEN_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/token"
+      OIDC_OP_USER_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/userinfo"
+      NBBB_DEBUG: "true"
+    networks:
+      - nbblackbox_database
+  nbblackbox_postgres:
+    image: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_PASSWORD: "secret"
+      POSTGRES_USER: "grader"
+    networks:
+      nbblackbox_database:
+        aliases:
+          - "database"
+  nbworker:
+    depends_on:
+      nbblackbox_main:
+        condition: service_healthy
+      nbblackbox_postgres:
+        condition: service_started
+    volumes:
+      - "./nbworker/source:/course/source"
+    image: nbworker
+    networks:
+      - nbblackbox_database
+    environment:
+      POSTGRES_HOST: "database"
+      POSTGRES_USER: "grader"
+      POSTGRES_PASSWORD: "secret"
+
+
+networks:
+  nbblackbox_database:
