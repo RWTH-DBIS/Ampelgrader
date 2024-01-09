@@ -126,13 +126,16 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             )
             new_sn.save()
             # we are done
-        return HttpResponseRedirect("/grader/successful_request")
+        return HttpResponseRedirect("/grader/successful_request?id={}".format(new_gp.identifier))
     else:
         return http.HttpResponseBadRequest("Invalid form")
 
 
 def successful_request(request: http.HttpRequest):
-    return http.HttpResponse("Grading was requested. You will hear from us.")
+    if request.method != "GET":
+        return http.HttpResponseNotAllowed("Not allowed")
+
+    return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
 
 
 """
