@@ -25,9 +25,9 @@ variables:
 
 build_image_main:
   script:
-    - docker build -t $CI_REGISTRY/main .
-    - docker push $CI_REGISTRY/main
+    - docker build -t $CI_REGISTRY/main:latest .
+    - docker push $CI_REGISTRY/main:latest
 build_image_worker:
   script:
-    - docker build -t $CI_REGISTRY/worker -f DockerfileWorker .
-    - docker push $CI_REGISTRY/worker
+    - docker build -t $CI_REGISTRY/worker:latest -f DockerfileWorker .
+    - docker push $CI_REGISTRY/worker:latest
