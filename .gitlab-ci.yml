@@ -25,9 +25,9 @@ variables:
 
 build_image_main:
   script:
-    - docker build -t $CI_REGISTRY/main:latest .
-    - docker push $CI_REGISTRY/main:latest
+    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest .
+    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest
 build_image_worker:
   script:
-    - docker build -t $CI_REGISTRY/worker:latest -f DockerfileWorker .
-    - docker push $CI_REGISTRY/worker:latest
+    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest -f DockerfileWorker .
+    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest
