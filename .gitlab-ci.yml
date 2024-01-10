@@ -1,0 +1,13 @@
+default:
+  image: docker
+  before_script:
+    - docker info
+
+build_image_main:
+  script:
+    - docker build -t registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main .
+    - docker push registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main
+build_image_worker:
+  script:
+    - docker build -t registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker -f DockerfileWorker .
+    - docker push registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker
