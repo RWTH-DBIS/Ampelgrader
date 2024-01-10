@@ -4,6 +4,7 @@ default:
     - docker:24.0.5-dind
   before_script:
     - docker info
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 variables:
   # When using dind service, you must instruct Docker to talk with
@@ -24,9 +25,9 @@ variables:
 
 build_image_main:
   script:
-    - docker build -t registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main .
-    - docker push registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main
+    - docker build -t $CI_REGISTRY/main .
+    - docker push $CI_REGISTRY/main
 build_image_worker:
   script:
-    - docker build -t registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker -f DockerfileWorker .
-    - docker push registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker
+    - docker build -t $CI_REGISTRY/worker -f DockerfileWorker .
+    - docker push $CI_REGISTRY/worker
