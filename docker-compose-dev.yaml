@@ -42,7 +42,7 @@ services:
       nbblackbox_postgres:
         condition: service_started
     volumes:
-      - "./nbworker/source:/course/source"
+      - "./testdata/source:/course/source"
     image: nbworker
     networks:
       - nbblackbox_database
