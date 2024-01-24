@@ -4,7 +4,7 @@ services:
     depends_on:
       nbblackbox_postgres:
         condition: service_healthy
-    image: nbblackbox_main
+    image: registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main:latest
     ports:
       - "80:80"
     environment:
@@ -43,7 +43,7 @@ services:
         condition: service_started
     volumes:
       - "./testdata/source:/course/source"
-    image: nbworker
+    image: registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker:latest
     networks:
       - nbblackbox_database
     environment:
