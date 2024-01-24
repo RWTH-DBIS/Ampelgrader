@@ -25,9 +25,21 @@ variables:
 
 build_image_main:
   script:
-    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest .
-    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest
+    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH .
+    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
 build_image_worker:
   script:
-    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest -f DockerfileWorker .
+    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH -f DockerfileWorker .
+    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH
+
+publish_images:
+  needs: ["build_image_main", "build_image_worker"]
+  script:
+    - docker pull $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
+    - docker tag $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest
+    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest
+    - docker pull -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH
+    - docker tag $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
