@@ -7,6 +7,7 @@ services:
     image: registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main:latest
     ports:
       - "80:80"
+    build: "."
     environment:
       NBBB_DB_HOST: "database"
       NBBB_DB_PASSWD: "secret"
@@ -36,6 +37,9 @@ services:
         aliases:
           - "database"
   nbworker:
+    build:
+      context: "."
+      dockerfile: "DockerfileWorker"
     depends_on:
       nbblackbox_main:
         condition: service_healthy
