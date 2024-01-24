@@ -127,6 +127,17 @@ USE_I18N = True
 
 USE_TZ = True
 
+# URL settings
+# the url for the grader. Normally this would correspond to host/grader/,
+# however in production this app should be directly available through an url
+BASE_GRADER_URL = os.getenv("BASE_GRADER_URL", "http://127.0.0.1/grader")
+
+# Email Setting
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
+
+# the prefix to which the unique process id is appended in the mail
+RESULT_LINK_PREFIX = BASE_GRADER_URL + "/results/"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

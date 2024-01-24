@@ -86,7 +86,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
 
-    user_email = request.user.email if not settings.DEBUG else "donotusemeinproduction@example.org"
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
     # check if user has already a submission running
     with transaction.atomic():
