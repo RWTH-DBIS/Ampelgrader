@@ -107,7 +107,7 @@ def main():
         if cur.rowcount > 0:
             available_job = cur.fetchone()
             process_id = available_job[0]
-            assignment = available_job[1]
+            assignment = available_job[2]
             # assign ourselves to the job
             cur.execute(
                 """

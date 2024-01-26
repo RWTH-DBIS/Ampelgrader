@@ -38,7 +38,7 @@ publish_images:
     - docker pull $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
     - docker tag $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:latest
-    - docker pull -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH
+    - docker pull $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH
     - docker tag $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:latest
   rules:
