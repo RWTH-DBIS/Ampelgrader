@@ -1,1 +1,42 @@
-<a href="{% url 'oidc_authentication_init' %}">Login</a>
+<!DOCTYPE html>
+<html>
+<style>
+    body{
+        background-color: white;
+    }
+
+    .container{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .btn {
+        background-color: rgba(144, 146, 148, 0.411);
+        color: #34353b;
+        text-decoration: none;
+        padding: 15px 40px;
+        border-radius: 4px;
+        box-shadow: 2px 2px 4px rgb(71, 69, 69);
+        font-family: Calibri;
+        font-size: 19px;
+        font-weight: bold;
+        font-style: normal;
+        font-variant: small-caps;
+        letter-spacing: 1px;
+        word-spacing: 0px;
+    }
+
+    .btn:hover {
+        background-color: rgba(66, 64, 64, 0.555);
+    }
+
+</style>
+
+<body>
+    <div class="container">
+        <a class="btn" href="{% url 'oidc_authentication_init' %}">Login</a>
+    </div>
+</body>
+</html>

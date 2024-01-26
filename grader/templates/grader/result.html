@@ -1,7 +1,82 @@
-<h1>Result</h1>
-You have achieved the following points:
-<ul>
-    {% for ex in result %}
-        <li>{{ ex.label }} achieved {{ex.score}} of max {{ ex.max_score}}</li>
-    {% endfor %}
-</ul>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+
+    /*background*/
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: white;
+      height: 100vh;
+      margin: 0;
+    }
+
+    /* outter box */
+    .box {
+      font-family: Calibri;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      background-color: rgba(144, 146, 148, 0.411); 
+      padding: 15px;
+    }
+
+    h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* inner box with traffic lights */
+    .traffic-light {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background-color: #77737381;
+      padding: 10px;
+    }
+
+    /* lights general - todo: make dependent on points achieved */
+    .light {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 10px;
+      background-color: #999;
+    }
+
+    .red {
+      background-color: rgba(255, 0, 0, 0.733);
+    }
+
+    .yellow {
+      background-color: rgba(255, 255, 0, 0.726);
+    }
+
+    .green {
+      background-color: rgba(0, 128, 0, 0.651);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h1>Result</h1>
+    <p>You have achieved the following points:</p>
+    <ul>
+      {% for ex in result %}
+          <li>{{ ex.label }} achieved {{ex.score}} of max {{ ex.max_score}}</li>
+      {% endfor %}
+    </ul>
+    <div class="traffic-light">
+      <div class="light red"></div>
+      <div class="light yellow"></div>
+      <div class="light green"></div>
+    </div>
+  </div>
+  
+</body>
+</html>

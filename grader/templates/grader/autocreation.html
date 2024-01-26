@@ -1,6 +1,28 @@
-<h1>Autocreation of exercise {{ exercise_identifier                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      }}</h1>
-<form enctype="multipart/form-data" action="/grader/autocreation" method="post">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Submit">
-</form>
+<!DOCTYPE html>
+<style>
+    body{
+        background-color: white;
+    }
+    .box {
+        width: 600px;
+        margin: auto;
+        margin-top: 80px;
+        padding: 2rem;
+        background-color: rgba(144, 146, 148, 0.411);
+        filter: drop-shadow(0 0 15px #0005);
+        font-family: Calibri;
+        border-radius: 10px;
+    }
+
+</style>
+
+<body>
+    <div class="box">
+        <h1>Autocreation of exercise {{ exercise_identifier }}</h1>
+        <form enctype="multipart/form-data" action="/grader/autocreation" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</body>
