@@ -28,7 +28,11 @@ def show_results(request: http.HttpRequest, for_process: str):
         return http.HttpResponseNotFound("Not found")
     grading = Grading.objects.filter(process=gq)
     if not grading.exists():
-        return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
+        # Check if there was an error
+        if ErrorLog.objects.filter(process=gq).exists():
+            return http.HttpResponseBadRequest("Something went wrong. Please check your notebook and try again. If the error persists, please contact us.")
+        else:
+            return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
