@@ -1,28 +1,28 @@
 <!DOCTYPE html>
-<style>
-    body{
-        background-color: white;
-    }
-    .box {
-        width: 600px;
-        margin: auto;
-        margin-top: 80px;
-        padding: 2rem;
-        background-color: rgba(144, 146, 148, 0.411);
-        filter: drop-shadow(0 0 15px #0005);
-        font-family: Calibri;
-        border-radius: 10px;
-    }
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Login Page</title>
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="styles.css">
+    </head>
 
-</style>
+    <body>
+        <div class="container">
+            <h2>Autocreation of exercise {{ exercise_identifier }}</h2>
+            <form enctype="multipart/form-data" action="/grader/autocreation" method="post">
+                {% csrf_token %}
+                {{ form }}
+                <input type="submit" value="Submit">
+            </form>
+        </div>
 
-<body>
-    <div class="box">
-        <h1>Autocreation of exercise {{ exercise_identifier }}</h1>
-        <form enctype="multipart/form-data" action="/grader/autocreation" method="post">
-            {% csrf_token %}
-            {{ form }}
-            <input type="submit" value="Submit">
-        </form>
-    </div>
-</body>
+
+        <!-- Bootstrap JS and Popper.js -->
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </body>
+</html>
