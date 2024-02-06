@@ -6,6 +6,10 @@ if [ "$NBBB_DEBUG" = 'true' ]; then
   export DJANGO_SUPERUSER_USERNAME=admin
   export DJANGO_SUPERUSER_PASSWORD=admin
   python3 manage.py createsuperuser --no-input
+  if [ "$NBBB_RUN_BAREMETAL" = 'true' ]; then
+      exec python3 manage.py runserver 127.0.0.1:80
+      exit
+  fi
   exec python3 manage.py runserver 0.0.0.0:80
 fi
 
