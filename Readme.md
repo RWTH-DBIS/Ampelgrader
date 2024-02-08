@@ -36,6 +36,23 @@ The more complex way is to use the django-generated admin tools under /admin.
 
 For configuration of the nbworker, see the [readme](nbworker/Readme.md).
 
+### Running bare metal for developement
+
+There are two ways of running the software throughout developement.
+The first one is by using the docker-compose-dev compose file.
+The second one is by running the database as a standalone docker container and the software directly.
+First, create a dedicated network:
+```docker network create broker```
+To start a postgres docker container with the standard credential the software expects (Do not use these credentials in any prod deployments):
+```docker run -d --name database --network broker -p 5432:5432 -e POSTGRES_PASSWORD=secret -e POSTGRES_USER=grader postgres``` 
+
+Then, use the start script to create the superuser for django and start the server:
+```NBBB_DEBUG=true NBBB_RUN_BAREMETAL=true ./start.sh```
+The server will automatically reload if files change.
+
+Finally, to allow the autograding of notebooks start a worker:
+```docker run --name nbworker -e POSTGRES_HOST=database -e POSTGRES_USER=grader -e POSTGRES_PASSWORD=secret -v $(pwd)/testdata/source:/course/source --network broker registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker:latest```
+Here, you can pull the image or build it via the dev compose (or manually ofc).
 
 ## Project structure
 - `nbworker/`: The source code of the worker script

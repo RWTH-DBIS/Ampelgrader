@@ -47,6 +47,7 @@ class GradingProcess(models.Model):
     for_exercise = models.ForeignKey(
         Exercise, on_delete=models.CASCADE, db_column="for_exercise"
     )
+    notified = models.BooleanField("User Notified", db_column="notified", default=False)
 
     def __str__(self):
         return f"ID: {self.identifier} for email: {self.email}. Request at: {self.requested_at.__str__()}"

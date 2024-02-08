@@ -57,3 +57,5 @@ admin.site.register(StudentNotebook)
 admin.site.register(WorkerAssignment)
 
 admin.site.register(Grading)
+
+admin.site.register(ErrorLog)
