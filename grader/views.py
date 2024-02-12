@@ -43,13 +43,35 @@ def show_results(request: http.HttpRequest, for_process: str):
                 grading.process = %s 
             GROUP BY subexercise.label
         """, [str(gq.identifier)])
+
+        """calulate result percentage"""
         for row in cursor.fetchall():
+            score = row[1]
+            max_score = row[2]
+            
+            """calculate result percentage"""
+            percentage_res = (score/max_score)*100
+
+            """traffic light colour"""
+            lower_limit = settings.PERCENTAGE_LIMITS['RED']
+            upper_limit = settings.PERCENTAGE_LIMITS['YELLOW']
+            if percentage_res < settings.PERCENTAGE_LIMITS['RED']:
+                t_light_colour = "red"
+            elif lower_limit <= percentage_res < upper_limit:
+                t_light_colour = "yellow"
+            else:
+                t_light_colour = "green"
+
             result.append({
                 "label": row[0],
                 "score": row[1],
-                "max_score": row[2]
+                "max_score": row[2],
+                "percentage_res": percentage_res,
+                "t_light_colour": t_light_colour
             })
+
     return render(request, "grader/result.html", {"result": result})
+
 
 
 """

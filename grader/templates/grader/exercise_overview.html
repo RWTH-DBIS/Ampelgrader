@@ -1,3 +1,8 @@
+<!--	This shows the student all available exercise. 
+		It should be communicated to students which 
+		exercises are not currently activated for grading,
+		e.g. through deactivated links          		-->
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -6,14 +11,16 @@
 		<title>Login Page</title>
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="styles.css">
-        <link rel="stylesheet" type="text/css" href="{% static 'grader/common.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
     </head>
 
     <body>
         <div class="container">
+            <div class="d-flex justify-content-center">
+				<img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+			</div>
             {% load static %}
-            <h1>Exercises</h1>
+            <h2>Exercises</h2>
             {% for ex in exercises %}
                 <a href="{{ ex.identifier }}">
                     <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">

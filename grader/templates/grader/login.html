@@ -6,14 +6,15 @@
 		<title>Login</title>
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-		<link rel="stylesheet" type="text/css" href="styles.css">
+		<link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
 	</head>
 
 	<body>
 		<div class="container login">
-				<h3>NB Grader</h3>
-				<a href="{% url 'oidc_authentication_init' %}" class="btn btn-primary btn-block">Login</a>
+			<h3>NB Grader</h3>
+			<a href="{% url 'oidc_authentication_init' %}" class="btn btn-primary btn-block">Login</a>
 		</div>
+		
 
 		<!-- Bootstrap JS and Popper.js -->
 		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
