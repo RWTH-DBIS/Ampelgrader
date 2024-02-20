@@ -6,6 +6,9 @@ HEALTHCHECK --interval=10s --timeout=3s \
 
 RUN mkdir nbblackbox
 
+# create folder for static files
+RUN mkdir /static
+
 COPY pyproject.toml nbblackbox/pyproject.toml
 RUN pip install --upgrade pip
 RUN (cd nbblackbox; pip install .)
