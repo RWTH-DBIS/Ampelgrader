@@ -168,3 +168,7 @@ LOGIN_REDIRECT_URL = "/grader/request/"
 # leave the not Debug pull down to force user auth in non-debug deployment
 ALLOW_ANONYMOUS_GRADING = False
 NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
+
+# allowed hosts are parsed from #!/usr/bin/env python
+# default localhost + docker container base addres
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1, 0.0.0.0").split(",")

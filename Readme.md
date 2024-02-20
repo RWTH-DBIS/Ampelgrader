@@ -36,6 +36,9 @@ The more complex way is to use the django-generated admin tools under /admin.
 
 For configuration of the nbworker, see the [readme](nbworker/Readme.md).
 
+#### Supported Env variables
+- ALLOWED_HOSTS: comma seperated list of allowed hosts. Is passed to django allowed hosts setting (default: "127.0.0.1") 
+
 ### Running bare metal for developement
 
 There are two ways of running the software throughout developement.
