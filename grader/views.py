@@ -50,7 +50,7 @@ def show_results(request: http.HttpRequest, for_process: str):
             max_score = row[2]
             
             """calculate result percentage"""
-            percentage_res = (score/max_score)*100
+            percentage_res = (score/max_score)
 
             """traffic light colour"""
             lower_limit = settings.PERCENTAGE_LIMITS['RED']
@@ -64,8 +64,8 @@ def show_results(request: http.HttpRequest, for_process: str):
 
             result.append({
                 "label": row[0],
-                "score": row[1],
-                "max_score": row[2],
+                "score": score,
+                "max_score": max_score,
                 "percentage_res": percentage_res,
                 "t_light_colour": t_light_colour
             })
@@ -160,8 +160,10 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
 def successful_request(request: http.HttpRequest):
     if request.method != "GET":
         return http.HttpResponseNotAllowed("Not allowed")
-
-    return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
+    
+    id = request.GET.get('id', default='UNKNOWN')
+    return render(request, "grader/successful_request.html", {"id": id})
+    #return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
 
 
 """

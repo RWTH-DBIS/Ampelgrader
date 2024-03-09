@@ -1,29 +1,95 @@
 /*------------------------------------*\
   #General
 \*------------------------------------*/
-
-
 body {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: linear-gradient(to right, #1286c9d3, #2986bbbd);
-	margin: 0;
-	padding: 0;
-	min-height: 60vh;
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+    background: linear-gradient(to right, #1286c9d3, #2986bbbd);
 }
 
 .container {
-	background-color: rgba(255, 255, 255, 0.938);
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    min-width: 300px;
-    max-width: 700px;
-    width: 100%;
+    background: #fff;
+    width: 670px;
+    border-radius: 8px;
+    margin: 175px 0;
+    font-family: roboto,sans-serif;
+    color: #333;
+    font-weight: 400;
+    position: relative;
+    font-size: 18px
+}
+
+.container .container-content {
+    padding: 30px 45px;
+    position: relative
+}
+
+.container-content p {
+    padding-top: 20px;
+    line-height: 1.7;
+}
+
+.container-content h2 {
+    font-weight: 700;
+    font-size: 25px;
+    text-align: center;
+    position: relative;
+    padding: 3px 0 20px;
+    margin-bottom: 40px
 }
 
 
+.container-content h2::after {
+    background: #3786bd;
+    width: 50px;
+    height: 2px;
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.container-content label {
+    display: block;
+    font-size: 18px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+.container-content .input-text {
+    margin-bottom: 26px
+}
+
+.container-content input {
+    width: 94.5%;
+    padding: 10.5px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #e5e5e5;
+    appearance: unset;
+    outline: none;
+    border-radius: 4px;
+    font-family: roboto,sans-serif;
+    font-weight: 400;
+    font-size: 18px
+}
+
+
+.container-content input:focus {
+    border: 1px solid #b3b3b3
+}
+
+
+@media screen and (max-width: 767px) {
+    .container {
+        margin:175px 20px
+    }
+}
+
+.rwth-logo {
+	padding: 10px;
+}
 
 /*------------------------------------*\
   #autocreation_result
@@ -44,6 +110,8 @@ body {
     border: 2px cornflowerblue;
     display: flex;
     margin: 1em;
+    font-weight: 600;
+    font-size: x-large;
 }
 
 .inactive {
@@ -51,17 +119,30 @@ body {
     cursor: default;
     text-decoration: none;
     color: darkgray;
+    font-weight: 600;
 }
 
 
 /*------------------------------------*\
   #Login
 \*------------------------------------*/
-
-.login {
-    text-align: center;
-    width: 300px;
+.login-container {
+    background: #ffffffe3;
+    width: 470px;
+    margin: 175px 0;
+    border-radius: 8px;
+    font-family: roboto,sans-serif;
+    color: #333;
+    font-weight: 600;
+    position: relative;
+    font-size: 18px
 }
+
+.login-container-content {
+    padding: 30px 45px;
+    text-align: center;
+}
+
 
 /*------------------------------------*\
   #Request

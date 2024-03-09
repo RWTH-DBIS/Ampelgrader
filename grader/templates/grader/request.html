@@ -3,27 +3,32 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Login Page</title>
+		<title>Request Grading</title>
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-		<link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
+		{% load static %}
+        <link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
 	</head>
 
     <body>
         <div class="container">
             <div class="d-flex justify-content-center">
-				<img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
-			</div>
-            <h2>Request grading for assignment {{ for_exercise }}</h2>
-            <form enctype="multipart/form-data" action="/grader/request/{{ for_exercise }}" method="post">
-                {% csrf_token %}
-                {{ form }}
-                <input type="submit" value="Submit">
-                <div>
-                    If the grading is done, an email will be sent to {{ request.user.email }}
-                </div>
-            </form>
-        
+                <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+            </div>
+            
+            <div class="container-content">
+                
+                <h2>Request grading for assignment {{ for_exercise }}</h2>
+                
+                <form enctype="multipart/form-data" action="/grader/request/{{ for_exercise }}" method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <input type="submit" value="Submit">
+                    <p>When the grading is done, an email will be sent to
+                    {{ request.user.email }}
+                    </p>
+                </form>
+            </div>
         </div>
         
     

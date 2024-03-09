@@ -166,3 +166,9 @@ LOGIN_REDIRECT_URL = "/grader/request/"
 # leave the not Debug pull down to force user auth in non-debug deployment
 ALLOW_ANONYMOUS_GRADING = False
 NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
+
+"""set percentage for traffic light"""
+PERCENTAGE_LIMITS={
+    'RED': 0.3,
+    'YELLOW': 0.6
+}

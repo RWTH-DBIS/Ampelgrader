@@ -1,41 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Result</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
-  </head>
+	<head>
+    	<meta charset="UTF-8" />
+    	<meta name="viewport" content="width=device-width, initial-scale=1" />
+    	<title>Result</title>
+    	<!-- Bootstrap CSS -->
+    	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
+    	{% load static %}
+		<link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
+	</head>
 
-  <body>
-    <div class="container">
+	<body>
+      	<div class="container">
+        	<div class="d-flex justify-content-center">
+          		<img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+        	</div>
+        
+			<div class="container-content">
+    			<h2>Result</h2>
+        		<p>You have achieved the following result in {{ ex.label }}:</p>
+          		<ul>
+            		{% for ex in result %}
+            			<li>Just for debugging: {{ ex.label }} achieved {{ ex.score }} of max {{ ex.max_score}}, with percentage {{ ex.percentage_res }}</li>
       
-      <div class="d-flex justify-content-center">
-        <img
-          src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png"
-          width="500"
-        />
+            			<div class="d-flex justify-content-center">
+              				<div class="traffic-light">
+                				<div class="light rounded-circle {% if ex.t_light_colour == 'red' %} red {% else %} grey {% endif %}"></div>
+                				<div class="light rounded-circle {% if ex.t_light_colour == 'yellow' %} yellow {% else %} grey {% endif %}"></div>
+                				<div class="light rounded-circle {% if ex.t_light_colour == 'green' %} green {% else %} grey {% endif %}"></div>
+              				</div>
+            			</div>
+            		{% endfor %}
+          		</ul>
+			</div>
       </div>
-      
-      <h2>Result</h2>
-      <p>You have achieved the following points:</p>
-      <ul>
-        {% for ex in result %}
-        <li>{{ ex.label }} achieved {{ ex.score }} of max {{ ex.max_score}}</li>
-  
-        <div class="d-flex justify-content-center">
-          <div class="traffic-light">
-            <div class="light rounded-circle {% if ex.t_light_colour == red %} red {% else %} grey {% endif %}"></div>
-            <div class="light rounded-circle {% if ex.t_light_colour == yellow %} yellow {% else %} grey {% endif %}"></div>
-            <div class="light rounded-circle {% if ex.t_light_colour == green %} green {% else %} grey {% endif %}"></div>
-          </div>
-        </div>
-        {% endfor %}
-      </ul>
 
-    </div>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
