@@ -32,7 +32,8 @@ def show_results(request: http.HttpRequest, for_process: str):
         if ErrorLog.objects.filter(process=gq).exists():
             return http.HttpResponseBadRequest("Something went wrong. Please check your notebook and try again. If the error persists, please contact us.")
         else:
-            return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
+            return render(request, "grader/grading_processing.html", {})
+            #return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -100,7 +101,8 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
         if not ex.running():
-            return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
+            return render(request, "grader/grading_unavailable.html")
+            #return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     if request.method == "GET":
