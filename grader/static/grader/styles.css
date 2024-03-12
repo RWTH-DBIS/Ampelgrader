@@ -12,7 +12,7 @@ body {
     background: #fff;
     width: 670px;
     border-radius: 8px;
-    margin: 175px 0;
+    margin: 75px 0;
     font-family: roboto,sans-serif;
     color: #333;
     font-weight: 400;
@@ -26,8 +26,8 @@ body {
 }
 
 .container-content p {
-    padding-top: 20px;
-    line-height: 1.7;
+    padding-top: 5px;
+    line-height: 1.5;
 }
 
 .container-content h2 {
@@ -72,7 +72,7 @@ body {
     border-radius: 4px;
     font-family: roboto,sans-serif;
     font-weight: 400;
-    font-size: 18px
+    font-size: 17px
 }
 
 
@@ -146,6 +146,18 @@ body {
 
 /*------------------------------------*\
   #Request
+\*------------------------------------*/
+
+.alert-warning{
+    font-size: 15px;
+    margin-top: 30px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+
+/*------------------------------------*\
+    #Successful_request
 \*------------------------------------*/
 
 

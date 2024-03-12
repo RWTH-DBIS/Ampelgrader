@@ -18,9 +18,9 @@
         
 			<div class="container-content">
     			<h2>Result</h2>
-        		<p>You have achieved the following result in {{ ex.label }}:</p>
           		<ul>
             		{% for ex in result %}
+						<li><p>You have achieved the following result in {{ ex.label }}:</p></li>
             			<li>Just for debugging: {{ ex.label }} achieved {{ ex.score }} of max {{ ex.max_score}}, with percentage {{ ex.percentage_res }}</li>
       
             			<div class="d-flex justify-content-center">
