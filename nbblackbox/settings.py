@@ -172,3 +172,9 @@ NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
 # allowed hosts are parsed from #!/usr/bin/env python
 # default localhost + docker container base addres
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1, 0.0.0.0").split(",")
+
+# percentage for traffic light
+PERCENTAGE_LIMITS={
+    'RED': 0.3,
+    'YELLOW': 0.6
+}

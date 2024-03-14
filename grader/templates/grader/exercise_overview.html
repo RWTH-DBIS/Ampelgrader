@@ -1,10 +1,44 @@
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'grader/common.css' %}">
-<h1>Exercises</h1>
-{% for ex in exercises %}
-    <a href="{{ ex.identifier }}">
-    <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
-        <h2>{{ ex.identifier }}</h2>
-    </div>
-    </a>
-{% endfor %}
+<!--	This shows the student all available exercise. 
+		It should be communicated to students which 
+		exercises are not currently activated for grading,
+		e.g. through deactivated links          		-->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Exercise Overview</title>
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        {% load static %}
+        <link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="rwth-logo d-flex justify-content-center">
+                <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+            </div>
+
+            <div class="container-content">
+                {% load static %}
+                <h2>Exercises</h2>
+                {% for ex in exercises %}
+                    <a href="{{ ex.identifier }}">
+                        <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
+                            {{ ex.identifier }}
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+            
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    </body>
+</html>

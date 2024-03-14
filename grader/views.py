@@ -32,7 +32,8 @@ def show_results(request: http.HttpRequest, for_process: str):
         if ErrorLog.objects.filter(process=gq).exists():
             return http.HttpResponseBadRequest("Something went wrong. Please check your notebook and try again. If the error persists, please contact us.")
         else:
-            return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
+            return render(request, "grader/grading_processing.html", {})
+            #return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -43,13 +44,35 @@ def show_results(request: http.HttpRequest, for_process: str):
                 grading.process = %s 
             GROUP BY subexercise.label
         """, [str(gq.identifier)])
+
+        """calulate result percentage"""
         for row in cursor.fetchall():
+            score = row[1]
+            max_score = row[2]
+            
+            """calculate result percentage"""
+            percentage_res = (score/max_score)
+
+            """traffic light colour"""
+            lower_limit = settings.PERCENTAGE_LIMITS['RED']
+            upper_limit = settings.PERCENTAGE_LIMITS['YELLOW']
+            if percentage_res < settings.PERCENTAGE_LIMITS['RED']:
+                t_light_colour = "red"
+            elif lower_limit <= percentage_res < upper_limit:
+                t_light_colour = "yellow"
+            else:
+                t_light_colour = "green"
+
             result.append({
                 "label": row[0],
-                "score": row[1],
-                "max_score": row[2]
+                "score": score,
+                "max_score": max_score,
+                "percentage_res": percentage_res,
+                "t_light_colour": t_light_colour
             })
+
     return render(request, "grader/result.html", {"result": result})
+
 
 
 """
@@ -78,7 +101,8 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
         if not ex.running():
-            return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
+            return render(request, "grader/grading_unavailable.html")
+            #return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     if request.method == "GET":
@@ -138,8 +162,10 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
 def successful_request(request: http.HttpRequest):
     if request.method != "GET":
         return http.HttpResponseNotAllowed("Not allowed")
-
-    return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
+    
+    id = request.GET.get('id', default='UNKNOWN')
+    return render(request, "grader/successful_request.html", {"id": id})
+    #return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
 
 
 """
