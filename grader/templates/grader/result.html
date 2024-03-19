@@ -3,7 +3,7 @@
 	<head>
     	<meta charset="UTF-8" />
     	<meta name="viewport" content="width=device-width, initial-scale=1" />
-    	<title>Result</title>
+    	<title>Auswertung</title>
     	<!-- Bootstrap CSS -->
     	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"/>
     	{% load static %}
@@ -17,10 +17,10 @@
         	</div>
         
 			<div class="container-content">
-    			<h2>Result</h2>
+    			<h2>Auswertung</h2>
           		<ul>
             		{% for ex in result %}
-						<li><p>You have achieved the following result in {{ ex.label }}:</p></li>
+						<li><p>Sie haben folgendes Ergebnis bei {{ ex.label }} erzielt:</p></li>
             			<li>Just for debugging: {{ ex.label }} achieved {{ ex.score }} of max {{ ex.max_score}}, with percentage {{ ex.percentage_res }}</li>
       
             			<div class="d-flex justify-content-center">
