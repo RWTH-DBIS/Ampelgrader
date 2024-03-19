@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Request Grading</title>
+		<title>Bewertung Beantragen</title>
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 		{% load static %}
@@ -18,22 +18,19 @@
             
             <div class="container-content">
                 
-                <h2>Request grading for assignment {{ for_exercise }}</h2>
+                <h2>Bewertung für Aufgabe {{ for_exercise }} beantragen</h2>
                 
                 <form enctype="multipart/form-data" action="/grader/request/{{ for_exercise }}" method="post">
                     {% csrf_token %}
                     {{ form }}
                     <input type="submit" value="Submit">
-                    <p>When the grading is done, an email will be sent to
-                    {{ request.user.email }}
+                    <p>Wenn die Bewertung abgeschlossen ist, wird eine E-Mail an {{ request.user.email }} gesendet.
                     </p>
                 </form>
                 <div class="alert alert-warning" role="alert">
-                    <p><b>DISCLAIMER:</b></p>
-                    <p>Please note that the service provided is currently in beta and does not guarantee the correctness of the result.
-                    A positive feedback DOES NOT guarantee passing the exercise.</p>
-
-                    <p class="text-center"><b>A submission to the blackbox <u>DOES NOT</u> substitute a submission in Moodle!</b></p>
+                    <p>Bitte beachten Sie, dass Ihre E-Mail-Adresse gespeichert wird, wenn Sie diesen Dienst nutzen. 
+                        Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO).
+                    </p>
                 </div>
             </div>
 

@@ -75,11 +75,9 @@ body {
     font-size: 17px
 }
 
-
 .container-content input:focus {
     border: 1px solid #b3b3b3
 }
-
 
 @media screen and (max-width: 767px) {
     .container {

@@ -8,7 +8,7 @@
     <head>
         <meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Exercise Overview</title>
+		<title>Übung Übersicht</title>
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
         {% load static %}
@@ -23,14 +23,25 @@
 
             <div class="container-content">
                 {% load static %}
-                <h2>Exercises</h2>
+                <h2>Übungen</h2>
                 {% for ex in exercises %}
-                    <a href="{{ ex.identifier }}">
-                        <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
-                            {{ ex.identifier }}
-                        </div>
-                    </a>
+                    <ul>
+                        <a href="{{ ex.identifier }}">
+                            <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
+                                <li>{{ ex.identifier }}</li>
+                            </div>
+                        </a>
+                    </ul>
                 {% endfor %}
+            
+                <div class="alert alert-warning" role="alert">
+                    <p><b>Haftungsausschluss:</b></p>
+                    <p>Bitte beachten Sie, dass der bereitgestellte Dienst sich derzeit in der Beta-Phase befindet und die Richtigkeit des Ergebnisses nicht garantiert. 
+                        Ein positives Feedback GARANTIERT NICHT das Bestehen der Übung.</p>
+
+                    <p class="text-center"><b>Eine Einreichung in die Blackbox ersetzt <u>KEINE</u> Einreichung in Moodle!</b></p>
+                </div>
+            
             </div>
         </div>
 
