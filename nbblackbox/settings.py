@@ -177,6 +177,8 @@ NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
 # default localhost + docker container base addres
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1, 0.0.0.0").split(",")
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "127.0.0.1").split(",")
+# assume requests from our proxy as Secure
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # percentage for traffic light
 PERCENTAGE_LIMITS={
