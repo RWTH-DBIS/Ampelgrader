@@ -19,11 +19,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-+$y%c8zle#gry7(aj$fj^*%_(uubho(+w9%ibph#h#hic&4b00"
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("NBBB_DEBUG", "false").lower() == "true"
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = "THISISSOINSECURE_UwU"
+if not DEBUG:
+    SECRET_KEY = os.getenv("NBBB_SECRETKEY", None)
+    if SECRET_KEY is None:
+        raise RuntimeError("Secret Key is not set, cannot start in production mode. Please set the secret key using the NBBB_SECRETKEY env variable")
+
 ALLOWED_HOSTS = os.getenv("NBBB_ALLOWED_HOSTS", "").split(",")
 if DEBUG:
     print("-------YOU ARE RUNNING IN DEBUG MODE-------")
