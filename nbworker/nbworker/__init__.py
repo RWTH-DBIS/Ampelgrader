@@ -255,7 +255,8 @@ def grade(
 
 def cmd():
     GRADEBOOK = API.gradebook
-    GRADEBOOK.add_student(DUMMY_STUDENT_ID)
+    # check if the dummy student exists and if not, create it
+    GRADEBOOK.update_or_create_student(DUMMY_STUDENT_ID)
     GRADEBOOK.close()
     # create the folder if not exist with all parents
     PATH = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID
