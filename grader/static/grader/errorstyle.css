@@ -1,0 +1,12 @@
+#sql_error_container {
+    background-color: #1d1d21;
+    color: white;
+    border-radius: 5px;
+    border-color: #1d1d21;
+    border: 2px;
+    width: 45em;
+    padding: 1em;
+    margin-bottom: 2em;
+    display: block;
+    line-height: 1em;
+}
