@@ -21,16 +21,18 @@ Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei F
 """
 
 
-HTML_MAIL_TEMPLATE = lambda x: f"""Hallo,
-
-Die Ampel-Bewertung ihrer Abgabe ist abgeschlossen.
-Das Ergebniss finden Sie <a href="{settings.RESULT_LINK_PREFIX}{x}">hier</a>.
-
-Viele Grüße,
-
-Das DBIS-VL Team
-
-<footer>Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei Fragen wenden Sie sich bitte an dbis-ticket@dbis.rwth-aachen.de.</footer>
+HTML_MAIL_TEMPLATE = lambda x: f"""
+<p>Hallo,</p>
+<br>
+<p>Die Ampel-Bewertung ihrer Abgabe ist abgeschlossen.</p>
+<p>Das Ergebniss finden Sie <a href="{settings.RESULT_LINK_PREFIX}{x}">hier</a>.</p>
+<br>
+<p>Viele Grüße,</p>
+<br>
+<p>Das DBIS-VL Team</p>
+<br>
+<br>
+<footer style="color: darkgrey; font_size: small;">Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei Fragen wenden Sie sich bitte an dbis-ticket@dbis.rwth-aachen.de.</footer>
 """
 
 class Command(BaseCommand):
