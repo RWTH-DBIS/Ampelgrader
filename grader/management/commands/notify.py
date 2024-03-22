@@ -7,6 +7,18 @@ from grader.models import GradingProcess
 
 FROM_MAIL = "dbis-vl@dbis.rwth-aachen.de"
 
+MAIL_TEMPLATE = lambda x: f"""
+Hallo,
+
+Die Ampel-Bewertung ihrer Abgabe ist abgeschlossen.
+Das Ergebniss finden Sie <a href="{settings.RESULT_LINK_PREFIX}{x}">hier</a>.
+
+Viele Grüße,
+
+Das DBIS-VL Team
+
+<footer>Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei Fragen wenden Sie sich bitte an dbis-ticket@dbis.rwth-aachen.de.</footer>
+"""
 
 class Command(BaseCommand):
     help = 'Flush emails to students to notify them of finished grading processes'
@@ -19,8 +31,8 @@ class Command(BaseCommand):
         for process in unnotified_processes:
             try:
                 send_mail(
-                        "DBIS VL Autograder result is available",
-                        f"Hello, the result of your requested grading is available here: {settings.RESULT_LINK_PREFIX}{process.identifier}",
+                        "DBIS VL Autograder Bewertung abgeschlossen",
+                        MAIL_TEMPLATE(process.identifier),
                         FROM_MAIL,
                         [process.email]
                         )
