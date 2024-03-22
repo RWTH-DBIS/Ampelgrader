@@ -7,8 +7,21 @@ from grader.models import GradingProcess
 
 FROM_MAIL = "dbis-vl@dbis.rwth-aachen.de"
 
-MAIL_TEMPLATE = lambda x: f"""
-Hallo,
+MAIL_TEMPLATE = lambda x: f"""Hallo,
+
+Die Ampel-Bewertung ihrer Abgabe ist abgeschlossen.
+Das Ergebniss finden Sie hier: {settings.RESULT_LINK_PREFIX}{x}".
+
+Viele Grüße,
+
+Das DBIS-VL Team
+
+-------------
+Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei Fragen wenden Sie sich bitte an dbis-ticket@dbis.rwth-aachen.de.
+"""
+
+
+HTML_MAIL_TEMPLATE = lambda x: f"""Hallo,
 
 Die Ampel-Bewertung ihrer Abgabe ist abgeschlossen.
 Das Ergebniss finden Sie <a href="{settings.RESULT_LINK_PREFIX}{x}">hier</a>.
@@ -34,7 +47,8 @@ class Command(BaseCommand):
                         "DBIS VL Autograder Bewertung abgeschlossen",
                         MAIL_TEMPLATE(process.identifier),
                         FROM_MAIL,
-                        [process.email]
+                        [process.email],
+                        html_message=HTML_MAIL_TEMPLATE(process.identifier)
                         )
             except Exception as e:
                 # to error handling?
