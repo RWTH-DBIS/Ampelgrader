@@ -185,7 +185,7 @@ def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, int]]:
         A dictionary containing for each subexercise identifier present a dicitionary containing
         for each cell id (nbgraders grade id) the number of points achievable
     """
-    subexercise_identifier_re = re.compile("""\A#subexercise:(\w+)""")
+    subexercise_identifier_re = re.compile("""\A#subexercise:([\w ]+)""")
     if "cells" not in nb:
         raise ValueError(
             "Given dict does not contain the necessary top-level 'cells' field"
