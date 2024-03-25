@@ -180,7 +180,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1, 0.0.0.0").split(",")
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # percentage for traffic light
-PERCENTAGE_LIMITS={
-    'RED': 0.3,
-    'YELLOW': 0.6
+PERCENTAGE_LIMITS = {
+    'RED': 0.5,
+    'YELLOW': 0.75
 }
