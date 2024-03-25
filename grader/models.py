@@ -54,7 +54,7 @@ class GradingProcess(models.Model):
 
     @admin.display(boolean=True, description="Processed")
     def processed(self):
-        GradingProcess.objects.filter(process=self.identifier).exists()
+        Grading.objects.filter(process=self.identifier).exists()
 
     class Meta:
         db_table = "gradingprocess"
