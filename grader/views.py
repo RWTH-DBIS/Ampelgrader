@@ -23,8 +23,9 @@ def login(request: http.HttpRequest):
 
 
 def show_results(request: http.HttpRequest, for_process: str):
-    gq = GradingProcess.objects.get(identifier=for_process)
-    if gq is None:
+    try:
+        gq = GradingProcess.objects.get(identifier=for_process)
+    except GradingProcess.DoesNotExist:
         return http.HttpResponseNotFound("Not found")
     grading = Grading.objects.filter(process=gq)
     if not grading.exists():
