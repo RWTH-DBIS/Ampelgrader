@@ -182,5 +182,5 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 # percentage for traffic light
 PERCENTAGE_LIMITS = {
     'RED': 0.5,
-    'YELLOW': 0.75
+    'YELLOW': 0.7
 }
