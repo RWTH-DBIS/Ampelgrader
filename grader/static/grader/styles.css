@@ -199,3 +199,8 @@ body {
 .grey {
 	background-color: rgba(109, 109, 109, 0.551);
 }
+
+#legend {
+    font-size: small;
+}
+
