@@ -170,12 +170,12 @@ OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"kc_idp_hint": "rwth-aachen"}
 LOGIN_REDIRECT_URL = "/grader/request/"
 
 # leave the not Debug pull down to force user auth in non-debug deployment
-ALLOW_ANONYMOUS_GRADING = False
+ALLOW_ANONYMOUS_GRADING = True
 NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
 
 # allowed hosts are parsed from #!/usr/bin/env python
 # default localhost + docker container base addres
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1, 0.0.0.0").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,0.0.0.0").split(",")
 # assume requests from our proxy as Secure
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
