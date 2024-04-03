@@ -137,15 +137,8 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     if form.is_valid():
         # extract the binary file data of the notebook
         notebook_data = request.FILES["notebook"].read()
-        # get the filename of the user provided notebook and check of existance of a notebook with this file
-        notebook_filename = request.FILES["notebook"].name
-        # TODO notebooks exist in the context of exercises, therefore we need to check for the correct exercise here rather than just selection depending on notebook_filename
-        nb = Notebook.objects.filter(filename=notebook_filename)
-
-        if not nb.exists():
-            return http.HttpResponseForbidden("Invalid filename")
-
-        valid_nb = nb.first()
+        # get the one-to-one related notebook "blueprint" for the Exercise
+        valid_nb = ex.notebook
         # we have all the data we need to create the grading process
         with transaction.atomic():
             new_gp = GradingProcess(email=user_email, for_exercise=ex)
