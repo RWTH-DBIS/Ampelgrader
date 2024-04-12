@@ -11,6 +11,23 @@
 	</head>
 
 	<body>
+		<nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+              <a class="navbar-brand">Ampel-Grader</a>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="margin-right: 49px;">
+                    {% if user.is_authenticated %}
+                  <li class="nav-item">
+                    eingeloggt als: <span style="color:rgba(111, 111, 132, 0.855)">{{ user.email }}</span>
+                  </li>
+                </ul>
+                <form action="{% url 'oidc_logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Logout">
+                </form>
+                {% endif %}
+            </div>
+        </nav>
+
       	<div class="container">
         	<div class="d-flex justify-content-center">
           		<img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
@@ -20,7 +37,13 @@
     			<h2>Auswertung</h2>
           		<ul>
             		{% for ex in result %}
+<<<<<<< fd0073019a797a07a893f7ad629eea517158aa0e
+						<li><p>Sie haben folgendes Ergebnis bei {{ ex.label }} erzielt:</p></li>
+            			<li>Just for debugging: {{ ex.label }} achieved {{ ex.score }} of max {{ ex.max_score}}, with percentage {{ ex.percentage_res }}</li>
+      
+=======
 						<li><p>Abgabeteil {{ ex.label }}:</p></li>
+>>>>>>> 443c69212dba81041b3e18cff9aa96c9246c26d8
             			<div class="d-flex justify-content-center">
               				<div class="traffic-light">
                 				<div class="light rounded-circle {% if ex.t_light_colour == 'red' %} red {% else %} grey {% endif %}"></div>
