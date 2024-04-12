@@ -15,4 +15,4 @@ fi
 
 python3 manage.py collectstatic --noinput
 
-exec gunicorn -b 0.0.0.0:80 nbblackbox.wsgi
+exec gunicorn -c gunicorn.conf.py nbblackbox.wsgi
