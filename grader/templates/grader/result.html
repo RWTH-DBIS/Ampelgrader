@@ -37,13 +37,7 @@
     			<h2>Auswertung</h2>
           		<ul>
             		{% for ex in result %}
-<<<<<<< fd0073019a797a07a893f7ad629eea517158aa0e
-						<li><p>Sie haben folgendes Ergebnis bei {{ ex.label }} erzielt:</p></li>
-            			<li>Just for debugging: {{ ex.label }} achieved {{ ex.score }} of max {{ ex.max_score}}, with percentage {{ ex.percentage_res }}</li>
-      
-=======
 						<li><p>Abgabeteil {{ ex.label }}:</p></li>
->>>>>>> 443c69212dba81041b3e18cff9aa96c9246c26d8
             			<div class="d-flex justify-content-center">
               				<div class="traffic-light">
                 				<div class="light rounded-circle {% if ex.t_light_colour == 'red' %} red {% else %} grey {% endif %}"></div>
