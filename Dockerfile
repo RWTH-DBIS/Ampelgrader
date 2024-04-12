@@ -17,6 +17,7 @@ COPY grader nbblackbox/grader
 COPY nbblackbox nbblackbox/nbblackbox
 
 WORKDIR nbblackbox
+COPY gunicorn.conf.py .
 COPY start.sh .
 COPY manage.py .
 
