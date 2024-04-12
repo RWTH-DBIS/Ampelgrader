@@ -11,6 +11,23 @@
 	</head>
 
     <body>
+        <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+              <a class="navbar-brand">Ampel-Grader</a>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="margin-right: 49px;">
+                    {% if user.is_authenticated %}
+                  <li class="nav-item">
+                    eingeloggt als: <span style="color:rgba(111, 111, 132, 0.855)">{{ user.email }}</span>
+                  </li>
+                </ul>
+                <form action="{% url 'oidc_logout' %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Logout">
+                </form>
+                {% endif %}
+            </div>
+        </nav>
+
         <div class="container">
             <div class="d-flex justify-content-center">
                 <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
@@ -29,7 +46,11 @@
                 </form>
                 <div class="alert alert-warning" role="alert">
                     <p>Bitte beachten Sie, dass Ihre E-Mail-Adresse gespeichert wird, wenn Sie diesen Dienst nutzen. 
+<<<<<<< fd0073019a797a07a893f7ad629eea517158aa0e
+                        Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO).
+=======
                        Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu.
+>>>>>>> 443c69212dba81041b3e18cff9aa96c9246c26d8
                     </p>
                 </div>
             </div>
@@ -46,4 +67,4 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     </body>
-</html>
+</html>
