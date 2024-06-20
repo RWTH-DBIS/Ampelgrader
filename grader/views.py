@@ -169,7 +169,7 @@ from json import loads
 from .forms import AutoCreationForm
 
 
-def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, int]]:
+def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]:
     """
     Parses a jupyter notebook to extract the association between subexercises and cell ids.
     Raises value error if the given notebook dict has an unexpected format
@@ -203,7 +203,7 @@ def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, int]]:
                     m = subexercise_identifier_re.search(str_l)
                     if m is not None:
                         cell_id = cell["metadata"]["nbgrader"]["grade_id"]
-                        max_points = int(cell["metadata"]["nbgrader"]["points"])
+                        max_points = float(cell["metadata"]["nbgrader"]["points"])
                         sub_exericse_identifier = m.group(1)
                         res[sub_exericse_identifier][cell_id] = max_points
         except KeyError as e:
