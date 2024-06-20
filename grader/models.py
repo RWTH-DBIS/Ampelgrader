@@ -109,7 +109,7 @@ class Cell(models.Model):
     sub_exercise = models.ForeignKey(
         SubExercise, on_delete=models.CASCADE, db_column="sub_exercise"
     )
-    max_score = models.IntegerField(
+    max_score = models.FloatField(
         validators=[MinValueValidator(0)], db_column="max_score"
     )
 
@@ -128,7 +128,7 @@ class Grading(models.Model):
     # Important: This is the primary key of the cell table NOT THE CELL ID AS IN THE NOTEBOOK!
     # This is because we are not sure if we can assume that the cell id is globally unique
     cell = models.ForeignKey(Cell, on_delete=models.CASCADE, db_column="cell")
-    points = models.IntegerField(db_column="points")
+    points = models.FloatField(db_column="points")
 
     class Meta:
         constraints = [
