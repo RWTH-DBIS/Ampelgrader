@@ -8,30 +8,32 @@ title: NB Blackbox ER
 erDiagram
     Exercise {
         string identifier PK
-        date startDate
-        date stopDate
+        date start_date
+        date stop_date
     }
     Notebook {
         string filename PK
-        string inExercise FK
+        string in_exercise FK
     }
     
     SubExercise {
         integer id PK
-        string innotebook FK
+        string label
+        string in_notebook FK
     }
     
     Cell {
-        string cellId PK
-        integer maxScore
-        integer subExercise FK
+        string cell_id PK
+        integer max_score
+        integer sub_exercise FK
     }
     
     GradingProcess {
         uuid identifier
-        string forEmail
-        string exercise FK
-        date requestedAt
+        string email
+        string for_exercise FK
+        date requested_at
+        notified bool
     }
     
     Grading {
@@ -41,7 +43,7 @@ erDiagram
     }
     
     ErrorLog {
-        uuid processid FK,PK
+        uuid process FK,PK
         string log
     }
     
