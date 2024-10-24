@@ -182,6 +182,7 @@ OIDC_OP_USER_ENDPOINT = os.getenv("OIDC_OP_USER_ENDPOINT")
 OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"kc_idp_hint": "rwth-aachen"}
 
 LOGIN_REDIRECT_URL = "/grader/request/"
+LOGOUT_REDIRECT_URL = "/grader/login"
 
 # leave the not Debug pull down to force user auth in non-debug deployment
 ALLOW_ANONYMOUS_GRADING = True
