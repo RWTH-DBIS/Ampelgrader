@@ -31,7 +31,7 @@ def show_results(request: http.HttpRequest, for_process: str):
     if not grading.exists():
         # Check if there was an error
         if ErrorLog.objects.filter(process=gq).exists():
-            return http.HttpResponseBadRequest("Something went wrong. Please check your notebook and try again. If the error persists, please contact us.")
+            return render(request, "grader/grading_error.html", {})
         else:
             return render(request, "grader/grading_processing.html", {})
             #return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
