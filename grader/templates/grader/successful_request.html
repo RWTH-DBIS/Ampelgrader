@@ -38,7 +38,7 @@
                     <h2>Bewertung erfolgreich angefordert!</h2>
                     <p>Sie werden von uns hören. Ihre Prozess-ID lautet:</p>
                     <div class="alert alert-dark text-center" role="alert">
-                        {{ id }}
+                        <a href="{%url 'grading_results' id%}">{{id}}</a>
                     </div>
                 </div>
             </div>
