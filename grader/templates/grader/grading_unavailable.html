@@ -13,7 +13,7 @@
     <body>
         <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
             <div class="container-fluid">
-              <a class="navbar-brand">Ampel-Grader</a>
+              <a class="navbar-brand" href="{%url 'show_exercises' %}" >Ampel-Grader</a>
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="margin-right: 49px;">
                     {% if user.is_authenticated %}
                   <li class="nav-item">
@@ -30,7 +30,9 @@
 
         <div class="container">
             <div class="d-flex justify-content-center">
-                <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+                <a href="https://dbis.rwth-aachen.de/dbis/">
+                    <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+                </a>
             </div>
             
             <div class="alert alert-secondary" role="alert" style="margin-top: 100px; margin-bottom: 100px;">
