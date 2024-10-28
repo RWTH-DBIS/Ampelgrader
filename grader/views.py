@@ -92,7 +92,22 @@ def show_exercises(request):
             "active": ex.running()
         })
 
-    return render(request, "grader/exercise_overview.html", {"exercises": context_exercises})
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
+    # check if user has already a submission running
+    with transaction.atomic():
+        gp = GradingProcess.objects.raw(
+            """
+        SELECT identifier, email FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM grading) AND identifier NOT IN (SELECT process FROM errorlog)
+        AND email = %s LIMIT 1
+        """,
+            [user_email],
+        )
+
+        id = gp[0].identifier if len(list(gp)) > 0 else None
+
+    return render(request, "grader/exercise_overview.html", {"exercises": context_exercises, "id": id})
 
 
 def request_grading(request: http.HttpRequest, for_exercise: str):
