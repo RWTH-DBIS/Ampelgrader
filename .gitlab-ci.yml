@@ -2,6 +2,8 @@ default:
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
+  tags:
+    - did
   before_script:
     - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
