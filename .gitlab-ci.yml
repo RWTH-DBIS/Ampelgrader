@@ -2,8 +2,6 @@ default:
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
-  tags:
-    - did
   before_script:
     - docker info
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -30,9 +28,11 @@ build_image_main:
     - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH .
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
 build_image_worker:
+  tags:
+    - did
   script:
     - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH -f DockerfileWorker .
-    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH
+    - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH 
 
 publish_images:
   needs: ["build_image_main", "build_image_worker"]
@@ -46,5 +46,3 @@ publish_images:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-only:
-  -tags
