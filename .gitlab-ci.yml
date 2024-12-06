@@ -24,6 +24,8 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 build_image_main:
+  tags:
+    - did
   script:
     - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH .
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
