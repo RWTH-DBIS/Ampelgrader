@@ -25,20 +25,20 @@ variables:
 
 build_image_main:
   tags:
-    - c11-2
+    - c11
   script:
     - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH .
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
 build_image_worker:
   tags:
-    - c11-2
+    - c11
   script:
     - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH -f DockerfileWorker .
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/worker:$CI_COMMIT_BRANCH 
 
 publish_images:
   tags:
-    - c11-2
+    - c11
   needs: ["build_image_main", "build_image_worker"]
   script:
     - docker pull $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/main:$CI_COMMIT_BRANCH
