@@ -21,6 +21,9 @@ services:
       OIDC_OP_USER_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/userinfo"
       EMAIL_HOST: "smarthost.rwth-aachen.de"
       NBBB_DEBUG: "true"
+      RED_PERCENTAGE: "0.5"
+      YELLOW_PERCENTAGE: "0.7"
+      LANGUAGE_CODE: "en"
     networks:
       - nbblackbox_database
   nbblackbox_postgres:
