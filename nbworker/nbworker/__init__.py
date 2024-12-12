@@ -130,7 +130,7 @@ class GradingExecutor(JobExecutor):
                     process_id
                 )
 
-                notebook_filename = s_notebook["notebook"]+".ipynb"
+                notebook_filename = s_notebook["notebook"]
                 notebook_data = s_notebook["data"]
 
             except Exception as e:
