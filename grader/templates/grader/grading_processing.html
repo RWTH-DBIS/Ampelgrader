@@ -1,5 +1,5 @@
-
 {% extends "./base.html" %}
+{% load i18n %}
 {% block content %}
 
         <div class="container">
@@ -10,7 +10,11 @@
             </div>
             
             <div class="alert alert-secondary" role="alert" style="margin-top: 100px; margin-bottom: 100px;">
-               <div class="lead text-center"> Bewertungsprozess noch nicht abgeschlossen. Vielen Dank für Ihre Geduld! </div>
+               <div class="lead text-center">{% translate "Bewertungsprozess noch nicht abgeschlossen. Vielen Dank für Ihre Geduld!" %} </div>
+            </div>
+            
+            <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+                <button id="reloadButton" onclick="handleButtonOnClick()" class="btn btn-primary"> {% translate "Seite neu laden" %}</button>
             </div>
             
             <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 

@@ -9,5 +9,8 @@ dependencies = [
     "django~=5.0",
     "mozilla-django-oidc~=3.0",
     "gunicorn~=21.2",
-    "psycopg2-binary~=2.9"
+    "psycopg2-binary~=2.9",
+    "asyncpg~=0.30.0",
+    "pgqueuer~=0.14.0",
+    "whitenoise~=6.8.2",
 ]

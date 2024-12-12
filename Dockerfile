@@ -9,11 +9,15 @@ RUN mkdir nbblackbox
 # create folder for static files
 RUN mkdir /static
 
+# Install gettext for compiling locale files
+RUN apt-get update && apt-get install -y gettext && apt-get clean
+
 COPY pyproject.toml nbblackbox/pyproject.toml
 RUN pip install --upgrade pip
 RUN (cd nbblackbox; pip install .)
 
 COPY grader nbblackbox/grader
+COPY locale nbblackbox/locale
 COPY nbblackbox nbblackbox/nbblackbox
 
 WORKDIR nbblackbox

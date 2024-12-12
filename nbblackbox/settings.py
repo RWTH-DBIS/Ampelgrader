@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +29,7 @@ if not DEBUG:
     if SECRET_KEY is None:
         raise RuntimeError("Secret Key is not set, cannot start in production mode. Please set the secret key using the NBBB_SECRETKEY env variable")
 
-ALLOWED_HOSTS = os.getenv("NBBB_ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = os.getenv("NBBB_ALLOWED_HOSTS", "127.0.0.1,0.0.0.0").split(",")
 if DEBUG:
     print("-------YOU ARE RUNNING IN DEBUG MODE-------")
     ALLOWED_HOSTS = []
@@ -62,12 +63,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
 ]
 
 ROOT_URLCONF = "nbblackbox.urls"
@@ -109,6 +112,11 @@ DATABASES = {
     }
 }
 
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -118,7 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", 
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -137,11 +145,11 @@ AUTHENTICATION_BACKENDS = (
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+# LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "CET"
 
-USE_I18N = True
+# USE_I18N = True
 
 USE_TZ = True
 
@@ -153,16 +161,39 @@ BASE_GRADER_URL = os.getenv("BASE_GRADER_URL", "http://127.0.0.1/grader")
 # Email Setting
 EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 25))
+"""The email adress from which the mails are sent"""
+EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
+EMAIL_HEADER = os.getenv("EMAIL_HEADER", "Ampel Grader is done grading your submission.")
+EMAIL_TEMPLATE = os.getenv("EMAIL_TEMPLATE",
+"""
+<p>Hello,</p>
+<br>
+<p>The Ampel-Grading of your submission is complete!</p>
+<p>You can find your results <a href="{RESULT_LINK}">here</a>.</p>
+<br>
+<p>BR,</p>
+<br>
+<p>The Teaching Team,</p>
+<br>
+<br>
+<footer style="color: darkgrey; font_size: small;">Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei Fragen wenden Sie sich bitte an dbis-ticket@dbis.rwth-aachen.de.</footer>
+""")
 
 # the prefix to which the unique process id is appended in the mail
 RESULT_LINK_PREFIX = BASE_GRADER_URL + "/results/"
+"""Renders the template into a text"""
+def MAIL_TEMPLATE_RENDERER(x):
+    return EMAIL_TEMPLATE.format(RESULT_LINK=RESULT_LINK_PREFIX + str(x))
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = ALLOWED_HOSTS[0] + "/static/" if not DEBUG else "/static/"
 
-STATIC_ROOT = "/static"
+STATIC_ROOT = BASE_DIR / "static/"
+
+# uncomment this to test if the static files are not served correctly by compressed storage
+# STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -190,12 +221,25 @@ NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
 
 # allowed hosts are parsed from #!/usr/bin/env python
 # default localhost + docker container base addres
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,0.0.0.0").split(",")
+# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,0.0.0.0").split(",")
 # assume requests from our proxy as Secure
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # percentage for traffic light
 PERCENTAGE_LIMITS = {
-    'RED': 0.5,
-    'YELLOW': 0.7
+    'RED': os.getenv("RED_PERCENTAGE", "0.5"),
+    'YELLOW': os.getenv("YELLOW_PERCENTAGE", "0.7")
 }
+
+USE_I18N = True
+
+LANGUAGE_CODE = os.getenv("LANGUAGE_CODE", "de")
+
+LANGUAGES = [
+    ("de", "German"),
+    ("en", "English"),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]

@@ -2,8 +2,8 @@
 		It should be communicated to students which 
 		exercises are not currently activated for grading,
 		e.g. through deactivated links          		-->
-
 {% extends "./base.html" %}
+{% load i18n %}
 {% block content %}
 
     <div class="container">
@@ -15,7 +15,7 @@
 
         <div class="container-content">
             {% load static %}
-            <h2>Übungen</h2>
+            <h2>{% translate "Übungen"%}</h2>
             {% for ex in exercises %}
                 <ul>
                     <a href="{{ ex.identifier }}">
@@ -27,11 +27,10 @@
             {% endfor %}
         
             <div class="alert alert-warning" role="alert">
-                <p><b>Haftungsausschluss:</b></p>
-                <p>Bitte beachten Sie, dass der bereitgestellte Dienst sich derzeit in der Beta-Phase befindet und die Richtigkeit des Ergebnisses nicht garantiert. 
-                    Ein positives Feedback GARANTIERT NICHT das Bestehen der Übung.</p>
+                <p><b>{% translate "Haftungsausschluss" %}:</b></p>
+                <p>{% blocktrans %}Bitte beachten Sie, dass der bereitgestellte Dienst sich derzeit in der Beta-Phase befindet und die Richtigkeit des Ergebnisses nicht garantiert. Ein positives Feedback GARANTIERT NICHT das Bestehen der Übung.{% endblocktrans %}</p>
 
-                <p class="text-center"><b>Eine Einreichung in den Ampel-Grader ersetzt <u>KEINE</u> Einreichung in Moodle!</b></p>
+                <p class="text-center"><b> {% translate "Eine Einreichung in den Ampel-Grader ersetzt" %} <u>{% translate KEINE %}</u> {% translate "Einreichung in Moodle!" %}</b></p>
             </div>
         
         </div>
