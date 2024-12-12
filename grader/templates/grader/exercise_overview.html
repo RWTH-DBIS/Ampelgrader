@@ -2,71 +2,39 @@
 		It should be communicated to students which 
 		exercises are not currently activated for grading,
 		e.g. through deactivated links          		-->
+{% extends "./base.html" %}
+{% load i18n %}
+{% block content %}
 
-<!DOCTYPE html>
-<html lang="de">
-    <head>
-        <meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Übung Übersicht</title>
-		<!-- Bootstrap CSS -->
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        {% load static %}
-        <link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
-    </head>
-
-    <body>
-        <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
-            <div class="container-fluid">
-              <a class="navbar-brand">Ampel-Grader</a>
-                    {% if user.is_authenticated %}
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="margin-right: 49px;">
-                  <li class="nav-item">
-                    eingeloggt als: <span style="color:rgba(111, 111, 132, 0.855)">{{ user.email }}</span>
-                  </li>
-                </ul>
-                <form action="{% url 'oidc_logout' %}" method="post">
-                {% csrf_token %}
-                <input type="submit" value="Logout">
-                </form>
-                {% endif %}
-            </div>
-        </nav>
-
-        <div class="container">
-            <div class="rwth-logo d-flex justify-content-center">
+    <div class="container">
+        <div class="rwth-logo d-flex justify-content-center">
+            <a href="https://dbis.rwth-aachen.de/dbis/">
                 <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
-            </div>
-
-            <div class="container-content">
-                {% load static %}
-                <h2>Übungen</h2>
-                {% for ex in exercises %}
-                    <ul>
-                        <a href="{{ ex.identifier }}">
-                            <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
-                                <li>{{ ex.identifier }}</li>
-                            </div>
-                        </a>
-                    </ul>
-                {% endfor %}
-            
-                <div class="alert alert-warning" role="alert">
-                    <p><b>Haftungsausschluss:</b></p>
-                    <p>Bitte beachten Sie, dass der bereitgestellte Dienst sich derzeit in der Beta-Phase befindet und die Richtigkeit des Ergebnisses nicht garantiert. 
-                        Ein positives Feedback GARANTIERT NICHT das Bestehen der Übung.</p>
-
-                    <p class="text-center"><b>Eine Einreichung in den Ampel-Grader ersetzt <u>KEINE</u> Einreichung in Moodle!</b></p>
-                </div>
-            
-            </div>
+            </a>
         </div>
 
-            
-        <!-- Optional JavaScript -->
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    </body>
-</html>
+        <div class="container-content">
+            {% load static %}
+            <h2>{% translate "Übungen"%}</h2>
+            {% for ex in exercises %}
+                <ul>
+                    <a href="{{ ex.identifier }}">
+                        <div class="exercise {% if ex.active %} active {% else %} inactive {% endif %}">
+                            <li>{{ ex.identifier }}</li>
+                        </div>
+                    </a>
+                </ul>
+            {% endfor %}
+        
+            <div class="alert alert-warning" role="alert">
+                <p><b>{% translate "Haftungsausschluss" %}:</b></p>
+                <p>{% blocktrans %}Bitte beachten Sie, dass der bereitgestellte Dienst sich derzeit in der Beta-Phase befindet und die Richtigkeit des Ergebnisses nicht garantiert. Ein positives Feedback GARANTIERT NICHT das Bestehen der Übung.{% endblocktrans %}</p>
+
+                <p class="text-center"><b> {% translate "Eine Einreichung in den Ampel-Grader ersetzt" %} <u>{% translate KEINE %}</u> {% translate "Einreichung in Moodle!" %}</b></p>
+            </div>
+        
+        </div>
+    </div>
+
+{% endblock %}
+

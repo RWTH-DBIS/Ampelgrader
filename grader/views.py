@@ -2,6 +2,7 @@ import datetime
 import typing
 import django.http as http
 import re
+import os
 
 from collections import defaultdict
 
@@ -10,19 +11,31 @@ from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
 from django.conf import settings
+from django.utils.translation import gettext as _
+from django.utils import translation
 
 from grader.models import *
 
+import asyncio
+import asyncpg
+
+from pgqueuer.qm import QueueManager
+from pgqueuer.db import AsyncpgDriver
 
 def ping(request: http.HttpRequest):
+
     return http.HttpResponse(b"pong")
 
 
 def login(request: http.HttpRequest):
+    translation.activate(settings.LANGUAGE_CODE)
+
     return render(request, "grader/login.html", {})
 
 
 def show_results(request: http.HttpRequest, for_process: str):
+    translation.activate(settings.LANGUAGE_CODE)
+
     try:
         gq = GradingProcess.objects.get(identifier=for_process)
     except GradingProcess.DoesNotExist:
@@ -31,7 +44,7 @@ def show_results(request: http.HttpRequest, for_process: str):
     if not grading.exists():
         # Check if there was an error
         if ErrorLog.objects.filter(process=gq).exists():
-            return http.HttpResponseBadRequest("Something went wrong. Please check your notebook and try again. If the error persists, please contact us.")
+            return render(request, "grader/grading_error.html", {})
         else:
             return render(request, "grader/grading_processing.html", {})
             #return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
@@ -54,10 +67,13 @@ def show_results(request: http.HttpRequest, for_process: str):
             """calculate result percentage"""
             percentage_res = (score/max_score)
 
+            red_percentage = float(settings.PERCENTAGE_LIMITS['RED'])
+            yellow_percentage = float(settings.PERCENTAGE_LIMITS['YELLOW'])
+
             """traffic light colour"""
-            lower_limit = settings.PERCENTAGE_LIMITS['RED']
-            upper_limit = settings.PERCENTAGE_LIMITS['YELLOW']
-            if percentage_res < settings.PERCENTAGE_LIMITS['RED']:
+            lower_limit = red_percentage
+            upper_limit = yellow_percentage
+            if percentage_res < red_percentage:
                 t_light_colour = "red"
             elif lower_limit <= percentage_res < upper_limit:
                 t_light_colour = "yellow"
@@ -72,7 +88,10 @@ def show_results(request: http.HttpRequest, for_process: str):
                 "t_light_colour": t_light_colour
             })
 
-    return render(request, "grader/result.html", {"result": result})
+            red = red_percentage*100
+            yellow = yellow_percentage*100
+
+    return render(request, "grader/result.html", {"result": result, "red": red, "yellow": yellow})
 
 
 
@@ -82,6 +101,8 @@ Grading Request handling
 from .forms import NoteBookForm
 
 def show_exercises(request):
+    translation.activate(settings.LANGUAGE_CODE)
+
     if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
         return http.HttpResponseRedirect("../login")
     context_exercises = list()
@@ -92,10 +113,26 @@ def show_exercises(request):
             "active": ex.running()
         })
 
-    return render(request, "grader/exercise_overview.html", {"exercises": context_exercises})
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
+    # check if user has already a submission running
+    with transaction.atomic():
+        gp = GradingProcess.objects.raw(
+            """
+        SELECT identifier, email FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM errorlog)
+        AND email = %s LIMIT 1
+        """,
+            [user_email],
+        )
+
+        id = gp[0].identifier if len(list(gp)) > 0 else None
+
+    return render(request, "grader/exercise_overview.html", {"exercises": context_exercises, "id": id})
 
 
 def request_grading(request: http.HttpRequest, for_exercise: str):
+    translation.activate(settings.LANGUAGE_CODE)
     if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
         return http.HttpResponseRedirect("../login")
     try:
@@ -130,7 +167,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         # .exist() does not exist for RawQuerySet(lul)
         if len(list(gp)) > 0:
             return http.HttpResponseForbidden(
-                "A grading was already requested by this student."
+                _("A grading was already requested by this student.")
             )
     form = NoteBookForm(request.POST, request.FILES)
     # check if the form is correct
@@ -147,6 +184,9 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
                 data=notebook_data, process=new_gp, notebook=valid_nb
             )
             new_sn.save()
+
+        asyncio.run(enqueue_grading_request(new_gp.identifier))
+
             # we are done
         return HttpResponseRedirect("/grader/successful_request?id={}".format(new_gp.identifier))
     else:
@@ -154,6 +194,8 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
 
 
 def successful_request(request: http.HttpRequest):
+    translation.activate(settings.LANGUAGE_CODE)
+
     if request.method != "GET":
         return http.HttpResponseNotAllowed("Not allowed")
     
@@ -182,7 +224,7 @@ def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]
     subexercise_identifier_re = re.compile("""\A#subexercise:(.+)""")
     if "cells" not in nb:
         raise ValueError(
-            "Given dict does not contain the necessary top-level 'cells' field"
+            _("Given dict does not contain the necessary top-level 'cells' field")
         )
     res = defaultdict(lambda: dict())
     cells_array: typing.List[typing.Dict] = nb["cells"]
@@ -207,7 +249,7 @@ def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]
                         sub_exericse_identifier = m.group(1)
                         res[sub_exericse_identifier][cell_id] = max_points
         except KeyError as e:
-            raise ValueError("Given dict has invalid format. Key error: " + str(e))
+            raise ValueError(_("Given dict has invalid format. Key error: ") + str(e))
     return res
 
 
@@ -272,3 +314,22 @@ def autoprocess_notebook(request: http.HttpRequest):
         )
     else:
         return http.HttpResponseBadRequest("Invalid form")
+
+async def enqueue_grading_request(process_id) -> None:
+    # Establish a database connection; asyncpg and psycopg are supported.
+    connection = await asyncpg.connect(            
+            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
+            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
+            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
+            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
+    )
+
+    # Initialize a database driver
+    driver = AsyncpgDriver(connection)
+    # Create a QueueManager instance
+    qm = QueueManager(driver)
+
+    await qm.queries.enqueue(
+        ["grade_notebook"],
+        [str(process_id).encode()],
+    )
