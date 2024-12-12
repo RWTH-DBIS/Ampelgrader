@@ -1,5 +1,5 @@
-
 {% extends "./base.html" %}
+{% load i18n %}
 {% block content %}
 
         <div class="container">
@@ -8,7 +8,7 @@
             </div>
                 
             <div class="container-content">
-                <h2>Autocreation of exercise {{ exercise_identifier }}</h2>
+                <h2>{% translate "Autocreation von der Übung" %} {{ exercise_identifier }}</h2>
 
                 <div class="form-row-last">
                     <form enctype="multipart/form-data" action="/grader/autocreation" method="post">

@@ -1,7 +1,6 @@
 <!-- only admin -->
-
-
 {% extends "./base.html" %}
+{% load i18n %}
 {% block content %}
 
 		<div class="container">
@@ -10,7 +9,7 @@
 			</div>
 			
 			<div class="container-content">
-				<h2>Autocreation summary</h2>
+				<h2>{% translate "Autocreation Zusammenfassung" %}</h2>
 				
 				{% for subexercise in result %}
 					<div class="subexercise-summary">

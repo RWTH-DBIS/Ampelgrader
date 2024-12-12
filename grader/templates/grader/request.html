@@ -1,5 +1,5 @@
-
 {% extends "./base.html" %}
+{% load i18n %}
 {% block content %}
 
         <div class="container">
@@ -11,18 +11,18 @@
             
             <div class="container-content">
                 
-                <h2>Bewertung für Aufgabe {{ for_exercise }} beantragen</h2>
+                <h2>{% translate "Bewertung für Aufgabe" %} {{ for_exercise }} {% translate "beantragen" %}</h2>
                 
                 <form enctype="multipart/form-data" action="/grader/request/{{ for_exercise }}" method="post">
                     {% csrf_token %}
                     {{ form }}
                     <input type="submit" value="Submit">
-                    <p>Wenn die Bewertung abgeschlossen ist, wird eine E-Mail an {{ request.user.email }} gesendet.
+                    <p>{% translate "Wenn die Bewertung abgeschlossen ist, wird eine E-Mail an" %} {{ request.user.email }} {% translate "gesendet." %}
                     </p>
                 </form>
                 <div class="alert alert-warning" role="alert">
-                    <p>Bitte beachten Sie, dass Ihre E-Mail-Adresse gespeichert wird, wenn Sie diesen Dienst nutzen. 
-                        Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO).
+                    <p>{% translate "Bitte beachten Sie, dass Ihre E-Mail-Adresse gespeichert wird, wenn Sie diesen Dienst nutzen."%} 
+                        {% translate "Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO)." %}
                     </p>
                 </div>
             </div>

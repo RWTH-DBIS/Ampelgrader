@@ -10,6 +10,16 @@ import time
 import uuid
 import datetime
 import signal
+import asyncio
+import asyncpg
+import os
+from datetime import timedelta
+
+from pgqueuer.qm import QueueManager
+from pgqueuer.db import AsyncpgDriver
+from pgqueuer.models import Job
+from pgqueuer.db import AsyncpgDriver
+from pgqueuer.executors import JobExecutor
 
 from nbgrader.apps import NbGraderAPI
 from nbgrader.coursedir import CourseDirectory
@@ -62,15 +72,6 @@ def main():
     """Main Loop"""
     logger.info(f"NBWorker started with worker id {WORKER_ID}")
     logger.info(f"Using Course Directory: {API.coursedir.root}")
-    logger.info(f"Connecting to database...")
-    conn = psycopg2.connect(
-        host=POSTGRES_HOST,
-        dbname=POSTGRES_DB,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD,
-        port=POSTGRES_PORT,
-    )
-    cur = conn.cursor()
 
     # register a kill method
     class Killswitch:
@@ -87,117 +88,132 @@ def main():
     signal.signal(signal.SIGINT, k.kill)
     signal.signal(signal.SIGTERM, k.kill)
     while k.running:
-        time.sleep(WAITING_TIME)
-        logger.info("Checking for ungraded assignments...")
-        # check if there are free tasks in the form of unhandled grading processes
-        # use the FOR UPDATE to lock the row found so that no other worker can select it inbetween
-        # selecting and inserting into worker assignments
-        # SKIP LOCK ensures that instead of waiting for unlock,
-        # we just skip that row
-        cur.execute(
-            """
-        SELECT gradingprocess.identifier, gradingprocess.requested_at, gradingprocess.for_exercise FROM gradingprocess WHERE 
-            identifier NOT IN (SELECT process FROM errorlog)
-            AND identifier NOT IN (SELECT process FROM grading)
-            AND identifier NOT IN (SELECT process FROM workerassignment)
-            ORDER BY requested_at DESC LIMIT 1 FOR UPDATE SKIP LOCKED;
-        """,
-            (WORKER_ID, datetime.datetime.now()),
-        )
-        if cur.rowcount > 0:
-            available_job = cur.fetchone()
-            process_id = available_job[0]
-            assignment = available_job[2]
-            # assign ourselves to the job
-            cur.execute(
-                """
-            INSERT INTO workerassignment (worker_id, process, assigned_at)
-                VALUES(%s,%s,%s);
-            """,
-                (WORKER_ID, process_id, datetime.datetime.now()),
+        asyncio.run(grade_studentnotebook())
+
+class GradingExecutor(JobExecutor):
+    def __init__(
+        self,
+        func,
+        requests_per_second: float = 2.0,
+        retry_timer: timedelta = timedelta(seconds=30),
+        serialized_dispatch: bool = True,
+        concurrency_limit: int = 5,
+    ):
+        super().__init__(func, requests_per_second, retry_timer, serialized_dispatch, concurrency_limit)
+
+    async def execute(self, job: Job) -> None:
+                
+        # Extract notification type and message from job data
+        process_id = job.payload.decode()
+
+        await self.grade_notebook(process_id)
+
+    async def grade_notebook(self, process_id) -> None:
+        try:
+            connection = await asyncpg.connect(
+                host=os.getenv("POSTGRES_HOST"),
+                database=os.getenv("POSTGRES_DB"),
+                user=os.getenv("POSTGRES_USER"),
+                password=os.getenv("POSTGRES_PASSWORD")
             )
-            # try committing the transaction
-            try:
-                conn.commit()
-            except psycopg2.Error as err:
-                logger.error(f"Database Error: {err}")
-            else:
-                # commit successful, get necessary info from the db
-                # and grade
-                # get uploaded notebook
-                cur.execute(
-                    """
-                   SELECT data, notebook FROM
-                   studentnotebook WHERE process = %s; 
-                """,
-                    [process_id],
+
+            driver = AsyncpgDriver(connection)
+            # Create a QueueManager instance
+            qm = QueueManager(driver)
+
+            try: 
+                logger.info("Fetching notebook")
+                s_notebook = await connection.fetchrow("""
+                    SELECT * FROM
+                    studentnotebook WHERE process = $1; 
+                    """,
+                    process_id
                 )
-                if cur.rowcount == 0:
-                    # we shouldnt be here
-                    cur.execute(
-                        """
-                    INSERT INTO errolog(process, log) VALUES(%s,%s);
-                    """,
-                        (process_id, "No uploaded notebook found"),
-                    )
-                    conn.commit()
-                    continue
-                (notebook_data, notebook_filename) = cur.fetchone()
-                try:
-                    # psycopg returns a memory view, therefore we convert it to a bytestring via .tobytes()
-                    result = grade(
-                        {notebook_filename: notebook_data.tobytes()},
-                        assignment,
-                        process_id,
-                    )
-                    logger.info(f"Achieved result: {str(result)}")
-                except RuntimeError as err:
-                    logger.error("Grading error!")
-                    cur.execute(
-                        """
-                    INSERT INTO errorlog(process,log) VALUES(%s,%s);
-                    """,
-                        (process_id, f"Error through grading: {str(err)}"),
-                    )
-                    conn.commit()
-                    continue
-                else:
-                    params = (
-                        (
-                            process_id,
-                            result[cell_id],
-                            assignment,
-                            notebook_filename,
-                            cell_id,
+
+                notebook_filename = s_notebook["notebook"]+".ipynb"
+                notebook_data = s_notebook["data"]
+
+            except Exception as e:
+                logger.info("Error while fetching notebook:" + str(e))
+
+                await connection.execute("""
+                INSERT INTO errorlog (process, log) VALUES($1, $2);
+                """,
+                    process_id, "Error while fetching notebook: " + str(e)
+                )
+
+            try:
+                logger.info("Fetching grading process")
+                grading_process = await connection.fetchrow("""SELECT * FROM gradingprocess WHERE identifier = $1;""", str(process_id))
+                await connection.execute("""
+                        INSERT INTO workerassignment (worker_id, process, assigned_at) VALUES($1, $2, $3);
+                        """,
+                        str(WORKER_ID), str(process_id), datetime.datetime.now()
                         )
-                        for cell_id in result.keys()
-                    )
-                    logger.info("Inserting result into the database...")
-                    # We need the correct pk of the cell, as grading has a foreign key on the pk
-                    # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
-                    # for this we join the cell on subexercise on notebook on exercise
-                    # and compare the cell_id in the cell table which holds the cell id as in the
-                    # notebook
-                    psycopg2.extras.execute_batch(
-                        cur,
-                        """
-                    INSERT INTO grading(process,cell,points)
-                        SELECT %s, cell.id, %s FROM cell 
-                            JOIN subexercise ON cell.sub_exercise=subexercise.id
-                            JOIN notebook ON subexercise.in_notebook=notebook.filename
-                            JOIN exercise ON notebook.in_exercise=exercise.identifier
-                        WHERE exercise.identifier=%s
-                            AND notebook.filename=%s
-                            AND cell.cell_id=%s
+            except Exception as e:
+                logger.info("Error while fetching grading process and store workerassignment:" + str(e))
+                if grading_process is None:
+                    logger.info(f"Process with ID {process_id} not found.")
+                    return
+            
+            try:
+                result = grade(
+                    {notebook_filename: notebook_data},
+                    grading_process["for_exercise"],
+                    process_id,
+                )
+                logger.info(f"Achieved result: {str(result)}")
+            except RuntimeError as err:
+                logger.error("Grading error!")
+                await enqueue_graded(process_id)
+                await connection.execute("""
+                    INSERT INTO errorlog (process,log) VALUES($1, $2);
                     """,
-                        params,
+                        process_id, f"Error through grading: {str(err)}"
                     )
+            else:
+                notebook_filename = s_notebook["notebook"]
+                params = (
+                    (
+                        process_id,
+                        result[cell_id],
+                        grading_process["for_exercise"],
+                        notebook_filename,
+                        cell_id,
+                    )
+                    for cell_id in result.keys()
+                )
+                logger.info("Inserting result into the database...")
+                # We need the correct pk of the cell, as grading has a foreign key on the pk
+                # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
+                # for this we join the cell on subexercise on notebook on exercise
+                # and compare the cell_id in the cell table which holds the cell id as in the
+                # notebook
+                await connection.executemany("""
+                    INSERT INTO grading (process, cell, points)
+                        SELECT $1, cell.id, $2 FROM cell
+                            JOIN subexercise ON cell.sub_exercise = subexercise.id
+                            JOIN notebook ON subexercise.in_notebook = notebook.filename
+                            JOIN exercise ON notebook.in_exercise = exercise.identifier
+                        WHERE exercise.identifier = $3
+                            AND notebook.filename = $4
+                            AND cell.cell_id = $5;
+                """, params)
+
+                await qm.queries.enqueue(
+                    ["send_email"],
+                    [str(process_id).encode()],
+                )
+            
+        except Exception as e:
+        # to error handling?
+            logger.info("Error while grading notebook:" + str(e))
         else:
-            logger.debug("No job found!")
-        conn.commit()
-        logger.debug("Waiting...")
-
-
+            logger.info(f"Grading process with ID {grading_process['identifier']} finished.")
+        finally:
+            await connection.close()
+            logger.info("Connection closed")
+    
 def grade(
     notebook: typing.Dict[str, bytes], assignment: str, id: str
 ) -> typing.Dict[str, str]:
@@ -280,6 +296,40 @@ def cmd():
         except SystemExit:
             os._exit(0)
 
+async def grade_studentnotebook():
+    connection = await asyncpg.connect(
+        host=os.getenv("POSTGRES_HOST"),
+        database=os.getenv("POSTGRES_DB"),
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD")
+    )
+
+    driver = AsyncpgDriver(connection)
+    qm = QueueManager(driver)
+
+    @qm.entrypoint("grade_notebook", executor=GradingExecutor)
+    async def grading_task(job: Job) -> None:
+        logger.info(f"Executing grading job with ID: {job.id}")
+    
+    await qm.run()
+
+# Enqueue the successful graded assignment to the database for further processing
+async def enqueue_graded(process_id) -> None:
+    # Establish a database connection; asyncpg and psycopg are supported.
+    connection = await asyncpg.connect(            
+            host=os.getenv("POSTGRES_HOST"),  # Replace with your host
+            database=os.getenv("POSTGRES_DB"),  # Replace with your database name
+            user=os.getenv("POSTGRES_USER"),  # Replace with your username
+            password=os.getenv("POSTGRES_PASSWORD")  # Replace with your password)
+    )
+    # Initialize a database driver
+    driver = AsyncpgDriver(connection)
+    # Create a QueueManager instance
+    qm = QueueManager(driver)
+    await qm.queries.enqueue(
+        ["send_email"],
+        [str(process_id).encode()],
+    )
 
 if __name__ == "__main__":
     cmd()
