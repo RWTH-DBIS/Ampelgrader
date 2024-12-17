@@ -1,24 +1,24 @@
-<!DOCTYPE html>
-<html lang="de">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>404</title>
-		<!-- Bootstrap CSS -->
-		{% load static %}
-		<link rel="stylesheet" type="text/css" href="{% static 'grader/errorstyle.css' %}">
-	</head>
+{% extends "./grader/base.html" %}
+{% load i18n %}
+{% block content %}
+        <div class="container">
+            <div class="rwth-logo d-flex justify-content-center">
+                <a href="https://dbis.rwth-aachen.de/dbis/">
+                    <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+                </a>
+            </div>
 
-    <body>
-        <div id="sql_error_container">
-            <p class="code" >student=# SELECT * FROM PAGES WHERE path="{{request_path}}";</p>
-            <p class="code" >     path | content
-            <p class="code" >     ---------------</p>
-            <p class="code" >     (0 rows)</p>
+            <div class="container-content" id="sql_error_container" style="margin-left: 300px;">
+                <p class="code" >student=# SELECT * FROM PAGES WHERE path="{{request_path}}";</p>
+                <p class="code" >     path | content
+                <p class="code" >     ---------------</p>
+                <p class="code" >     (0 rows)</p>
+                
+            </div>
             
+            <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+                <p> {% translate "Diese Seite existiert nicht!" %}</p>
+                <button onclick="location.href='/grader/request/'" class="btn btn-primary">{% translate "Zur Startseite" %}</button>
+            </div>
         </div>
-        <div id="not_found_container">
-            <p>Diese Seite existiert nicht!</p>
-        </div>
-    </body>
-</html>
+{% endblock %}
