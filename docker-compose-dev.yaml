@@ -23,6 +23,7 @@ services:
       NBBB_DEBUG: "true"
       RED_PERCENTAGE: "0.5"
       YELLOW_PERCENTAGE: "0.7"
+      REQUEST_TIME_LIMIT: "300"
       LANGUAGE_CODE: "en"
     networks:
       - nbblackbox_database

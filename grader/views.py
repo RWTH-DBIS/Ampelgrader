@@ -169,6 +169,25 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             return http.HttpResponseForbidden(
                 _("A grading was already requested by this student.")
             )
+        
+    with transaction.atomic():
+        gp_time = GradingProcess.objects.raw(
+            """
+        SELECT requested_at FROM gradingprocess WHERE email = %s LIMIT 1
+        """,
+            [user_email],
+        )
+
+        # check if the last request was less than 5 minutes ago
+        if len(list(gp_time)) > 0:
+            last_request = gp_time[0].requested_at
+            now = datetime.datetime.now()
+            time_diff = now - last_request
+            if time_diff.total_seconds() < settings.REQUEST_TIME_LIMIT:
+                return HttpResponseRedirect(
+                    "/grader/request/{}/counter".format(for_exercise)
+                )
+            
     form = NoteBookForm(request.POST, request.FILES)
     # check if the form is correct
     if form.is_valid():
@@ -192,6 +211,44 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     else:
         return http.HttpResponseBadRequest("Invalid form")
 
+def counter(request: http.HttpRequest, for_exercise: str):
+    translation.activate(settings.LANGUAGE_CODE)
+
+    if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
+        return http.HttpResponseRedirect("../login")
+    try:
+        ex = Exercise.objects.get(identifier=for_exercise)
+    except ObjectDoesNotExist:
+        return http.HttpResponseNotFound("Exercise not found")
+    if not ex.running():
+        return render(request, "grader/grading_unavailable.html")
+    
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
+    with transaction.atomic():
+        gp_time = GradingProcess.objects.raw(
+            """
+        SELECT requested_at FROM gradingprocess WHERE email = %s LIMIT 1
+        """,
+            [user_email],
+        )
+
+    target_time = gp_time[0].requested_at + datetime.timedelta(seconds=settings.REQUEST_TIME_LIMIT)
+    remaining_time = target_time - datetime.datetime.now()
+    if remaining_time.total_seconds() <= 0:
+        return HttpResponseRedirect("/grader/request/{}".format(for_exercise))
+    
+    hours = remaining_time.seconds // 3600
+    minutes = (remaining_time.seconds // 60) % 60
+    seconds = remaining_time.seconds % 60
+
+    data = {
+        "hours": hours,
+        "minutes": minutes,
+        "seconds": seconds,
+    }
+
+    return render(request, "grader/counter.html", {"data": data, "for_exercise": for_exercise})
 
 def successful_request(request: http.HttpRequest):
     translation.activate(settings.LANGUAGE_CODE)

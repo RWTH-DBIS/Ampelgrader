@@ -1,0 +1,60 @@
+<!--	This shows the student all available exercise. 
+It should be communicated to students which 
+exercises are not currently activated for grading,
+e.g. through deactivated links          		-->
+{% extends "./base.html" %}
+{% load i18n %}
+{% block content %}
+
+    <div class="container">
+        <div class="rwth-logo d-flex justify-content-center">
+            <a href="https://dbis.rwth-aachen.de/dbis/">
+                <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+            </a>
+        </div>
+
+        <div class="container-content">
+            {% load static %}
+            <h2>{% translate "Countdown für Aufgabe" %} {{ for_exercise }}</h2>
+            <div id="counter">
+                {{ data.hours|stringformat:"02d" }} : {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
+            </div>
+         
+            <script>
+                // Function to update the countdown timer
+                function updateTimer() {
+                    var hours = parseInt(document.getElementById('countdown').textContent.split(':')[0]);
+                    var minutes = parseInt(document.getElementById('countdown').textContent.split(':')[1]);
+                    var seconds = parseInt(document.getElementById('countdown').textContent.split(':')[2]);
+         
+                    if (seconds > 0) {
+                        seconds--;
+                    } else {
+                        if (minutes > 0) {
+                            minutes--;
+                            seconds = 59;
+                        } else {
+                            if (hours > 0) {
+                                hours--;
+                                minutes = 59;
+                                seconds = 59;
+                            } else {
+                                // Timer has reached zero, you can handle this case as needed
+                            }
+                        }
+                    }
+         
+                    // Update the timer display
+                    document.getElementById('countdown').textContent =
+                        (hours < 10 ? '0' : '') + hours + ' : ' +
+                        (minutes < 10 ? '0' : '') + minutes + ' : ' +
+                        (seconds < 10 ? '0' : '') + seconds;
+                }
+         
+                // Update the timer every second
+                setInterval(updateTimer, 1000);
+            </script>
+        </div>
+    </div>
+
+{% endblock %}

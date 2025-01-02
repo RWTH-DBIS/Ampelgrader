@@ -114,7 +114,17 @@ body {
   #autocreation
 \*------------------------------------*/
 
-
+/*------------------------------------*\
+  #counter
+\*------------------------------------*/
+.counter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2em;
+    font-weight: 600;
+    margin: 1em;
+}
 
 /*------------------------------------*\
   #exercise_overview
