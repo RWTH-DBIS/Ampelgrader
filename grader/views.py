@@ -5,6 +5,7 @@ import re
 import os
 
 from collections import defaultdict
+from datetime import timedelta
 
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -13,6 +14,7 @@ from django.db import transaction, connection
 from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
+from django.utils import timezone
 
 from grader.models import *
 
@@ -173,17 +175,16 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     with transaction.atomic():
         gp_time = GradingProcess.objects.raw(
             """
-        SELECT requested_at FROM gradingprocess WHERE email = %s LIMIT 1
+        SELECT identifier, requested_at FROM gradingprocess WHERE email = %s ORDER BY requested_at DESC LIMIT 1
         """,
             [user_email],
         )
 
         # check if the last request was less than 5 minutes ago
         if len(list(gp_time)) > 0:
-            last_request = gp_time[0].requested_at
-            now = datetime.datetime.now()
-            time_diff = now - last_request
-            if time_diff.total_seconds() < settings.REQUEST_TIME_LIMIT:
+            target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
+            remaining_time = target_time - timezone.now()
+            if remaining_time.total_seconds() > 0:
                 return HttpResponseRedirect(
                     "/grader/request/{}/counter".format(for_exercise)
                 )
@@ -228,13 +229,13 @@ def counter(request: http.HttpRequest, for_exercise: str):
     with transaction.atomic():
         gp_time = GradingProcess.objects.raw(
             """
-        SELECT requested_at FROM gradingprocess WHERE email = %s LIMIT 1
+        SELECT identifier, requested_at FROM gradingprocess WHERE email = %s ORDER BY requested_at DESC LIMIT 1
         """,
             [user_email],
         )
 
-    target_time = gp_time[0].requested_at + datetime.timedelta(seconds=settings.REQUEST_TIME_LIMIT)
-    remaining_time = target_time - datetime.datetime.now()
+    target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
+    remaining_time = target_time - timezone.now()
     if remaining_time.total_seconds() <= 0:
         return HttpResponseRedirect("/grader/request/{}".format(for_exercise))
     
