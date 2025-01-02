@@ -236,6 +236,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
 
     target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
     remaining_time = target_time - timezone.now()
+    
     if remaining_time.total_seconds() <= 0:
         return HttpResponseRedirect("/grader/request/{}".format(for_exercise))
     

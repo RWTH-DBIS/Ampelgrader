@@ -32,6 +32,9 @@ e.g. through deactivated links          		-->
                 .then(response => response.text())
                 .then(html => {
                     document.body.innerHTML = html;
+                    if (document.querySelector('.counter').innerText === '00 : 00 : 00') {
+                        window.location.href = "/grader/request/{}".format(for_exercise);
+                    }
                 });
         }
 
