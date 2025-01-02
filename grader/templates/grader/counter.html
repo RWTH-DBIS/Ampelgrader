@@ -16,45 +16,25 @@ e.g. through deactivated links          		-->
         <div class="container-content">
             {% load static %}
             <h2>{% translate "Countdown für Aufgabe" %} {{ for_exercise }}</h2>
-            <div id="counter">
+
+            <div class="counter">
                 {{ data.hours|stringformat:"02d" }} : {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
             </div>
          
-            <script>
-                // Function to update the countdown timer
-                function updateTimer() {
-                    var hours = parseInt(document.getElementById('countdown').textContent.split(':')[0]);
-                    var minutes = parseInt(document.getElementById('countdown').textContent.split(':')[1]);
-                    var seconds = parseInt(document.getElementById('countdown').textContent.split(':')[2]);
-         
-                    if (seconds > 0) {
-                        seconds--;
-                    } else {
-                        if (minutes > 0) {
-                            minutes--;
-                            seconds = 59;
-                        } else {
-                            if (hours > 0) {
-                                hours--;
-                                minutes = 59;
-                                seconds = 59;
-                            } else {
-                                // Timer has reached zero, you can handle this case as needed
-                            }
-                        }
-                    }
-         
-                    // Update the timer display
-                    document.getElementById('countdown').textContent =
-                        (hours < 10 ? '0' : '') + hours + ' : ' +
-                        (minutes < 10 ? '0' : '') + minutes + ' : ' +
-                        (seconds < 10 ? '0' : '') + seconds;
-                }
-         
-                // Update the timer every second
-                setInterval(updateTimer, 1000);
-            </script>
+            <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+                <button onclick="location.href='/grader/request/'" class="btn btn-primary">{% translate "Zurück" %}</button>
+            </div>
         </div>
     </div>
+    <script>
+        function updateCountdown() {
+            fetch(window.location.pathname)
+                .then(response => response.text())
+                .then(html => {
+                    document.body.innerHTML = html;
+                });
+        }
 
+        setInterval(updateCountdown, 1000);
+    </script>
 {% endblock %}
