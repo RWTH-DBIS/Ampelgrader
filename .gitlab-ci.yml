@@ -52,8 +52,6 @@ publish_images:
 
 trigger_job:
   stage: deploy
-  tags: 
-    - did
   needs: ["publish_images"]
   trigger:
     include:
