@@ -50,3 +50,12 @@ publish_images:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+trigger_job:
+  trigger:
+    include:
+      - project: './Teaching/Ampel-Grader/nbgrader-dev-deploment'
+        ref: 'main'
+        file: '.gitlab-ci.yml'
+
+  
+  
