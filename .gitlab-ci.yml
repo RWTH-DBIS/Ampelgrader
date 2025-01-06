@@ -51,9 +51,13 @@ publish_images:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 trigger_job:
+  stage: deploy
+  tags: 
+    - did
+  needs: ["publish_images"]
   trigger:
     include:
-      - project: './Teaching/Ampel-Grader/nbgrader-dev-deploment'
+      - project: 'DBIS/Teaching/Ampel-Grader/nbgrader-dev-deploment'
         ref: 'main'
         file: '.gitlab-ci.yml'
 
