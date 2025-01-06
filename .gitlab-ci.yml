@@ -54,4 +54,4 @@ trigger_pipeline:
   needs: ["build_image_main", "build_image_worker"]
   script:
     - echo "Triggering job"
-    - "curl -X POST --fail -F token=$TRIGGER_TOKEN -F ref=main https://git.rwth-aachen.de/api/v4/projects/107517/trigger/pipeline"
+    - curl -X POST --fail -F token=$TRIGGER_TOKEN -F ref=main https://git.rwth-aachen.de/api/v4/projects/107517/trigger/pipeline
