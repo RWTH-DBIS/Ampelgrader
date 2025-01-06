@@ -51,7 +51,7 @@ publish_images:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 trigger_job:
-  needs: ["publish_images"]
+  needs: ["build_image_main", "build_image_worker"]
   trigger:
     include:
       - project: 'DBIS/Teaching/Ampel-Grader/nbgrader-dev-deploment'
