@@ -54,5 +54,3 @@ trigger_job:
   needs: ["build_image_main", "build_image_worker"]
   trigger:
     project: 'DBIS/Teaching/Ampel-Grader/nbgrader-dev-deploment'
-    ref: 'main'
-    file: '.gitlab-ci.yml'
