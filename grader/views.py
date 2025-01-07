@@ -175,7 +175,9 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     with transaction.atomic():
         gp_time = GradingProcess.objects.raw(
             """
-        SELECT identifier, requested_at FROM gradingprocess WHERE email = %s ORDER BY requested_at DESC LIMIT 1
+        SELECT identifier, requested_at FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM errorlog) 
+        AND email = %s ORDER BY requested_at DESC LIMIT 1
         """,
             [user_email],
         )
@@ -229,7 +231,9 @@ def counter(request: http.HttpRequest, for_exercise: str):
     with transaction.atomic():
         gp_time = GradingProcess.objects.raw(
             """
-        SELECT identifier, requested_at FROM gradingprocess WHERE email = %s ORDER BY requested_at DESC LIMIT 1
+        SELECT identifier, requested_at FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM errorlog) 
+        AND email = %s ORDER BY requested_at DESC LIMIT 1
         """,
             [user_email],
         )
