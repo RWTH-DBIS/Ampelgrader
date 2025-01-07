@@ -50,8 +50,9 @@ publish_images:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-trigger_pipeline:
+trigger_job:
   needs: ["build_image_main", "build_image_worker"]
-  script:
-    - echo "Triggering job"
-    - curl -X POST --fail -F token=$TRIGGER_TOKEN -F ref=main https://git.rwth-aachen.de/api/v4/projects/107517/trigger/pipeline
+  trigger:
+    project: 'DBIS/Teaching/Ampel-Grader/nbgrader-dev-deploment'
+    ref: 'main'
+    file: '.gitlab-ci.yml'
