@@ -50,7 +50,10 @@ publish_images:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-trigger_job:
+trigger_pipeline:
+  image: alpine:3.12
   needs: ["build_image_main", "build_image_worker"]
-  trigger:
-    project: 'i5/Teaching/Ampel-Grader/nbgrader-dev-deployment'
+  script:
+    - apk add --no-cache curl
+    - echo "Triggering job"
+    - "curl -X POST --fail -F token=$TRIGGER_TOKEN -F ref=main https://git.rwth-aachen.de/api/v4/projects/107517/trigger/pipeline"
