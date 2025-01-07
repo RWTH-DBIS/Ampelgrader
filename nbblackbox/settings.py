@@ -32,7 +32,7 @@ if not DEBUG:
 ALLOWED_HOSTS = os.getenv("NBBB_ALLOWED_HOSTS", "127.0.0.1,0.0.0.0").split(",")
 if DEBUG:
     print("-------YOU ARE RUNNING IN DEBUG MODE-------")
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ['*']
 
 LOGGING = {
     "version": 1,
