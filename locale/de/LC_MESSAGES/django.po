@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-17 17:16+0100\n"
+"POT-Creation-Date: 2025-01-14 13:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1274,6 +1274,28 @@ msgstr ""
 msgid "Letzte Einreichung"
 msgstr ""
 
+#: grader/templates/grader/counter.html:18
+msgid "Countdown für Aufgabe"
+msgstr ""
+
+#: grader/templates/grader/counter.html:26
+msgid "Um Überlastung zu vermeiden, ist eine Abgabe nur alle"
+msgstr ""
+
+#: grader/templates/grader/counter.html:27
+msgid ""
+"Minuten möglich. Bitte warten Sie mit der nächsten Abgabe, bis der Countdown "
+"abgelaufen ist."
+msgstr ""
+
+#: grader/templates/grader/counter.html:29
+#: grader/templates/grader/grading_error.html:17
+#: grader/templates/grader/grading_unavailable.html:18
+#: grader/templates/grader/result.html:28
+#: grader/templates/grader/successful_request.html:21
+msgid "Zurück"
+msgstr ""
+
 #: grader/templates/grader/exercise_overview.html:18
 msgid "Übungen"
 msgstr ""
@@ -1301,13 +1323,6 @@ msgstr ""
 msgid ""
 "Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche es "
 "nochmal."
-msgstr ""
-
-#: grader/templates/grader/grading_error.html:17
-#: grader/templates/grader/grading_unavailable.html:18
-#: grader/templates/grader/result.html:28
-#: grader/templates/grader/successful_request.html:21
-msgid "Zurück"
 msgstr ""
 
 #: grader/templates/grader/grading_processing.html:13
@@ -1374,14 +1389,14 @@ msgstr ""
 msgid "Sie werden von uns hören. Ihre Prozess-ID lautet: "
 msgstr ""
 
-#: grader/views.py:170
+#: grader/views.py:172
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:227
+#: grader/views.py:291
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:252
+#: grader/views.py:316
 msgid "Given dict has invalid format. Key error: "
 msgstr ""

@@ -239,6 +239,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
         )
 
     target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
+    time_limit_minutes = settings.REQUEST_TIME_LIMIT // 60
     remaining_time = target_time - timezone.now()
     
     if remaining_time.total_seconds() <= 0:
@@ -254,7 +255,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
         "seconds": seconds,
     }
 
-    return render(request, "grader/counter.html", {"data": data, "for_exercise": for_exercise})
+    return render(request, "grader/counter.html", {"data": data, "for_exercise": for_exercise, "minutes": time_limit_minutes})
 
 def successful_request(request: http.HttpRequest):
     translation.activate(settings.LANGUAGE_CODE)

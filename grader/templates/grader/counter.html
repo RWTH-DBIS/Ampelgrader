@@ -20,8 +20,12 @@ e.g. through deactivated links          		-->
             <div class="counter">
                 {{ data.hours|stringformat:"02d" }} : {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
             </div>
-         
+
             <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+                <!-- TODO: Block translate this and add minutes -->
+                <p> {% translate "Um Überlastung zu vermeiden, ist eine Abgabe nur alle" %} {{ minutes }} 
+                    {% translate "Minuten möglich. Bitte warten Sie mit der nächsten Abgabe, bis der Countdown abgelaufen ist." %}
+                </p>
                 <button onclick="location.href='/grader/request/'" class="btn btn-primary">{% translate "Zurück" %}</button>
             </div>
         </div>
