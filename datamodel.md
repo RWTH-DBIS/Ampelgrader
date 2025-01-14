@@ -11,9 +11,11 @@ erDiagram
         date start_date
         date stop_date
     }
+
     Notebook {
         string filename PK
         string in_exercise FK
+        BLOB data
     }
     
     SubExercise {
