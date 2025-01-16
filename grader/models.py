@@ -72,6 +72,7 @@ class Notebook(models.Model):
     in_exercise = models.OneToOneField(
         Exercise, on_delete=models.CASCADE, db_column="in_exercise"
     )
+    data = models.BinaryField(db_column="data")
 
     class Meta:
         db_table = "notebook"
