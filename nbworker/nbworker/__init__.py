@@ -122,7 +122,7 @@ class GradingExecutor(JobExecutor):
             qm = QueueManager(driver)
 
             try: 
-                logger.info("Fetching notebook")
+                logger.info("Fetching student notebook")
                 s_notebook = await connection.fetchrow("""
                     SELECT * FROM
                     studentnotebook WHERE process = $1; 
@@ -155,7 +155,7 @@ class GradingExecutor(JobExecutor):
                 if grading_process is None:
                     logger.info(f"Process with ID {process_id} not found.")
                     return
-            
+
             try:
                 result = grade(
                     {notebook_filename: notebook_data},
@@ -213,6 +213,71 @@ class GradingExecutor(JobExecutor):
         finally:
             await connection.close()
             logger.info("Connection closed")
+
+class NotebookExecutor(JobExecutor):
+    def __init__(
+        self,
+        func,
+        requests_per_second: float = 2.0,
+        retry_timer: timedelta = timedelta(seconds=30),
+        serialized_dispatch: bool = True,
+        concurrency_limit: int = 5,
+    ):
+        super().__init__(func, requests_per_second, retry_timer, serialized_dispatch, concurrency_limit)
+
+    async def execute(self, job: Job) -> None:
+                
+        # Extract notification type and message from job data
+        notebook_name = job.payload.decode()
+
+        await self.update_notebook(notebook_name)
+
+    async def update_notebook(self, notebook_name) -> None:
+        try:
+            connection = await asyncpg.connect(
+                host=os.getenv("POSTGRES_HOST"),
+                database=os.getenv("POSTGRES_DB"),
+                user=os.getenv("POSTGRES_USER"),
+                password=os.getenv("POSTGRES_PASSWORD")
+            )
+
+            try:
+                # Retreive notebook from the database
+                notebook = await connection.fetchrow("""
+                    SELECT * FROM notebook WHERE filename = $1;
+                    """,
+                    notebook_name
+                )
+
+                folder_name = notebook_name.split(".")[0]
+
+                # Store notebook into course directory
+                SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+                    API.coursedir.source_directory
+                )
+
+                # create directory if not exist
+                if not os.path.exists(f"{SOURCE_PATH}/{folder_name}"):
+                    os.makedirs(f"{SOURCE_PATH}/{folder_name}")
+                    logger.info(f"Directory {SOURCE_PATH}/{folder_name} created")
+
+                with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
+                    f.write(notebook['data'])
+                    logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
+                
+                # generate the assignment
+                API.generate_assignment(folder_name)
+
+            except Exception as e:
+                logger.error("Error while checking if assignment exists:" + str(e))
+        except Exception as e:
+        # to error handling?
+            logger.info("Error while updating notebook:" + str(e))
+        else:
+            logger.info(f"Notebook {notebook_name} has been updated.")
+        finally:
+            await connection.close()
+            logger.info("Connection closed")
     
 def grade(
     notebook: typing.Dict[str, bytes], assignment: str, id: str
@@ -232,6 +297,7 @@ def grade(
         logger.error(
             f"Grading for Assignment {assignment} was requested but assignment was not found!"
         )
+
         raise RuntimeError("Assignment does not exist!")
 
     # dump the notebook
@@ -296,7 +362,11 @@ def cmd():
         except SystemExit:
             os._exit(0)
 
+# https://pgqueuer.readthedocs.io/en/latest/ for the QueueManager
 async def grade_studentnotebook():
+    """
+    Main function to grade the student notebook and update new notebooks.
+    """
     connection = await asyncpg.connect(
         host=os.getenv("POSTGRES_HOST"),
         database=os.getenv("POSTGRES_DB"),
@@ -310,8 +380,11 @@ async def grade_studentnotebook():
     @qm.entrypoint("grade_notebook", executor=GradingExecutor)
     async def grading_task(job: Job) -> None:
         logger.info(f"Executing grading job with ID: {job.id}")
-    
-    await qm.run()
+
+    @qm.entrypoint("update_notebook", executor=NotebookExecutor)
+    async def update_task(job: Job) -> None:
+        logger.info(f"Executing update job with ID: {job.id}")
+    await qm.run()    
 
 # Enqueue the successful graded assignment to the database for further processing
 async def enqueue_graded(process_id) -> None:

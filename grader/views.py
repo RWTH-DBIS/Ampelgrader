@@ -345,7 +345,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                 stop_date=form.cleaned_data["stop_date"],
             )
             ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex)
+            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data)
             nb.save()
             for subexercise_ident in subexercise_dict.keys():
                 sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
@@ -357,6 +357,9 @@ def autoprocess_notebook(request: http.HttpRequest):
                         max_score=subexercise_dict[subexercise_ident][cell_id],
                     )
                     cell.save()
+
+        # trigger nbgrader to update notebook and generate assignments
+        asyncio.run(enqueue_notebook_update(notebook_file_name))
 
         # transform the result into a structure easier to use in django template engine:
         # you cannot straigthforward use variables content as keys to access a dictionary
@@ -396,4 +399,23 @@ async def enqueue_grading_request(process_id) -> None:
     await qm.queries.enqueue(
         ["grade_notebook"],
         [str(process_id).encode()],
+    )
+
+async def enqueue_notebook_update(filename) -> None:
+    # Establish a database connection; asyncpg and psycopg are supported.
+    connection = await asyncpg.connect(            
+            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
+            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
+            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
+            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
+    )
+
+    # Initialize a database driver
+    driver = AsyncpgDriver(connection)
+    # Create a QueueManager instance
+    qm = QueueManager(driver)
+
+    await qm.queries.enqueue(
+        ["update_notebook"],
+        [str(filename).encode()],
     )
