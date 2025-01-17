@@ -9,7 +9,6 @@ from datetime import datetime
 Models an assignment
 """
 
-
 class Exercise(models.Model):
     identifier = models.CharField(
         max_length=255, primary_key=True, db_column="identifier"
@@ -18,6 +17,10 @@ class Exercise(models.Model):
         "Starting date exercise grading", db_column="start_date"
     )
     stop_date = models.DateTimeField("End date exercise grading", db_column="stop_date")
+
+    last_updated = models.DateTimeField("Exercise last updated", db_column="last_updated", auto_now=True)
+
+    released = models.BooleanField("Generated and released by nbgrader", db_column="released", default=False)
 
     def __str__(self):
         return f"ID: {self.identifier}. Correction from {self.start_date} to {self.stop_date}."

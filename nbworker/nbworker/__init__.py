@@ -265,8 +265,22 @@ class NotebookExecutor(JobExecutor):
                     f.write(notebook['data'])
                     logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
                 
-                # generate the assignment
-                API.generate_assignment(folder_name)
+                try:
+                    # generate the assignment 
+                    # (store notebook in src dir to release and stripping all output cells)
+                    # https://nbgrader.readthedocs.io/en/stable/user_guide/what_is_nbgrader.html#nbgrader-generate-assignment
+                    API.generate_assignment(folder_name)
+                except:
+                    logger.error(f"Error while generating assignment {folder_name}")
+                else:
+                    logger.info(f"Assignment {folder_name} generated")
+
+                    # update the database, set released to True
+                    await connection.execute("""
+                            UPDATE exercise SET released = TRUE WHERE identifier = $1;
+                        """,
+                        folder_name
+                    )
 
             except Exception as e:
                 logger.error("Error while checking if assignment exists:" + str(e))
@@ -344,7 +358,7 @@ def cmd():
     PATH = pathlib.Path(COURSE_DIRECTORY) / "submitted" / DUMMY_STUDENT_ID
     PATH.mkdir(parents=True, exist_ok=True)
     # nbgrader will not work if the assignments are not in the database
-    # it seems to be necessary to generate the assignments, so that nbgrade is correctly initialised
+    # it seems to be necessary to generate the assignments, so that nbgrader is correctly initialised
     # therefore we do that for every assignment present
     SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
         API.coursedir.source_directory

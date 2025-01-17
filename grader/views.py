@@ -343,6 +343,8 @@ def autoprocess_notebook(request: http.HttpRequest):
                 exercise_identifier,
                 start_date=form.cleaned_data["start_date"],
                 stop_date=form.cleaned_data["stop_date"],
+                last_updated=datetime.now(),
+                released=False,
             )
             ex.save()
             nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data)
