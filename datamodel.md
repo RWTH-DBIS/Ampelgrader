@@ -10,6 +10,8 @@ erDiagram
         string identifier PK
         date start_date
         date stop_date
+        date last_updated
+        boolean released
     }
 
     Notebook {
