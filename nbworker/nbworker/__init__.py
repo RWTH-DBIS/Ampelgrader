@@ -157,7 +157,7 @@ class GradingExecutor(JobExecutor):
                     return
 
             try:
-                result = grade(
+                result = await grade(
                     {notebook_filename: notebook_data},
                     grading_process["for_exercise"],
                     process_id,
@@ -272,14 +272,17 @@ class NotebookExecutor(JobExecutor):
                     API.generate_assignment(folder_name)
                 except:
                     logger.error(f"Error while generating assignment {folder_name}")
+                    raise RuntimeError(f"Error while generating assignment {folder_name}")
                 else:
                     logger.info(f"Assignment {folder_name} generated")
 
-                    # update the database, set released to True
+                    date_now = datetime.datetime.now()
+
+                    # update last_updated field in exercise table
                     await connection.execute("""
-                            UPDATE exercise SET released = TRUE WHERE identifier = $1;
+                            UPDATE exercise SET last_updated = $1 WHERE identifier = $2;
                         """,
-                        folder_name
+                        date_now, folder_name
                     )
 
             except Exception as e:
@@ -293,7 +296,7 @@ class NotebookExecutor(JobExecutor):
             await connection.close()
             logger.info("Connection closed")
     
-def grade(
+async def grade(
     notebook: typing.Dict[str, bytes], assignment: str, id: str
 ) -> typing.Dict[str, str]:
     """
@@ -302,17 +305,7 @@ def grade(
     """
     logging.info("Received assignment to grade")
 
-    # Delete any old submission present
-    # ...do we just delete the file in the submitted folder or do we access the notebook via Gradebook?
-    # also check if the assignment exist
-    # overwrite released so there is no database request whether the release of the assignment was generated
-    if API.get_assignment(assignment, released=[assignment]) is None:
-        # seems to return None if assignment does not exist: https://nbgrader.readthedocs.io/en/stable/_modules/nbgrader/apps/api.html#NbGraderAPI.get_assignment
-        logger.error(
-            f"Grading for Assignment {assignment} was requested but assignment was not found!"
-        )
-
-        raise RuntimeError("Assignment does not exist!")
+    await check_assignment(assignment)
 
     # dump the notebook
     dump_notebook(notebook, assignment)
@@ -417,6 +410,76 @@ async def enqueue_graded(process_id) -> None:
         ["send_email"],
         [str(process_id).encode()],
     )
+
+async def check_assignment(assignment: str) -> None:
+    try:
+        connection = await asyncpg.connect(
+            host=os.getenv("POSTGRES_HOST"),
+            database=os.getenv("POSTGRES_DB"),
+            user=os.getenv("POSTGRES_USER"),
+            password=os.getenv("POSTGRES_PASSWORD")
+    )
+        # check if the assignment exists
+        if API.get_assignment(assignment, released=[assignment]) is None:
+            # seems to return None if assignment does not exist: https://nbgrader.readthedocs.io/en/stable/_modules/nbgrader/apps/api.html#NbGraderAPI.get_assignment
+            logger.error(
+                f"Grading for Assignment {assignment} was requested but assignment was not found!"
+            )
+
+            # check if there is a notebook for the assignment in the database
+            notebook = await connection.fetchrow("""
+                    SELECT * FROM notebook WHERE in_exercise=$1;
+                """,
+                assignment
+            )
+
+            if notebook is None:
+                logger.error(
+                    f"Notebook for assignment {assignment} was not found in the database!"
+                )
+                raise RuntimeError('Assignment for grading not found')
+            else:
+                NotebookExecutor.update_notebook(notebook['filename'])
+                logger.info(f"Notebook for assignment {assignment} updated") 
+
+        else:
+            # check if it is the newest assignment version and if not, generate the assignment
+            try:
+
+                last_exercise_v = await connection.fetchrow("""
+                    SELECT last_updated FROM exercise WHERE identifier = $1;
+                    """,
+                    assignment
+                )
+
+                last_notebook_v = await connection.fetchrow("""
+                    SELECT uploaded_at FROM notebook WHERE in_exercise = $1 ORDER BY uploaded_at DESC LIMIT 1;
+                    """,
+                    assignment
+                )
+
+                if last_notebook_v['uploaded_at'] > last_exercise_v['last_updated'] :
+                    logger.info(f"Last exercise version: {last_notebook_v['uploaded_at']} is newer than last notebook version: {last_exercise_v['last_updated']}")
+                    NotebookExecutor.update_notebook(assignment)
+                    logger.info(f"Notebook for assignment {assignment} updated")
+                else: 
+                    logger.info(f"Notebook for assignment {assignment} is the newest version")
+
+            except:
+                logger.error(f"Error while checking if assignment exists")
+                raise RuntimeError('Error while checking if assignment exists')
+            
+    except Exception as e:
+        logger.error(f"Error while checking notebook version: {str(e)}")
+        raise RuntimeError('Error while checking notebook version')
+    else:
+        logger.info(f"Notebook is the newest version")
+    finally:
+        await connection.close()
+        logger.info("Connection closed")
+    
+    return
+
 
 if __name__ == "__main__":
     cmd()

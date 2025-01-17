@@ -20,8 +20,6 @@ class Exercise(models.Model):
 
     last_updated = models.DateTimeField("Exercise last updated", db_column="last_updated", auto_now=True)
 
-    released = models.BooleanField("Generated and released by nbgrader", db_column="released", default=False)
-
     def __str__(self):
         return f"ID: {self.identifier}. Correction from {self.start_date} to {self.stop_date}."
 
@@ -76,6 +74,7 @@ class Notebook(models.Model):
         Exercise, on_delete=models.CASCADE, db_column="in_exercise"
     )
     data = models.BinaryField(db_column="data")
+    uploaded_at = models.DateTimeField(db_column="uploaded_at", auto_now=True)
 
     class Meta:
         db_table = "notebook"

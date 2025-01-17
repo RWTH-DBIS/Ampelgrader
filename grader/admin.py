@@ -37,7 +37,7 @@ class NotebookAdmin(admin.StackedInline):
 class ExerciseAdmin(admin.ModelAdmin):
     model = Exercise
     inlines = [NotebookAdmin]
-    list_display = ["identifier", "start_date", "stop_date", "running", "last_updated", "released"]
+    list_display = ["identifier", "start_date", "stop_date", "running", "last_updated"]
 
 
 class ProcessAdmin(admin.ModelAdmin):

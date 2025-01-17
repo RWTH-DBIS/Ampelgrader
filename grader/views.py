@@ -96,7 +96,6 @@ def show_results(request: http.HttpRequest, for_process: str):
     return render(request, "grader/result.html", {"result": result, "red": red, "yellow": yellow})
 
 
-
 """
 Grading Request handling
 """
@@ -344,10 +343,9 @@ def autoprocess_notebook(request: http.HttpRequest):
                 start_date=form.cleaned_data["start_date"],
                 stop_date=form.cleaned_data["stop_date"],
                 last_updated=datetime.now(),
-                released=False,
             )
             ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data)
+            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, uploaded_at=datetime.now())
             nb.save()
             for subexercise_ident in subexercise_dict.keys():
                 sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
