@@ -65,7 +65,7 @@ publish_images:
 #   rules:
 #     - if: $CI_COMMIT_BRANCH == "main"
 
-trigger_pipeline_dev:
+trigger_pipeline:
   image: alpine:latest
   needs: ["build_image_main", "build_image_worker"]
   script:
@@ -79,16 +79,16 @@ trigger_pipeline_dev:
   rules:
     - if: $CI_COMMIT_BRANCH == "develop"
 
-trigger_pipeline_dbis:
-  image: alpine:latest
-  needs: ["build_image_main", "build_image_worker"]
-  script:
-    - apk add --no-cache curl
-    - echo "Triggering feature project pipeline"
-    - curl -X POST --fail -F token=$TRIGGER_TOKEN_DBIS -F ref=main https://git.rwth-aachen.de/api/v4/projects/106538/trigger/pipeline
-  services: []
-  before_script: []
-  variables: 
-    TRIGGER_TOKEN_DBIS: $TRIGGER_TOKEN_DBIS
-  rules:
-    - if: $CI_COMMIT_BRANCH == "dbis"
+# trigger_pipeline_dbis:
+#   image: alpine:latest
+#   needs: ["build_image_main", "build_image_worker"]
+#   script:
+#     - apk add --no-cache curl
+#     - echo "Triggering feature project pipeline"
+#     - curl -X POST --fail -F token=$TRIGGER_TOKEN_DBIS -F ref=main https://git.rwth-aachen.de/api/v4/projects/106538/trigger/pipeline
+#   services: []
+#   before_script: []
+#   variables: 
+#     TRIGGER_TOKEN_DBIS: $TRIGGER_TOKEN_DBIS
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == "dbis"
