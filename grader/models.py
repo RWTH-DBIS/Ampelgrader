@@ -9,7 +9,6 @@ from datetime import datetime
 Models an assignment
 """
 
-
 class Exercise(models.Model):
     identifier = models.CharField(
         max_length=255, primary_key=True, db_column="identifier"
@@ -18,6 +17,8 @@ class Exercise(models.Model):
         "Starting date exercise grading", db_column="start_date"
     )
     stop_date = models.DateTimeField("End date exercise grading", db_column="stop_date")
+
+    last_updated = models.DateTimeField("Exercise last updated", db_column="last_updated", auto_now=True)
 
     def __str__(self):
         return f"ID: {self.identifier}. Correction from {self.start_date} to {self.stop_date}."
@@ -72,6 +73,8 @@ class Notebook(models.Model):
     in_exercise = models.OneToOneField(
         Exercise, on_delete=models.CASCADE, db_column="in_exercise"
     )
+    data = models.BinaryField(db_column="data")
+    uploaded_at = models.DateTimeField(db_column="uploaded_at", auto_now=True)
 
     class Meta:
         db_table = "notebook"

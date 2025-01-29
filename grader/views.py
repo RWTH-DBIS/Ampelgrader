@@ -5,6 +5,7 @@ import re
 import os
 
 from collections import defaultdict
+from datetime import timedelta
 
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
@@ -13,6 +14,7 @@ from django.db import transaction, connection
 from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
+from django.utils import timezone
 
 from grader.models import *
 
@@ -94,7 +96,6 @@ def show_results(request: http.HttpRequest, for_process: str):
     return render(request, "grader/result.html", {"result": result, "red": red, "yellow": yellow})
 
 
-
 """
 Grading Request handling
 """
@@ -121,7 +122,7 @@ def show_exercises(request):
             """
         SELECT identifier, email FROM gradingprocess WHERE 
         identifier NOT IN (SELECT process FROM errorlog)
-        AND email = %s LIMIT 1
+        AND email = %s ORDER BY requested_at DESC LIMIT 1
         """,
             [user_email],
         )
@@ -143,16 +144,30 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             #return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
+    
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
     if request.method == "GET":
+        # check if user has already a submission running
+        with transaction.atomic():
+            gp = GradingProcess.objects.raw(
+                """
+            SELECT identifier, email FROM gradingprocess WHERE 
+            identifier NOT IN (SELECT process FROM errorlog)
+            AND email = %s ORDER BY requested_at DESC LIMIT 1
+            """,
+                [user_email],
+            )
+
+        id = gp[0].identifier if len(list(gp)) > 0 else None
+
         return render(
             request,
             "grader/request.html",
-            {"form": NoteBookForm(), "for_exercise": for_exercise},
+            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id},
         )
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
-
-    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
     # check if user has already a submission running
     with transaction.atomic():
@@ -169,6 +184,26 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             return http.HttpResponseForbidden(
                 _("A grading was already requested by this student.")
             )
+        
+    with transaction.atomic():
+        gp_time = GradingProcess.objects.raw(
+            """
+        SELECT identifier, requested_at FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM errorlog) 
+        AND email = %s AND for_exercise = %s ORDER BY requested_at DESC LIMIT 1
+        """,
+            [user_email, for_exercise],
+        )
+
+        # check if the last request was less than 5 minutes ago
+        if len(list(gp_time)) > 0:
+            target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
+            remaining_time = target_time - timezone.now()
+            if remaining_time.total_seconds() > 1:
+                return HttpResponseRedirect(
+                    "/grader/request/{}/counter".format(for_exercise)
+                )
+            
     form = NoteBookForm(request.POST, request.FILES)
     # check if the form is correct
     if form.is_valid():
@@ -192,6 +227,48 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     else:
         return http.HttpResponseBadRequest("Invalid form")
 
+def counter(request: http.HttpRequest, for_exercise: str):
+    translation.activate(settings.LANGUAGE_CODE)
+
+    if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
+        return http.HttpResponseRedirect("../login")
+    try:
+        ex = Exercise.objects.get(identifier=for_exercise)
+    except ObjectDoesNotExist:
+        return http.HttpResponseNotFound("Exercise not found")
+    if not ex.running():
+        return render(request, "grader/grading_unavailable.html")
+    
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
+    with transaction.atomic():
+        gp_time = GradingProcess.objects.raw(
+            """
+        SELECT identifier, requested_at FROM gradingprocess WHERE 
+        identifier NOT IN (SELECT process FROM errorlog) 
+        AND email = %s AND for_exercise = %s ORDER BY requested_at DESC LIMIT 1
+        """,
+            [user_email, for_exercise],
+        )
+
+    target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
+    time_limit_minutes = settings.REQUEST_TIME_LIMIT // 60
+    remaining_time = target_time - timezone.now()
+    
+    if remaining_time.total_seconds() <= 0:
+        return HttpResponseRedirect("/grader/request/{}".format(for_exercise))
+    
+    hours = remaining_time.seconds // 3600
+    minutes = (remaining_time.seconds // 60) % 60
+    seconds = remaining_time.seconds % 60
+
+    data = {
+        "hours": hours,
+        "minutes": minutes,
+        "seconds": seconds,
+    }
+
+    return render(request, "grader/counter.html", {"data": data, "for_exercise": for_exercise, "minutes": time_limit_minutes})
 
 def successful_request(request: http.HttpRequest):
     translation.activate(settings.LANGUAGE_CODE)
@@ -279,9 +356,10 @@ def autoprocess_notebook(request: http.HttpRequest):
                 exercise_identifier,
                 start_date=form.cleaned_data["start_date"],
                 stop_date=form.cleaned_data["stop_date"],
+                last_updated=datetime.now(),
             )
             ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex)
+            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, uploaded_at=datetime.now())
             nb.save()
             for subexercise_ident in subexercise_dict.keys():
                 sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
@@ -293,6 +371,9 @@ def autoprocess_notebook(request: http.HttpRequest):
                         max_score=subexercise_dict[subexercise_ident][cell_id],
                     )
                     cell.save()
+
+        # trigger nbgrader to update notebook and generate assignments
+        asyncio.run(enqueue_notebook_update(notebook_file_name))
 
         # transform the result into a structure easier to use in django template engine:
         # you cannot straigthforward use variables content as keys to access a dictionary
@@ -332,4 +413,23 @@ async def enqueue_grading_request(process_id) -> None:
     await qm.queries.enqueue(
         ["grade_notebook"],
         [str(process_id).encode()],
+    )
+
+async def enqueue_notebook_update(filename) -> None:
+    # Establish a database connection; asyncpg and psycopg are supported.
+    connection = await asyncpg.connect(            
+            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
+            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
+            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
+            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
+    )
+
+    # Initialize a database driver
+    driver = AsyncpgDriver(connection)
+    # Create a QueueManager instance
+    qm = QueueManager(driver)
+
+    await qm.queries.enqueue(
+        ["update_notebook"],
+        [str(filename).encode()],
     )

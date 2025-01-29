@@ -10,10 +10,14 @@ erDiagram
         string identifier PK
         date start_date
         date stop_date
+        date last_updated
     }
+
     Notebook {
         string filename PK
         string in_exercise FK
+        BLOB data
+        date uploaded_at
     }
     
     SubExercise {
