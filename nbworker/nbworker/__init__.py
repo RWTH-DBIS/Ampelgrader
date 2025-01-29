@@ -150,6 +150,7 @@ class GradingExecutor(JobExecutor):
                         """,
                         str(WORKER_ID), str(process_id), datetime.datetime.now()
                         )
+                
             except Exception as e:
                 logger.info("Error while fetching grading process and store workerassignment:" + str(e))
                 if grading_process is None:
@@ -163,14 +164,15 @@ class GradingExecutor(JobExecutor):
                     process_id,
                 )
                 logger.info(f"Achieved result: {str(result)}")
+
             except RuntimeError as err:
                 logger.error("Grading error!")
-                await enqueue_graded(process_id)
                 await connection.execute("""
                     INSERT INTO errorlog (process,log) VALUES($1, $2);
                     """,
                         process_id, f"Error through grading: {str(err)}"
                     )
+                await enqueue_graded(process_id)
             else:
                 notebook_filename = s_notebook["notebook"]
                 params = (
@@ -411,7 +413,12 @@ async def enqueue_graded(process_id) -> None:
         [str(process_id).encode()],
     )
 
+
 async def check_assignment(assignment: str) -> None:
+    """
+    Sanity checking if the assignment exists and is the newest version in the source folder.
+    If not, the assignment will be updated.
+    """
     try:
         connection = await asyncpg.connect(
             host=os.getenv("POSTGRES_HOST"),
@@ -439,35 +446,38 @@ async def check_assignment(assignment: str) -> None:
                 )
                 raise RuntimeError('Assignment for grading not found')
             else:
-                NotebookExecutor.update_notebook(notebook['filename'])
+                await update_notebook(notebook)
                 logger.info(f"Notebook for assignment {assignment} updated") 
 
-        else:
-            # check if it is the newest assignment version and if not, generate the assignment
-            try:
+        # check if assignment also exist in release folder
+        elif not os.path.exists(f"{COURSE_DIRECTORY}/{API.coursedir.release_directory}/{assignment}"):
+            logger.error(
+                f"Grading for Assignment {assignment} was requested but assignment was not found in release folder!"
+            )
+            API.generate_assignment(assignment)
 
-                last_exercise_v = await connection.fetchrow("""
-                    SELECT last_updated FROM exercise WHERE identifier = $1;
-                    """,
-                    assignment
-                )
+        # ensure each worker is uptodate with the newest assignment version, therefore check time of last update in directory
+        RELEASE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+            API.coursedir.release_directory
+        )
 
-                last_notebook_v = await connection.fetchrow("""
-                    SELECT uploaded_at FROM notebook WHERE in_exercise = $1 ORDER BY uploaded_at DESC LIMIT 1;
-                    """,
-                    assignment
-                )
+        last_release_update = datetime.datetime.fromtimestamp(os.path.getmtime(f"{RELEASE_PATH}/{assignment}"), tz=datetime.timezone.utc)
+        logger.info(f"Last release updated at: {last_release_update}")
 
-                if last_notebook_v['uploaded_at'] > last_exercise_v['last_updated'] :
-                    logger.info(f"Last exercise version: {last_notebook_v['uploaded_at']} is newer than last notebook version: {last_exercise_v['last_updated']}")
-                    NotebookExecutor.update_notebook(assignment)
-                    logger.info(f"Notebook for assignment {assignment} updated")
-                else: 
-                    logger.info(f"Notebook for assignment {assignment} is the newest version")
+        last_notebook_v = await connection.fetchrow("""
+            SELECT * FROM notebook WHERE in_exercise = $1 ORDER BY uploaded_at DESC LIMIT 1;
+            """,
+            assignment
+        )
 
-            except:
-                logger.error(f"Error while checking if assignment exists")
-                raise RuntimeError('Error while checking if assignment exists')
+        logger.info(f"Last notebook version: {last_notebook_v['uploaded_at']}")
+
+        if last_notebook_v['uploaded_at'] > last_release_update :
+            logger.info(last_notebook_v['filename'] )
+            await update_notebook(last_notebook_v)
+            logger.info(f"Notebook for assignment {assignment} updated")
+        else: 
+            logger.info(f"Notebook for assignment {assignment} is the newest version")
             
     except Exception as e:
         logger.error(f"Error while checking notebook version: {str(e)}")
@@ -480,6 +490,35 @@ async def check_assignment(assignment: str) -> None:
     
     return
 
+async def update_notebook(notebook) -> None:
+    notebook_name = notebook['filename']
+    folder_name = notebook_name.split(".")[0]
+
+    # Store notebook into course directory
+    SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+        API.coursedir.source_directory
+    )
+
+    # create directory if not exist
+    if not os.path.exists(f"{SOURCE_PATH}/{folder_name}"):
+        os.makedirs(f"{SOURCE_PATH}/{folder_name}")
+        logger.info(f"Directory {SOURCE_PATH}/{folder_name} created")
+
+    with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
+        f.write(notebook['data'])
+        logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
+
+    try:
+        # generate the assignment 
+        # (store notebook in src dir to release and stripping all output cells)
+        # https://nbgrader.readthedocs.io/en/stable/user_guide/what_is_nbgrader.html#nbgrader-generate-assignment
+        API.generate_assignment(folder_name)
+    except:
+        # error handling for multiple workers? 
+        logger.error(f"Error while generating assignment {folder_name}")
+        raise RuntimeError(f"Error while generating assignment {folder_name}")
+    else:
+        logger.info(f"Assignment {folder_name} generated")
 
 if __name__ == "__main__":
     cmd()
