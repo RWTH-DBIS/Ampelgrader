@@ -4,7 +4,7 @@ services:
     depends_on:
       nbblackbox_postgres:
         condition: service_healthy
-    image: registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/main:latest
+    image: nbgrader:local
     ports:
       - "80:80"
     build: "."
@@ -21,8 +21,10 @@ services:
       OIDC_OP_USER_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/userinfo"
       EMAIL_HOST: "smarthost.rwth-aachen.de"
       NBBB_DEBUG: "true"
+      NBBB_ALLOWED_HOSTS: "*"
       RED_PERCENTAGE: "0.5"
       YELLOW_PERCENTAGE: "0.7"
+      REQUEST_TIME_LIMIT: "300"
       LANGUAGE_CODE: "en"
     networks:
       - nbblackbox_database
@@ -51,7 +53,7 @@ services:
         condition: service_started
     volumes:
       - "./testdata/source:/course/source"
-    image: registry.git.rwth-aachen.de/i5/teaching/dbis/nbgrader-blackbox/worker:latest
+    image: nbworker:local
     networks:
       - nbblackbox_database
     environment:

@@ -1,0 +1,48 @@
+<!--	This shows the student all available exercise. 
+It should be communicated to students which 
+exercises are not currently activated for grading,
+e.g. through deactivated links          		-->
+{% extends "./base.html" %}
+{% load i18n %}
+{% block content %}
+
+    <div class="container">
+        <div class="rwth-logo d-flex justify-content-center">
+            <a href="https://dbis.rwth-aachen.de/dbis/">
+                <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+            </a>
+        </div>
+
+        <div class="container-content">
+            {% load static %}
+            <h2>{% translate "Countdown für Aufgabe" %} {{ for_exercise }}</h2>
+
+            <div class="counter">
+                {{ data.hours|stringformat:"02d" }} : {{ data.minutes|stringformat:"02d" }} : {{ data.seconds|stringformat:"02d" }}
+            </div>
+
+            <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+                <p> {% translate "Um Überlastung zu vermeiden, ist eine Abgabe nur alle" %} {{ minutes }} 
+                    {% translate "Minuten möglich. Bitte warten Sie mit der nächsten Abgabe, bis der Countdown abgelaufen ist." %}
+                </p>
+                <button onclick="location.href='/grader/request/'" class="btn btn-primary">{% translate "Zurück" %}</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function updateCountdown() {
+            fetch(window.location.pathname)
+                .then(response => response.text())
+                .then(html => {
+                    if (document.querySelector('.counter').innerText === '00 : 00 : 00') {
+                        path = window.location.pathname.replace('/counter', '');
+                        window.location.href = path;
+                    } else {
+                        document.body.innerHTML = html;
+                    }
+                });
+        }
+
+        setInterval(updateCountdown, 1000);
+    </script>
+{% endblock %}

@@ -32,7 +32,7 @@ if not DEBUG:
 ALLOWED_HOSTS = os.getenv("NBBB_ALLOWED_HOSTS", "127.0.0.1,0.0.0.0").split(",")
 if DEBUG:
     print("-------YOU ARE RUNNING IN DEBUG MODE-------")
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ['*']
 
 LOGGING = {
     "version": 1,
@@ -243,3 +243,5 @@ LANGUAGES = [
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
+
+REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
