@@ -22,7 +22,6 @@ e.g. through deactivated links          		-->
             </div>
 
             <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
-                <!-- TODO: Block translate this and add minutes -->
                 <p> {% translate "Um Überlastung zu vermeiden, ist eine Abgabe nur alle" %} {{ minutes }} 
                     {% translate "Minuten möglich. Bitte warten Sie mit der nächsten Abgabe, bis der Countdown abgelaufen ist." %}
                 </p>
@@ -35,9 +34,11 @@ e.g. through deactivated links          		-->
             fetch(window.location.pathname)
                 .then(response => response.text())
                 .then(html => {
-                    document.body.innerHTML = html;
                     if (document.querySelector('.counter').innerText === '00 : 00 : 00') {
-                        window.location.href = "/grader/request/{}".format(for_exercise);
+                        path = window.location.pathname.replace('/counter', '');
+                        window.location.href = path;
+                    } else {
+                        document.body.innerHTML = html;
                     }
                 });
         }
