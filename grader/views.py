@@ -122,7 +122,7 @@ def show_exercises(request):
             """
         SELECT identifier, email FROM gradingprocess WHERE 
         identifier NOT IN (SELECT process FROM errorlog)
-        AND email = %s LIMIT 1
+        AND email = %s ORDER BY requested_at DESC LIMIT 1
         """,
             [user_email],
         )
@@ -144,16 +144,30 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             #return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
+    
+    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
     if request.method == "GET":
+        # check if user has already a submission running
+        with transaction.atomic():
+            gp = GradingProcess.objects.raw(
+                """
+            SELECT identifier, email FROM gradingprocess WHERE 
+            identifier NOT IN (SELECT process FROM errorlog)
+            AND email = %s ORDER BY requested_at DESC LIMIT 1
+            """,
+                [user_email],
+            )
+
+        id = gp[0].identifier if len(list(gp)) > 0 else None
+
         return render(
             request,
             "grader/request.html",
-            {"form": NoteBookForm(), "for_exercise": for_exercise},
+            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id},
         )
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
-
-    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
     # check if user has already a submission running
     with transaction.atomic():
