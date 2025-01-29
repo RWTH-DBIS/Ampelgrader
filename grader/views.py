@@ -176,9 +176,9 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             """
         SELECT identifier, requested_at FROM gradingprocess WHERE 
         identifier NOT IN (SELECT process FROM errorlog) 
-        AND email = %s ORDER BY requested_at DESC LIMIT 1
+        AND email = %s AND for_exercise = %s ORDER BY requested_at DESC LIMIT 1
         """,
-            [user_email],
+            [user_email, for_exercise],
         )
 
         # check if the last request was less than 5 minutes ago
@@ -232,9 +232,9 @@ def counter(request: http.HttpRequest, for_exercise: str):
             """
         SELECT identifier, requested_at FROM gradingprocess WHERE 
         identifier NOT IN (SELECT process FROM errorlog) 
-        AND email = %s ORDER BY requested_at DESC LIMIT 1
+        AND email = %s AND for_exercise = %s ORDER BY requested_at DESC LIMIT 1
         """,
-            [user_email],
+            [user_email, for_exercise],
         )
 
     target_time = gp_time[0].requested_at + timedelta(seconds=settings.REQUEST_TIME_LIMIT)
