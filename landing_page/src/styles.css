@@ -1,0 +1,114 @@
+/*------------------------------------*\
+#Navbar
+\*------------------------------------*/
+
+input[type=submit]{
+    padding: 6px 12px;
+    border: 1px solid #e5e5e5;
+    appearance: unset;
+    outline: none;
+    border-radius: 4px;
+    font-family: roboto,sans-serif;
+    font-weight: 600;
+    font-size: 17px
+}
+
+
+/*------------------------------------*\
+#General
+\*------------------------------------*/
+body {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+    background: linear-gradient(to right, #1286c9d3, #2986bbbd);
+}
+
+.container {
+    background: #fff;
+    width: 670px;
+    border-radius: 8px;
+    margin: 75px 0;
+    font-family: roboto,sans-serif;
+    color: #333;
+    font-weight: 400;
+    position: relative;
+    font-size: 18px
+}
+
+.container .container-content {
+    padding: 30px 45px;
+    position: relative
+}
+
+.container-content p {
+    padding-top: 5px;
+    line-height: 1.5;
+}
+
+.container-content h2 {
+    font-weight: 700;
+    font-size: 25px;
+    text-align: center;
+    position: relative;
+    padding: 3px 0 20px;
+    margin-bottom: 40px
+}
+
+
+.container-content h2::after {
+    background: #3786bd;
+    width: 50px;
+    height: 2px;
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.container-content label {
+    display: block;
+    font-size: 18px;
+    padding-top: 20px;
+    padding-bottom: 5px;
+}
+
+.container-content .input-text {
+    margin-bottom: 26px
+}
+
+.container-content input {
+    width: 94.5%;
+    padding: 10.5px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #e5e5e5;
+    appearance: unset;
+    outline: none;
+    border-radius: 4px;
+    font-family: roboto,sans-serif;
+    font-weight: 400;
+    font-size: 17px
+}
+
+.container-content input:focus {
+    border: 1px solid #b3b3b3
+}
+
+@media screen and (max-width: 767px) {
+    .container {
+        margin:175px 20px
+    }
+}
+
+.rwth-logo {
+    padding: 10px;
+}
+
+ul {
+    padding: 0;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
