@@ -60,7 +60,9 @@ services:
       POSTGRES_HOST: "database"
       POSTGRES_USER: "grader"
       POSTGRES_PASSWORD: "secret"
-
-
+  landing_page:
+    build: .
+    image: landing_page:local
+    
 networks:
   nbblackbox_database:

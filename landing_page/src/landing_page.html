@@ -5,7 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" type="text/css" href="/styles.css">
     </head>
     <body>
         <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
@@ -30,25 +30,6 @@
                 </ul>
             </div>
         </div>
-
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const services = [
-                    { name: 'DBIS', url: 'http://nbblackbox-dbis.example.com' },
-                    { name: 'SEMWEB', url: 'http://nbblackbox-semweb.example.com' },
-                ];
-
-                const serviceList = document.getElementById('service-list');
-                services.forEach(service => {
-                    const listItem = document.createElement('li');
-                    const link = document.createElement('a');
-                    link.href = service.url;
-                    link.textContent = service.name;
-                    listItem.appendChild(link);
-                    serviceList.appendChild(listItem);
-                });
-            });
-        </script> 
-                    
+        <script src="landing_page.js"></script>
     </body>
 </html>
