@@ -5,7 +5,7 @@ FROM node:14
 WORKDIR /usr/src/app
 
 # Copy the current directory contents into the container at /usr/src/app
-COPY . .
+COPY landing_page/ .
 
 # Install dependencies
 RUN npm install
@@ -16,7 +16,7 @@ RUN chmod +x ./kubectl
 RUN mv ./kubectl /usr/local/bin
 RUN apt-get update && apt-get install -y jq
 
-RUN chmod +x src/retrieve_services.sh
+# RUN chmod +x src/retrieve_services.sh
 
 # Make port 3000 available to the world outside this container
 EXPOSE 3000
