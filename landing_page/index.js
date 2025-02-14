@@ -1,13 +1,9 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const { exec } = require('child_process');
 const app = express();
 const port = 3000;
-
-// Environment variables for services
-const services = [
-    { name: 'DBIS', url: process.env.DBIS_URL || 'http://nbblackbox-dbis.example.com' },
-    { name: 'SEMWEB', url: process.env.SEMWEB_URL || 'http://nbblackbox-semweb.example.com' },
-];
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'src')));
@@ -19,7 +15,28 @@ app.get('/', (req, res) => {
 
 // Endpoint to get services
 app.get('/services', (req, res) => {
-    res.json(services);
+    exec('./src/retrieve_services.sh', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing script: ${error.message}`);
+            return res.status(500).send('Error retrieving services');
+        }
+        if (stderr) {
+            console.error(`Script stderr: ${stderr}`);
+            return res.status(500).send('Error retrieving services');
+        }
+        console.log(`Script stdout: ${stdout}`);
+
+        // Read services from services.json
+        fs.readFile(path.join(__dirname, 'src', 'services.json'), 'utf8', (err, data) => {
+            if (err) {
+                console.error('Error reading services.json:', err);
+                return res.status(500).send('Error reading services');
+            }
+            const services = JSON.parse(data);
+            
+            res.json(services);
+        });
+    });
 });
 
 app.listen(port, () => {
