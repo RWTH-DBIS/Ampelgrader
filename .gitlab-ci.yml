@@ -41,7 +41,7 @@ build_image_landing_page:
   tags:
     - did
   script:
-    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/landing-page:$CI_COMMIT_BRANCH -f DockerfileLanding .
+    - docker build -t $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/landing-page:$CI_COMMIT_BRANCH -f ./landing_page/DockerfileLanding .
     - docker push $CI_REGISTRY/i5/teaching/dbis/nbgrader-blackbox/landing-page:$CI_COMMIT_BRANCH
 
 publish_images:
