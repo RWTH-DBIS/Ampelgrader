@@ -15,16 +15,16 @@ app.get('/', (req, res) => {
 
 // Endpoint to get services
 app.get('/services', (req, res) => {
-    exec('./src/retrieve_services.sh', (error, stdout, stderr) => {
+    exec("kubectl get ingresses -o json -A | jq '[.items[] | {host: .spec.rules[].host}]' > ./src/services.json", (error, stdout, stderr) => {
         if (error) {
-            console.error(`Error executing script: ${error.message}`);
-            return res.status(500).send('Error retrieving services');
+            console.error(`Error executing kubectl command: ${error.message}`);
+            return res.status(500).send('Error retrieving ingresses ');
         }
         if (stderr) {
-            console.error(`Script stderr: ${stderr}`);
-            return res.status(500).send('Error retrieving services');
+            console.error(`kubectl stderr: ${stderr}`);
+            return res.status(500).send('Error retrieving ingresses');
         }
-        console.log(`Script stdout: ${stdout}`);
+        console.log(`kubectl stdout: ${stdout}`);
 
         // Read services from services.json
         fs.readFile(path.join(__dirname, 'src', 'services.json'), 'utf8', (err, data) => {
