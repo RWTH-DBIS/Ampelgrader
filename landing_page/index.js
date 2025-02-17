@@ -24,7 +24,6 @@ app.get('/services', (req, res) => {
             console.error(`kubectl stderr: ${stderr}`);
             return res.status(500).send('Error retrieving ingresses');
         }
-        console.log(`kubectl stdout: ${stdout}`);
 
         // Read services from services.json
         fs.readFile(path.join(__dirname, 'src', 'services.json'), 'utf8', (err, data) => {
@@ -32,7 +31,20 @@ app.get('/services', (req, res) => {
                 console.error('Error reading services.json:', err);
                 return res.status(500).send('Error reading services');
             }
-            const services = JSON.parse(data);
+
+            let services;
+            try {
+                services = JSON.parse(data)
+                    .filter(service => service.host.includes('nbgrader')) // Filter services with 'nbgrader' in the URL
+                    .map(service => ({
+                        name: service.host.split('.')[0], 
+                        url: `https://${service.host}`
+                    }));
+                console.log('Services:', services);
+            } catch (parseError) {
+                console.error('Error parsing services.json:', parseError);
+                return res.status(500).send('Error parsing services');
+            }
             
             res.json(services);
         });
