@@ -35,9 +35,9 @@ app.get('/services', (req, res) => {
             let services;
             try {
                 services = JSON.parse(data)
-                    .filter(service => service.host.includes('nbgrader')) // Filter services with 'nbgrader' in the URL
+                    .filter(service => service.host.includes('grader') && !service.host.includes('landing-page'))
                     .map(service => ({
-                        name: service.host.split('.')[0], 
+                        name: service.host.split('.')[0].split('-')[1], 
                         url: `https://${service.host}`
                     }));
                 console.log('Services:', services);
