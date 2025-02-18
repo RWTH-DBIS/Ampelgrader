@@ -449,7 +449,7 @@ def keycloak_logout(request):
     '''
     django_logout_url = settings.LOGOUT_REDIRECT_URL or '/'
 
-    if request.user.is_authenticated(request.user):
+    if request.user.is_authenticated:
         logout_url = get_logout_url(request)
 
         # Log out the Django user if they were logged in.
