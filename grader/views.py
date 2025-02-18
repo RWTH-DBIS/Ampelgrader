@@ -439,7 +439,7 @@ def get_logout_url(request):
     Return the url of the logout for keycloak
     '''
     keycloak_redirect_url = settings.OIDC_OP_LOGOUT_ENDPOINT or None
-    return keycloak_redirect_url + "?redirect_uri=" + request.build_absolute_uri("/")
+    return keycloak_redirect_url + "?redirect_uri=" + request.build_absolute_uri("/") + "grader/login"
 
 from django.contrib import auth
 
@@ -447,7 +447,6 @@ def keycloak_logout(request):
     '''
     Perform the logout of the app and redirect to keycloak
     '''
-    django_logout_url = settings.LOGOUT_REDIRECT_URL or '/'
 
     if request.user.is_authenticated:
         logout_url = get_logout_url(request)
