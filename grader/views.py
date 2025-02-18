@@ -3,6 +3,7 @@ import typing
 import django.http as http
 import re
 import os
+import requests
 
 from collections import defaultdict
 from datetime import timedelta
@@ -451,7 +452,13 @@ def keycloak_logout(request):
     if request.user.is_authenticated:
         logout_url = get_logout_url(request)
 
-        # Log out the Django user if they were logged in.
         auth.logout(request)
 
-        return HttpResponseRedirect(logout_url)
+        # Retrieve the response from the logout URL
+        response = requests.get(logout_url)
+
+        # Check if the logout was successful
+        if response.status_code == 200:
+            return HttpResponseRedirect(response.url)
+        else:
+            return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
