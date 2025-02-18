@@ -26,7 +26,7 @@
                     {% if id %}
                     <a href="{%url 'grading_results' id%}" class="btn btn-primary">{% translate "Letzte Einreichung" %}</a>
                     {% endif %}
-                    <form action="{% url 'oidc_logout' %}" method="post">
+                    <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <input type="submit" value="Logout">
                     </form>
