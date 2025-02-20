@@ -435,14 +435,9 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-def get_logout_url(request):
-    '''
-    Return the url of the logout for keycloak
-    '''
-    keycloak_redirect_url = settings.OIDC_OP_LOGOUT_ENDPOINT or None
-    return keycloak_redirect_url + "?redirect_uri=" + request.build_absolute_uri("/") + "grader/login"
-
 from django.contrib.auth import logout
+import logging
+logger = logging.getLogger(__name__)
 
 def keycloak_logout(request):
     '''
@@ -450,12 +445,20 @@ def keycloak_logout(request):
     '''
 
     if request.user.is_authenticated:
-        logout_url = get_logout_url(request)
+        # logout_url = get_logout_url(request)
+        user = request.user
+        if user.social_auth.filter(provider='keycloak'):
+            social = user.social_auth.get(provider='keycloak')
+            access_token=social.extra_data['access_token']
+            refresh_token=social.extra_data['refresh_token']
+            logger.info(access_token) # you can view the tokens
+            logger.info(refresh_token)
+            logout_request_data={"client_id": settings.OIDC_RP_CLIENT_ID, "refresh_token": refresh_token, "client_secret": settings.OIDC_RP_CLIENT_SECRET}
+            headers={"Authorization" : "Bearer "+access_token,"Content-Type" : "application/x-www-form-urlencoded"}
+            result=requests.post(settings.OIDC_OP_LOGOUT_ENDPOINT,data=logout_request_data,headers=headers)
+            logger.info(result)
+        if request.user.social_auth.exists():
+            request.user.social_auth.all().delete()
+    logout(request)
 
-        logout(request)
-
-        # Retrieve the response from the logout URL
-        response = requests.get(logout_url)
-        print(response)
-
-        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
+    return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
