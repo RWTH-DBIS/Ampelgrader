@@ -17,6 +17,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils import timezone
+from mozilla_django_oidc.views import OIDCLogoutView
 
 from grader.models import *
 
@@ -436,38 +437,15 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-from django.contrib.auth import logout
-import logging
-logger = logging.getLogger(__name__)
+def provider_logout(request):
+    id_token = str(request.COOKIES['csrftoken'])
 
-def keycloak_logout(request):
-    '''
-    Perform the logout of the app and redirect to keycloak
-    '''
-    if request.user.is_authenticated:
-        # If we have the oidc_id_token, we can automatically redirect
-        # the user back to the application.
-        oidc_id_token = request.session.get('oidc_id_token', None)
-        logger.info("oidc_id_token: %s", oidc_id_token)
-        if oidc_id_token:
-          logout_url = (
-              settings.OIDC_OP_LOGOUT_ENDPOINT
-              + "?"
-              + urlencode(
-                  {
-                      "id_token_hint": oidc_id_token,
-                      "post_logout_redirect_uri": request.build_absolute_uri(
-                          location=settings.LOGOUT_REDIRECT_URL
-                      )
-                  }
-              )
-          )
-          result = requests.get(logout_url)
-          if result.status_code != 200:
-              logger.error("Failed to logout from Keycloak: %s", result.text)
-          else:
-            logger.info(result.text)
-            logout(request)
-        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
-    else:
-        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
+    logout_request = \
+        f'{settings.OIDC_OP_LOGOUT_ENDPOINT}?id_token_hint={id_token}' \
+        f'&post_logout_redirect_uri={settings.LOGOUT_REDIRECT_URI}'    
+
+    return logout_request
+
+class LogoutView(OIDCLogoutView):      
+    def get(self, request):
+        return self.post(request)
