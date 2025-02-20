@@ -445,26 +445,29 @@ def keycloak_logout(request):
     Perform the logout of the app and redirect to keycloak
     '''
     if request.user.is_authenticated:
-        logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
-
         # If we have the oidc_id_token, we can automatically redirect
         # the user back to the application.
-        csrftoken =  str(request.COOKIES['csrftoken'])
-        if csrftoken:
+        oidc_id_token = request.session.get('oidc_id_token', None)
+        logger.info("oidc_id_token: %s", oidc_id_token)
+        if oidc_id_token:
           logout_url = (
               settings.OIDC_OP_LOGOUT_ENDPOINT
               + "?"
               + urlencode(
                   {
-                      "id_token_hint": csrftoken,
+                      "id_token_hint": oidc_id_token,
                       "post_logout_redirect_uri": request.build_absolute_uri(
                           location=settings.LOGOUT_REDIRECT_URL
                       )
                   }
               )
           )
-
-        logout(request)
-        return HttpResponseRedirect(logout_url)
+          result = requests.get(logout_url)
+          if result.status_code != 200:
+              logger.error("Failed to logout from Keycloak: %s", result.text)
+          else:
+            logger.info(result.text)
+            logout(request)
+        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
     else:
         return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
