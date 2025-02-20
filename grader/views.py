@@ -1,5 +1,6 @@
 import datetime
 import typing
+from urllib.parse import urlencode
 import django.http as http
 import re
 import os
@@ -443,22 +444,27 @@ def keycloak_logout(request):
     '''
     Perform the logout of the app and redirect to keycloak
     '''
-
     if request.user.is_authenticated:
-        # logout_url = get_logout_url(request)
-        user = request.user
-        if user.social_auth.filter(provider='keycloak'):
-            social = user.social_auth.get(provider='keycloak')
-            access_token=social.extra_data['access_token']
-            refresh_token=social.extra_data['refresh_token']
-            logger.info(access_token) # you can view the tokens
-            logger.info(refresh_token)
-            logout_request_data={"client_id": settings.OIDC_RP_CLIENT_ID, "refresh_token": refresh_token, "client_secret": settings.OIDC_RP_CLIENT_SECRET}
-            headers={"Authorization" : "Bearer "+access_token,"Content-Type" : "application/x-www-form-urlencoded"}
-            result=requests.post(settings.OIDC_OP_LOGOUT_ENDPOINT,data=logout_request_data,headers=headers)
-            logger.info(result)
-        if request.user.social_auth.exists():
-            request.user.social_auth.all().delete()
-    logout(request)
+        logout_url = settings.OIDC_OP_LOGOUT_ENDPOINT
 
-    return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
+        # If we have the oidc_id_token, we can automatically redirect
+        # the user back to the application.
+        oidc_id_token = request.session.get('oidc_id_token', None)
+        if oidc_id_token:
+          logout_url = (
+              settings.OIDC_OP_LOGOUT_ENDPOINT
+              + "?"
+              + urlencode(
+                  {
+                      "id_token_hint": oidc_id_token,
+                      "post_logout_redirect_uri": request.build_absolute_uri(
+                          location=settings.LOGOUT_REDIRECT_URL
+                      )
+                  }
+              )
+          )
+
+        logout(request)
+        return HttpResponseRedirect(logout_url)
+    else:
+        return HttpResponseRedirect(settings.LOGOUT_REDIRECT_URL)
