@@ -449,14 +449,14 @@ def keycloak_logout(request):
 
         # If we have the oidc_id_token, we can automatically redirect
         # the user back to the application.
-        oidc_id_token = request.session.get('oidc_id_token', None)
-        if oidc_id_token:
+        csrftoken =  str(request.COOKIES['csrftoken'])
+        if csrftoken:
           logout_url = (
               settings.OIDC_OP_LOGOUT_ENDPOINT
               + "?"
               + urlencode(
                   {
-                      "id_token_hint": oidc_id_token,
+                      "id_token_hint": csrftoken,
                       "post_logout_redirect_uri": request.build_absolute_uri(
                           location=settings.LOGOUT_REDIRECT_URL
                       )
