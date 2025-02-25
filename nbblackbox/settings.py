@@ -214,6 +214,7 @@ OIDC_OP_LOGOUT_URL_METHOD = os.getenv("OIDC_OP_LOGOUT_URL_METHOD")
 
 # necessary to show only rwth sso
 OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"kc_idp_hint": "rwth-aachen"}
+OIDC_STORE_ID_TOKEN = True
 
 LOGIN_REDIRECT_URL = "/grader/request/"
 LOGOUT_REDIRECT_URL = "/grader/login"
