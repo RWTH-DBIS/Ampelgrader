@@ -17,7 +17,6 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils import timezone
-from mozilla_django_oidc.views import OIDCLogoutView
 
 from grader.models import *
 
@@ -437,3 +436,7 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
+def logout(request: http.HttpRequest):
+    translation.activate(settings.LANGUAGE_CODE)
+
+    return render(request, "grader/login.html", {})
