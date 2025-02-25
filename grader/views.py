@@ -17,6 +17,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from grader.models import *
 
@@ -436,7 +437,9 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-def logout(request: http.HttpRequest):
-    translation.activate(settings.LANGUAGE_CODE)
 
-    return render(request, "grader/login.html", {})
+# Logout redirect 
+@csrf_exempt
+def logout(request: http.HttpRequest):
+    # redirect to the login page
+    return http.HttpResponseRedirect("login")
