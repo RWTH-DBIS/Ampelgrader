@@ -437,15 +437,3 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-def provider_logout(request):
-    id_token = str(request.COOKIES['csrftoken'])
-
-    logout_request = \
-        f'{settings.OIDC_OP_LOGOUT_ENDPOINT}?id_token_hint={id_token}' \
-        f'&post_logout_redirect_uri={settings.LOGOUT_REDIRECT_URI}'    
-
-    return logout_request
-
-class LogoutView(OIDCLogoutView):      
-    def get(self, request):
-        return self.post(request)
