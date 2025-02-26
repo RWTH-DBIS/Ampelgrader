@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "grader",
-    "csp",
+    # "csp",
 ]
 
 MIDDLEWARE = [
@@ -72,7 +72,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
-    "csp.middleware.CSPMiddleware",
+    # "csp.middleware.CSPMiddleware",
 ]
 
 ROOT_URLCONF = "nbblackbox.urls"
@@ -251,33 +251,3 @@ LOCALE_PATHS = [
 ]
 
 REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
-
-CSP_FRAME_ANCESTORS = (
-    "'self'", 
-    "https://auth.las2peer.org",
-    "https://sso.rwth-aachen.de/"
-)
-
-CSP_DEFAULT_SRC = ("'self'",)
-
-# Allow images from specific external domains
-CSP_IMG_SRC = ("'self'", "https://git.rwth-aachen.de")
-
-# Allow scripts from specific external domains
-CSP_SCRIPT_SRC = (
-    "'self'",
-    "'unsafe-inline'",
-    "https://code.jquery.com",
-    "https://cdn.jsdelivr.net", 
-)
-
-# Allow styles from specific external domains
-CSP_STYLE_SRC = (
-    "'self'",  
-    "'unsafe-inline'",
-    "https://cdnjs.cloudflare.com", 
-)
-
-CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com")
-
-# CSP_SCRIPT_NONCE = True  
