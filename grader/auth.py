@@ -16,7 +16,7 @@ def provider_logout(request):
             {
                 "id_token_hint": oidc_id_token,
                 "post_logout_redirect_uri": request.build_absolute_uri(
-                    location="/grader/logout"
+                    location=settings.LOGOUT_REDIRECT_URL
                 )
             }
         )
