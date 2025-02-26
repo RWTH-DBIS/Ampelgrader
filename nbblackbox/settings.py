@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "grader",
+    "csp",
 ]
 
 MIDDLEWARE = [
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    "csp.middleware.CSPMiddleware",
 ]
 
 ROOT_URLCONF = "nbblackbox.urls"
@@ -249,3 +251,5 @@ LOCALE_PATHS = [
 ]
 
 REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
+
+CSP_FRAME_ANCESTORS = ("'self'", "https://auth.las2peer.org")
