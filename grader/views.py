@@ -1,23 +1,24 @@
 import datetime
 import typing
-from urllib.parse import urlencode
 import django.http as http
 import re
 import os
-import requests
 
 from collections import defaultdict
 from datetime import timedelta
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
 from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+# from django.views.decorators.csrf import csrf_exempt
+
+from django.http import JsonResponse
+from django.contrib.auth import logout
 
 from grader.models import *
 
@@ -437,16 +438,12 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-from django.http import JsonResponse
-import json
-from django.contrib.auth import logout
-
 # Logout redirect 
 def keycloak_logout(request: http.HttpRequest):
     try:
         # Log out the current user
         logout(request)
 
-        return render(request, "grader/logout.html", {"status": "success"})
+        return redirect(settings.LOGOUT_REDIRECT_URL)
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)})
