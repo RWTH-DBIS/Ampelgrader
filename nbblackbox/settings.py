@@ -252,4 +252,5 @@ LOCALE_PATHS = [
 
 REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
 
-CSP_FRAME_ANCESTORS = ("'self'", "https://auth.las2peer.org")
+CSP_FRAME_ANCESTORS = ("'self'", "https://auth.las2peer.org", "https://sso.rwth-aachen.de/")
+CSP_DEFAULT_SRC = ("'self'")
