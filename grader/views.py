@@ -442,16 +442,11 @@ import json
 from django.contrib.auth import logout
 
 # Logout redirect 
-# @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
-# Extract the logout token from the request
     try:
-        logout_token = request.body
-        logout_token = json.loads(logout_token.decode('utf-8'))
-
         # Log out the current user
         logout(request)
 
-        return JsonResponse({"status": "success"})
+        return render(request, "grader/logout.html", {"status": "success"})
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)})
