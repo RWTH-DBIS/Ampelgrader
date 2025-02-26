@@ -441,5 +441,4 @@ async def enqueue_notebook_update(filename) -> None:
 # Logout redirect 
 @csrf_exempt
 def logout(request: http.HttpRequest):
-    # redirect to the login page
-    return http.HttpResponseRedirect("login")
+    return render(request, "grader/logout.html", {})
