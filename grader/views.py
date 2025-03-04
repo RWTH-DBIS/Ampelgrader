@@ -30,6 +30,7 @@ from pgqueuer.qm import QueueManager
 from pgqueuer.db import AsyncpgDriver
 
 import logging
+from mozilla_django_oidc.views import OIDCLogoutView
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -448,14 +449,15 @@ async def enqueue_notebook_update(filename) -> None:
 # Logout redirect 
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
-    logger.info("Keycloak logout")
     try:
         logout(request)
-
-        request.session.flush()
 
         logger.info("Logout successful")
         return http.HttpResponse(status=200)
     except Exception as e:
         logger.error("Error occured: " + str(e))
         return JsonResponse({"status": "error", "message": str(e)})
+
+class LogoutView(OIDCLogoutView):
+    def get(self, request):
+        return self.post(request)
