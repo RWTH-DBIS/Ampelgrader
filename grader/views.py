@@ -450,7 +450,11 @@ def keycloak_logout(request: http.HttpRequest):
     logger.info("Keycloak logout")
     try:
         logger.info(request)
+        logger.info(request.headers)
+        logger.info(request.user)
         logger.info(request.body)
+
+        request.session.flush()
 
         logout(request)
 
