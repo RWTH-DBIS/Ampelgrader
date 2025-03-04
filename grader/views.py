@@ -19,6 +19,7 @@ from django.utils import timezone
 
 from django.http import JsonResponse
 from django.contrib.auth import logout
+from django.views.decorators.csrf import csrf_exempt
 
 from grader.models import *
 
@@ -439,6 +440,7 @@ async def enqueue_notebook_update(filename) -> None:
     )
 
 # Logout redirect 
+@csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
         # Log out the current user
