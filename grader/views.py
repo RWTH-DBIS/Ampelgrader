@@ -29,6 +29,11 @@ import asyncpg
 from pgqueuer.qm import QueueManager
 from pgqueuer.db import AsyncpgDriver
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 def ping(request: http.HttpRequest):
 
     return http.HttpResponse(b"pong")
@@ -439,27 +444,18 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 # Logout redirect 
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     logger.info("Keycloak logout")
     try:
-        logger.info(request)
-        logger.info(request.headers)
-        logger.info(request.user)
-        logger.info(request.body)
+        logout(request)
 
         request.session.flush()
 
-        logout(request)
-
         logger.info("Logout successful")
-        return redirect(settings.LOGOUT_REDIRECT_URL)
+        return http.HttpResponse(status=200)
     except Exception as e:
         logger.error("Error occured: " + str(e))
         return JsonResponse({"status": "error", "message": str(e)})
