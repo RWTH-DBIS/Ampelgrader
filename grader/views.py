@@ -444,7 +444,7 @@ logger = logging.getLogger(__name__)
 
 # Logout redirect 
 @csrf_exempt
-def keycloak_logout(self, request: http.HttpRequest):
+def keycloak_logout(request: http.HttpRequest):
     try:
         # Log out the current user
         logout(request)
