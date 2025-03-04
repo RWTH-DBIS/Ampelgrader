@@ -440,22 +440,22 @@ async def enqueue_notebook_update(filename) -> None:
     )
 
 import logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Logout redirect 
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     logger.info("Keycloak logout")
     try:
-        request.user.auth_token.delete()
-
-        # Log out the current user
         logger.info(request)
-        logger.info("User logged out")
+        # Delete the user's auth token
+        request.user.auth_token.delete()
 
         logout(request)
 
         return redirect(settings.LOGOUT_REDIRECT_URL)
     except Exception as e:
-        logger.error(str(e))
+        logger.error("Error occured: " + str(e))
         return JsonResponse({"status": "error", "message": str(e)})
