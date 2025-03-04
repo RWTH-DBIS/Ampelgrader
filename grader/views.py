@@ -451,11 +451,10 @@ def keycloak_logout(request: http.HttpRequest):
     try:
         logger.info(request)
         logger.info(request.body)
-        # Delete the user's auth token
-        request.user.auth_token.delete()
 
         logout(request)
 
+        logger.info("Logout successful")
         return redirect(settings.LOGOUT_REDIRECT_URL)
     except Exception as e:
         logger.error("Error occured: " + str(e))
