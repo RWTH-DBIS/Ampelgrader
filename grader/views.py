@@ -450,6 +450,7 @@ def keycloak_logout(request: http.HttpRequest):
     logger.info("Keycloak logout")
     try:
         logger.info(request)
+        logger.info(request.body)
         # Delete the user's auth token
         request.user.auth_token.delete()
 
