@@ -129,7 +129,7 @@ def show_exercises(request):
         identifier NOT IN (SELECT process FROM errorlog)
         AND email = %s ORDER BY requested_at DESC LIMIT 1
         """,
-            [user_email],
+            [user_email], 
         )
 
         id = gp[0].identifier if len(list(gp)) > 0 else None
@@ -445,12 +445,17 @@ logger = logging.getLogger(__name__)
 # Logout redirect 
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
+    logger.info("Keycloak logout")
     try:
+        request.user.auth_token.delete()
+
         # Log out the current user
-        logout(request)
         logger.info(request)
         logger.info("User logged out")
 
+        logout(request)
+
         return redirect(settings.LOGOUT_REDIRECT_URL)
     except Exception as e:
+        logger.error(str(e))
         return JsonResponse({"status": "error", "message": str(e)})
