@@ -59,12 +59,12 @@ def store_sid(sender, request, user, **kwargs):
 
         # Update session key using keycloak sid
         try:
-            session = Session.objects.get(session_key=request.session.session_key)
-            session.keycloak_sid = sid
-            session.save()
-            logger.info('Session ID stored in the database: ' + sid)
-        except Session.DoesNotExist:
-            logger.error('Session does not exist')
+          with connection.cursor() as cursor:
+              cursor.execute("INSERT INTO keycloak_session (keycloak_sid, django_sid) VALUES (%s, %s)", 
+                             [sid, request.session.session_key])
+        except Exception as e:
+            logger.error("Error occured: " + str(e))
+
     else:
         logger.error('No keycloak token found in the session')
         
@@ -481,12 +481,24 @@ def keycloak_logout(request: http.HttpRequest):
         
         sid = logout_token.get("sid")
 
+        try:
+          with connection.cursor() as cursor:
+              django_sid = cursor.execute("SELECT django_sid FROM keycloak_session WHERE keycloak_sid = %s", [sid])
+        except Exception as e:
+            logger.error("Error occured: " + str(e))
+        
         if not sid:
-            return JsonResponse({"status": "error", "message": "No session ID found in the logout token"})
+            return JsonResponse({"status": "error", "message": "No session ID found."})
         else:
             # Delete the session from the database
-            session = Session.objects.get(keycloak_sid=sid)
+            session = Session.objects.get(session_key=django_sid)
             session.delete()
+        
+        try: 
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM keycloak_session WHERE keycloak_sid = %s", [sid])
+        except Exception as e:
+            logger.error("Error occured: " + str(e))
 
         # Logout the user
         logout(request)

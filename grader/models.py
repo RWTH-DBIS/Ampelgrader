@@ -1,5 +1,4 @@
 import uuid
-
 from django.db import models
 from django.contrib import admin
 from django.core.validators import MinValueValidator
@@ -197,3 +196,13 @@ class StudentNotebook(models.Model):
 
     class Meta:
         db_table = "studentnotebook"
+
+""" 
+Maps the keycloak session to the django session
+"""
+class KeycloakSession(models.Model):
+    keycloak_sid = models.CharField(max_length=255, primary_key=True, db_column="keycloak_sid")
+    django_sid = models.CharField(max_length=40, db_column="django_sid")
+
+    class Meta:
+        db_table = "keycloak_session" 
