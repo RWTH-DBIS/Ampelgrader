@@ -51,7 +51,6 @@ def login(request: http.HttpRequest):
 
 @receiver(user_logged_in)
 def store_sid(sender, request, user, **kwargs):
-    logger.info('User session ID: ' + request.session.session_key)
     keycloak_token = request.session.get('oidc_id_token', None)
 
     if keycloak_token:
@@ -61,7 +60,7 @@ def store_sid(sender, request, user, **kwargs):
         # Update session key using keycloak sid
         try:
             session = Session.objects.get(session_key=request.session.session_key)
-            session.session_key = sid
+            session.keycloak_sid = sid
             session.save()
             logger.info('Session ID stored in the database: ' + sid)
         except Session.DoesNotExist:
@@ -475,8 +474,6 @@ async def enqueue_notebook_update(filename) -> None:
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
-        logger.info("Request Body received: " + str(request.body))
-
         logout_token = decode_token(str(request.body))
         
         if not logout_token:
@@ -487,16 +484,14 @@ def keycloak_logout(request: http.HttpRequest):
         if not sid:
             return JsonResponse({"status": "error", "message": "No session ID found in the logout token"})
         else:
-            logger.info('Session ID found in the logout token:' + sid)
             # Delete the session from the database
-            session = Session.objects.get(session_key=sid)
+            session = Session.objects.get(keycloak_sid=sid)
             session.delete()
-            logger.info('Session deleted from the database')
 
         # Logout the user
         logout(request)
 
-        logger.info("Logout successful")
+        logger.info("Backchannel Logout successful")
         return http.HttpResponse(status=200)
     except Exception as e:
         logger.error("Error occured: " + str(e))
@@ -507,5 +502,4 @@ def decode_token(token:str) -> dict:
     payload = parts[1]
     payload += '=' * (-len(payload) % 4)
     decoded = base64.b64decode(payload).decode('utf-8')
-    logger.info(f"Decoded token: {decoded}")
     return json.loads(decoded)
