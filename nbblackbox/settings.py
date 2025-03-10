@@ -222,7 +222,7 @@ LOGIN_REDIRECT_URL = "/grader/request/"
 LOGOUT_REDIRECT_URL = "/grader/login"
 
 # leave the not Debug pull down to force user auth in non-debug deployment
-ALLOW_ANONYMOUS_GRADING = True
+ALLOW_ANONYMOUS_GRADING = False
 NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
 
 # allowed hosts are parsed from #!/usr/bin/env python
