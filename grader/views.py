@@ -29,6 +29,8 @@ import asyncpg
 from pgqueuer.qm import QueueManager
 from pgqueuer.db import AsyncpgDriver
 
+from django.contrib.auth.models import AnonymousUser
+
 import logging
 from mozilla_django_oidc.views import OIDCLogoutView
 logging.basicConfig(level=logging.INFO)
@@ -452,6 +454,9 @@ async def enqueue_notebook_update(filename) -> None:
 def keycloak_logout(request: http.HttpRequest):
     try:
         logout(request)
+
+        logger.info("Flush session")
+        request.session.flush()
 
         logger.info("Logout successful")
         return http.HttpResponse(status=200)
