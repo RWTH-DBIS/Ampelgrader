@@ -458,6 +458,8 @@ def keycloak_logout(request: http.HttpRequest):
         logger.error("Error occured: " + str(e))
         return JsonResponse({"status": "error", "message": str(e)})
 
+
 class LogoutView(OIDCLogoutView):
+    @csrf_exempt
     def get(self, request):
         return self.post(request)
