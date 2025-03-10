@@ -17,7 +17,7 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils import timezone
-# from django.views.decorators.csrf import csrf_exempt
+from django.contrib.sessions.models import Session
 
 from django.http import JsonResponse
 from django.contrib.auth import logout
@@ -51,18 +51,23 @@ def login(request: http.HttpRequest):
 
 @receiver(user_logged_in)
 def store_sid(sender, request, user, **kwargs):
-    logger.info(f"Login request data: {request.body}")
+    logger.info('User session ID: ' + request.session.session_key)
     keycloak_token = request.session.get('oidc_id_token', None)
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
         sid = decoded_token.get("sid")
 
-        # Store session ID in Django's session
-        if sid:
-            request.session['sid'] = sid 
-            logger.info(f"Session ID stored in Django's session: {request.session['sid']}")
-            request.session.modified = True
+        # Update session key using keycloak sid
+        try:
+            session = Session.objects.get(session_key=request.session.session_key)
+            session.session_key = sid
+            session.save()
+            logger.info('Session ID stored in the database: ' + sid)
+        except Session.DoesNotExist:
+            logger.error('Session does not exist')
+    else:
+        logger.error('No keycloak token found in the session')
         
     return 
 
@@ -479,8 +484,11 @@ def keycloak_logout(request: http.HttpRequest):
             return JsonResponse({"status": "error", "message": "No session ID found in the logout token"})
         else:
             logger.info('Session ID found in the logout token:' + sid)
-            request.session.delete(sid)
+            # Delete the session from the database
+            Session.objects.filter(session_key=sid).delete()
+            logger.info('Session deleted from the database')
 
+        # Logout the user
         logout(request)
 
         logger.info("Logout successful")
