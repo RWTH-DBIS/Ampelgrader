@@ -453,10 +453,8 @@ async def enqueue_notebook_update(filename) -> None:
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
+        logger.info(str(request.session))
         logout(request)
-
-        logger.info("Flush session")
-        request.session.flush()
 
         logger.info("Logout successful")
         return http.HttpResponse(status=200)
