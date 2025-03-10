@@ -116,8 +116,7 @@ from .forms import NoteBookForm
 
 def show_exercises(request):
     translation.activate(settings.LANGUAGE_CODE)
-    logger.info("Authentication needed:" + str(settings.NEED_GRADING_AUTH))
-    logger.info('User is authenticated: ' + str(request.user.is_authenticated))
+
     if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
         return http.HttpResponseRedirect("../login")
     context_exercises = list()
@@ -453,7 +452,10 @@ async def enqueue_notebook_update(filename) -> None:
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
-        logger.info(str(request.session))
+        logger.info(str(request.session.get('session_key')))
+
+        del request.session['session_key']
+
         logout(request)
 
         logger.info("Logout successful")
