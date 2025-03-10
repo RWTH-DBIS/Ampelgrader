@@ -476,15 +476,14 @@ async def enqueue_notebook_update(filename) -> None:
 def keycloak_logout(request: http.HttpRequest):
     try:
         logger.info("Request Body received: " + str(request.body))
-        
-        # Parse the request body to JSON
-        body = json.loads(request.body.decode('utf-8'))
-        logout_token = body.get('logout_token', None)
-        logger.info('Logout token: ' + logout_token)
+
+        logout_token = decode_token(str(request.body))
         
         if not logout_token:
             return JsonResponse({"status": "error", "message": "No logout token provided"})
-        sid = decode_token(logout_token).get("sid")
+        
+        sid = logout_token.get("sid")
+        
         if not sid:
             return JsonResponse({"status": "error", "message": "No session ID found in the logout token"})
         else:
