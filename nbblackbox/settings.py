@@ -75,6 +75,8 @@ MIDDLEWARE = [
     # "csp.middleware.CSPMiddleware",
 ]
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
 ROOT_URLCONF = "nbblackbox.urls"
 
 TEMPLATES = [
