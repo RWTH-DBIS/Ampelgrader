@@ -53,17 +53,18 @@ def login(request: http.HttpRequest):
 def store_sid(sender, request, user, **kwargs):
     logger.info(f"Login request data: {request.body}")
     keycloak_token = request.session.get('oidc_id_token', None)
-    logger.info(f"Keycloak token: {keycloak_token}")
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
         sid = decoded_token.get("sid")
-        logger.info(f"Session ID: {sid}")
+
         # Store session ID in Django's session
         if sid:
-            request.session['sid'] = sid  # Store it in the Django session
-
-    return http.HttpResponse("Session ID saved in Django session!")        
+            request.session['sid'] = sid 
+            logger.info(f"Session ID stored in Django's session: {request.session['sid']}")
+            request.session.modified = True
+        
+    return 
 
 def show_results(request: http.HttpRequest, for_process: str):
     translation.activate(settings.LANGUAGE_CODE)
