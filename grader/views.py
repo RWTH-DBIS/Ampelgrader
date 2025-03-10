@@ -481,8 +481,6 @@ def keycloak_logout(request: http.HttpRequest):
         
         sid = logout_token.get("sid")
 
-        logger.info("Received backchannel logout request for session ID: " + str(sid))
-
         try:
           with connection.cursor() as cursor:
               cursor.execute("SELECT django_sid FROM keycloak_session WHERE keycloak_sid = %s", [str(sid)])
@@ -490,13 +488,10 @@ def keycloak_logout(request: http.HttpRequest):
         except Exception as e:
             logger.error("Error occured: " + str(e))
         
-        logger.info("Found session with session_key: " + str(django_sid))
-
         if not django_sid:
             return JsonResponse({"status": "error", "message": "No session ID found."})
         else:
             # Delete the session from the database
-            logger.info("Deleting session with session_key: " + str(django_sid))
             session = Session.objects.get(session_key=django_sid)
             Session.objects.filter(session_key=session.session_key).delete()
         
