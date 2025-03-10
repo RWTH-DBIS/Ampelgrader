@@ -475,9 +475,11 @@ async def enqueue_notebook_update(filename) -> None:
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
-        # Getting a logout token from keycloak
+        logger.info("Request Body received: " + str(request.body))
+        
+        # Parse the request body to JSON
         body = json.loads(request.body.decode('utf-8'))
-        logout_token = body.get("logout_token", None)
+        logout_token = body.get('logout_token', None)
         logger.info('Logout token: ' + logout_token)
         
         if not logout_token:
