@@ -3,6 +3,8 @@ import typing
 import django.http as http
 import re
 import os
+import base64
+import json
 
 from collections import defaultdict
 from datetime import timedelta
@@ -29,10 +31,10 @@ import asyncpg
 from pgqueuer.qm import QueueManager
 from pgqueuer.db import AsyncpgDriver
 
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
 
 import logging
-from mozilla_django_oidc.views import OIDCLogoutView
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -47,6 +49,21 @@ def login(request: http.HttpRequest):
 
     return render(request, "grader/login.html", {})
 
+@receiver(user_logged_in)
+def store_sid(sender, request, user, **kwargs):
+    logger.info(f"Login request data: {request.body}")
+    keycloak_token = request.session.get('oidc_id_token', None)
+    logger.info(f"Keycloak token: {keycloak_token}")
+
+    if keycloak_token:
+        decoded_token = decode_token(keycloak_token)
+        sid = decoded_token.get("sid")
+        logger.info(f"Session ID: {sid}")
+        # Store session ID in Django's session
+        if sid:
+            request.session['sid'] = sid  # Store it in the Django session
+
+    return http.HttpResponse("Session ID saved in Django session!")        
 
 def show_results(request: http.HttpRequest, for_process: str):
     translation.activate(settings.LANGUAGE_CODE)
@@ -452,7 +469,16 @@ async def enqueue_notebook_update(filename) -> None:
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
-        logger.info(f"Logout request data: {request.body}")
+        # Getting a logout token from keycloak
+        logout_token = request.body.get("logout_token", None)
+        if not logout_token:
+            return JsonResponse({"status": "error", "message": "No logout token provided"})
+        sid = decode_token(logout_token).get("sid")
+        if not sid:
+            return JsonResponse({"status": "error", "message": "No session ID found in the logout token"})
+        else:
+            logger.info('Session ID found in the logout token:' + sid)
+            request.session.delete(sid)
 
         logout(request)
 
@@ -461,8 +487,11 @@ def keycloak_logout(request: http.HttpRequest):
     except Exception as e:
         logger.error("Error occured: " + str(e))
         return JsonResponse({"status": "error", "message": str(e)})
-
-class LogoutView(OIDCLogoutView):
-    @csrf_exempt
-    def get(self, request):
-        return self.post(request)
+    
+def decode_token(token:str) -> dict:
+    parts = token.split(".")
+    payload = parts[1]
+    payload += '=' * (-len(payload) % 4)
+    decoded = base64.b64decode(payload).decode('utf-8')
+    logger.info(f"Decoded token: {decoded}")
+    return json.loads(decoded)
