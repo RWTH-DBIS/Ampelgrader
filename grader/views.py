@@ -483,13 +483,14 @@ def keycloak_logout(request: http.HttpRequest):
             return JsonResponse({"status": "error", "message": "No logout token provided"})
         
         sid = logout_token.get("sid")
-        
+
         if not sid:
             return JsonResponse({"status": "error", "message": "No session ID found in the logout token"})
         else:
             logger.info('Session ID found in the logout token:' + sid)
             # Delete the session from the database
-            Session.objects.filter(session_key=sid).delete()
+            session = Session.objects.get(session_key=sid)
+            session.delete()
             logger.info('Session deleted from the database')
 
         # Logout the user
