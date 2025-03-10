@@ -485,7 +485,8 @@ def keycloak_logout(request: http.HttpRequest):
 
         try:
           with connection.cursor() as cursor:
-              django_sid = cursor.execute("SELECT django_sid FROM keycloak_session WHERE keycloak_sid = %s", [str(sid)])
+              cursor.execute("SELECT django_sid FROM keycloak_session WHERE keycloak_sid = %s", [str(sid)])
+              django_sid = cursor.fetchone()[0]
         except Exception as e:
             logger.error("Error occured: " + str(e))
         
