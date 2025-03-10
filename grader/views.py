@@ -114,7 +114,8 @@ from .forms import NoteBookForm
 
 def show_exercises(request):
     translation.activate(settings.LANGUAGE_CODE)
-
+    logger.info("Authentication needed:" + str(settings.NEED_GRADING_AUTH))
+    logger.info('User is authenticated: ' + str(request.user.is_authenticated))
     if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
         return http.HttpResponseRedirect("../login")
     context_exercises = list()
@@ -457,7 +458,6 @@ def keycloak_logout(request: http.HttpRequest):
     except Exception as e:
         logger.error("Error occured: " + str(e))
         return JsonResponse({"status": "error", "message": str(e)})
-
 
 class LogoutView(OIDCLogoutView):
     @csrf_exempt
