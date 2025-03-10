@@ -452,9 +452,7 @@ async def enqueue_notebook_update(filename) -> None:
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
     try:
-        logger.info(str(request.session.get('session_key')))
-
-        del request.session['session_key']
+        logger.info(f"Logout request data: {request.body}")
 
         logout(request)
 
