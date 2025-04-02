@@ -3,18 +3,25 @@ import typing
 import django.http as http
 import re
 import os
+import base64
+import json
 
 from collections import defaultdict
 from datetime import timedelta
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
 from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils import translation
 from django.utils import timezone
+from django.contrib.sessions.models import Session
+
+from django.http import JsonResponse
+from django.contrib.auth import logout
+from django.views.decorators.csrf import csrf_exempt
 
 from grader.models import *
 
@@ -23,6 +30,14 @@ import asyncpg
 
 from pgqueuer.qm import QueueManager
 from pgqueuer.db import AsyncpgDriver
+
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def ping(request: http.HttpRequest):
 
@@ -34,6 +49,26 @@ def login(request: http.HttpRequest):
 
     return render(request, "grader/login.html", {})
 
+@receiver(user_logged_in)
+def store_sid(sender, request, user, **kwargs):
+    keycloak_token = request.session.get('oidc_id_token', None)
+
+    if keycloak_token:
+        decoded_token = decode_token(keycloak_token)
+        sid = decoded_token.get("sid")
+
+        # Update session key using keycloak sid
+        try:
+          with connection.cursor() as cursor:
+              cursor.execute("INSERT INTO keycloak_session (keycloak_sid, django_sid) VALUES (%s, %s)", 
+                             [sid, request.session.session_key])
+        except Exception as e:
+            logger.error("Error occured: " + str(e))
+
+    else:
+        logger.error('No keycloak token found in the session')
+        
+    return 
 
 def show_results(request: http.HttpRequest, for_process: str):
     translation.activate(settings.LANGUAGE_CODE)
@@ -124,7 +159,7 @@ def show_exercises(request):
         identifier NOT IN (SELECT process FROM errorlog)
         AND email = %s ORDER BY requested_at DESC LIMIT 1
         """,
-            [user_email],
+            [user_email], 
         )
 
         id = gp[0].identifier if len(list(gp)) > 0 else None
@@ -433,3 +468,51 @@ async def enqueue_notebook_update(filename) -> None:
         ["update_notebook"],
         [str(filename).encode()],
     )
+
+
+# Logout redirect 
+@csrf_exempt
+def keycloak_logout(request: http.HttpRequest):
+    try:
+        logout_token = decode_token(str(request.body))
+        
+        if not logout_token:
+            return JsonResponse({"status": "error", "message": "No logout token provided"})
+        
+        sid = logout_token.get("sid")
+
+        try:
+          with connection.cursor() as cursor:
+              cursor.execute("SELECT django_sid FROM keycloak_session WHERE keycloak_sid = %s", [str(sid)])
+              django_sid = cursor.fetchone()[0]
+        except Exception as e:
+            logger.error("Error occured: " + str(e))
+        
+        if not django_sid:
+            return JsonResponse({"status": "error", "message": "No session ID found."})
+        else:
+            # Delete the session from the database
+            session = Session.objects.get(session_key=django_sid)
+            Session.objects.filter(session_key=session.session_key).delete()
+        
+        try: 
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM keycloak_session WHERE keycloak_sid = %s", [sid])
+        except Exception as e:
+            logger.error("Error occured: " + str(e))
+
+        # Logout the user
+        logout(request)
+
+        logger.info("Backchannel Logout successful")
+        return http.HttpResponse(status=200)
+    except Exception as e:
+        logger.error("Error occured: " + str(e))
+        return JsonResponse({"status": "error", "message": str(e)})
+    
+def decode_token(token:str) -> dict:
+    parts = token.split(".")
+    payload = parts[1]
+    payload += '=' * (-len(payload) % 4)
+    decoded = base64.b64decode(payload).decode('utf-8')
+    return json.loads(decoded)
