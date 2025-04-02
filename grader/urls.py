@@ -11,4 +11,5 @@ urlpatterns = [
     path("results/<str:for_process>", views.show_results, name="grading_results"),
     path("successful_request", views.successful_request, name="successful_request"),
     path("autocreation", views.autoprocess_notebook, name="autocreate"),
+    path("logout", views.keycloak_logout, name="keycloak_logout"),
 ]

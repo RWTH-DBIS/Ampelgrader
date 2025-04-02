@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "grader",
+    # "csp",
 ]
 
 MIDDLEWARE = [
@@ -71,7 +72,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    # "csp.middleware.CSPMiddleware",
 ]
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 ROOT_URLCONF = "nbblackbox.urls"
 
@@ -209,14 +213,18 @@ OIDC_OP_JWKS_ENDPOINT = os.getenv("OIDC_OP_JWKS_ENDPOINT")
 OIDC_OP_AUTHORIZATION_ENDPOINT = os.getenv("OIDC_OP_AUTHORIZATION_ENDPOINT")
 OIDC_OP_TOKEN_ENDPOINT = os.getenv("OIDC_OP_TOKEN_ENDPOINT")
 OIDC_OP_USER_ENDPOINT = os.getenv("OIDC_OP_USER_ENDPOINT")
+OIDC_OP_LOGOUT_ENDPOINT = os.getenv("OIDC_OP_LOGOUT_ENDPOINT")
+OIDC_OP_LOGOUT_URL_METHOD = os.getenv("OIDC_OP_LOGOUT_URL_METHOD")
+
 # necessary to show only rwth sso
 OIDC_AUTH_REQUEST_EXTRA_PARAMS = {"kc_idp_hint": "rwth-aachen"}
+OIDC_STORE_ID_TOKEN = True
 
 LOGIN_REDIRECT_URL = "/grader/request/"
 LOGOUT_REDIRECT_URL = "/grader/login"
 
 # leave the not Debug pull down to force user auth in non-debug deployment
-ALLOW_ANONYMOUS_GRADING = True
+ALLOW_ANONYMOUS_GRADING = False
 NEED_GRADING_AUTH = (not DEBUG) or (not ALLOW_ANONYMOUS_GRADING)
 
 # allowed hosts are parsed from #!/usr/bin/env python

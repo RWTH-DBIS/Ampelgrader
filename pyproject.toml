@@ -13,4 +13,5 @@ dependencies = [
     "asyncpg~=0.30.0",
     "pgqueuer~=0.14.0",
     "whitenoise~=6.8.2",
+    "django-csp~=3.8",
 ]
