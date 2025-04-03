@@ -108,7 +108,7 @@ DATABASES = {
     # }
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "grader",
+        "NAME": os.getenv("NBBB_DB_NAME", "grader"),
         "USER": os.getenv("NBBB_DB_USER", "grader"),
         "PASSWORD": os.getenv("NBBB_DB_PASSWD", "secret"),
         "HOST": os.getenv("NBBB_DB_HOST", "127.0.0.1"),
