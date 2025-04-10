@@ -40,8 +40,6 @@ HTML_MAIL_TEMPLATE = lambda x: f"""
 class Command(BaseCommand):
     # help = 'Flush emails to students to notify them of finished grading processes'
     # asyncio.run(notify_students())
-    help = 'Start the pgqueuer background process'
-
     def handle(self, *args, **options):
         asyncio.run(self.notify_students())
 
