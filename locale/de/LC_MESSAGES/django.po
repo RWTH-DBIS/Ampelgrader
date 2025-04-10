@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-10 19:01+0200\n"
+"POT-Creation-Date: 2025-04-10 19:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -89,15 +89,9 @@ msgid ""
 msgstr ""
 
 #: grader/templates/grader/exercise_overview.html:33
-msgid "Eine Einreichung in den Ampel-Grader ersetzt"
-msgstr ""
-
-#: grader/templates/grader/exercise_overview.html:33
-msgid "KEINE"
-msgstr ""
-
-#: grader/templates/grader/exercise_overview.html:33
-msgid "Einreichung in Moodle!"
+msgid ""
+"Eine Einreichung in den Ampel-Grader ersetzt <u>KEINE</u> Einreichung in "
+"Moodle!"
 msgstr ""
 
 #: grader/templates/grader/grading_error.html:13

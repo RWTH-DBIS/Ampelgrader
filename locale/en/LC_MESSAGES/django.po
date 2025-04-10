@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-10 19:02+0200\n"
+"POT-Creation-Date: 2025-04-10 19:12+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,16 +96,10 @@ msgstr ""
 "GUARANTEE that you will pass the exercise."
 
 #: grader/templates/grader/exercise_overview.html:33
-msgid "Eine Einreichung in den Ampel-Grader ersetzt"
-msgstr "A submission to the Ample-Grader does not replace"
-
-#: grader/templates/grader/exercise_overview.html:33
-msgid "KEINE"
-msgstr ""
-
-#: grader/templates/grader/exercise_overview.html:33
-msgid "Einreichung in Moodle!"
-msgstr "a submission in Moodle"
+msgid ""
+"Eine Einreichung in den Ampel-Grader ersetzt <u>KEINE</u> Einreichung in "
+"Moodle!"
+msgstr "A submission to the Ample-Grader does <u>NOT</u> replace a submission in Moodle."
 
 #: grader/templates/grader/grading_error.html:13
 msgid ""
@@ -1420,6 +1414,9 @@ msgstr ""
 #: venv/lib/python3.13/site-packages/django/views/templates/default_urlconf.html:236
 msgid "Connect, get help, or contribute"
 msgstr ""
+
+#~ msgid "Einreichung in Moodle!"
+#~ msgstr "a submission in Moodle"
 
 #~ msgid ", Gelb von weniger als 70&#37;."
 #~ msgstr ", Yellow to less than"
