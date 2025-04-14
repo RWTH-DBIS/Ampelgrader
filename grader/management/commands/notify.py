@@ -46,7 +46,7 @@ class Command(BaseCommand):
     async def notify_students(self):
         connection = await asyncpg.connect(
             host=os.getenv("NBBB_DB_HOST"),
-            database=os.getenv("PG_DATABASE"),
+            database=os.getenv("NBBB_DB_NAME"),
             user=os.getenv("NBBB_DB_USER"),
             password=os.getenv("NBBB_DB_PASSWD")
         )
@@ -88,7 +88,7 @@ class NotificationExecutor(JobExecutor):
         try:
             connection = await asyncpg.connect(
                 host=os.getenv("NBBB_DB_HOST"),
-                database=os.getenv("PG_DATABASE"),
+                database=os.getenv("NBBB_DB_NAME"),
                 user=os.getenv("NBBB_DB_USER"),
                 password=os.getenv("NBBB_DB_PASSWD")
             )
