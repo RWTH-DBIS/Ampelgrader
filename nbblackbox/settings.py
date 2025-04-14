@@ -253,3 +253,5 @@ LOCALE_PATHS = [
 ]
 
 REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
+
+ADMIN_ROLE = os.getenv("ADMIN_ROLE", "admin")

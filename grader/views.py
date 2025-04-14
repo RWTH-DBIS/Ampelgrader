@@ -51,6 +51,10 @@ def login(request: http.HttpRequest):
 
 @receiver(user_logged_in)
 def store_sid(sender, request, user, **kwargs):
+    """
+    Store the keycloak session id in the database.
+    Check for user role to set user permissions.
+    """
     keycloak_token = request.session.get('oidc_id_token', None)
 
     if keycloak_token:
@@ -60,9 +64,10 @@ def store_sid(sender, request, user, **kwargs):
         # check if roles key is present in decoded token
         if "roles" in decoded_token:
             roles = decoded_token["roles"]
+            admin_role = settings.ADMIN_ROLE
 
             # if user has role "ampel-testgroup" make the user to staff and superuser 
-            if "ampel-testgroup" in roles:
+            if admin_role in roles:
                 if not user.is_staff:
                     user.is_staff = True
                     user.save()
