@@ -106,7 +106,7 @@ class NotificationExecutor(JobExecutor):
                 [process['email']],
                 html_message=settings.MAIL_TEMPLATE_RENDERER(process['identifier'])
                 )
-            print(f"Sent email to {process.email}")
+            
         except Exception as e:
         # to error handling?
             print("Error while sending email:" + str(e))
