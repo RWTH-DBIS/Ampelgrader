@@ -55,6 +55,7 @@ def store_sid(sender, request, user, **kwargs):
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
+        logger.info("Decoded token: " + str(decoded_token))
         sid = decoded_token.get("sid")
 
         # Update session key using keycloak sid
