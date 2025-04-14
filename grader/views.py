@@ -55,13 +55,11 @@ def store_sid(sender, request, user, **kwargs):
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
-        logger.info(f"Decoded token: {decoded_token}")
         sid = decoded_token.get("sid")
 
         # check if roles key is present in decoded token
         if "roles" in decoded_token:
             roles = decoded_token["roles"]
-            logger.info(f"Roles: {roles}")
 
             # if user has role "ampel-testgroup" make the user to staff and superuser 
             if "ampel-testgroup" in roles:
