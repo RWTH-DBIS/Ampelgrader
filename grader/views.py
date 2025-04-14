@@ -60,8 +60,14 @@ def store_sid(sender, request, user, **kwargs):
         # Update session key using keycloak sid
         try:
           with connection.cursor() as cursor:
-              cursor.execute("INSERT INTO keycloak_session (keycloak_sid, django_sid) VALUES (%s, %s)", 
-                             [sid, request.session.session_key])
+              # Check if the session already exists
+              cursor.execute("SELECT * FROM keycloak_session WHERE keycloak_sid = %s", [sid])
+              if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO keycloak_session (keycloak_sid, django_sid) VALUES (%s, %s)", 
+                              [sid, request.session.session_key])
+              else:
+                cursor.execute("UPDATE keycloak_session SET django_sid = %s WHERE keycloak_sid = %s", 
+                              [request.session.session_key, sid])
         except Exception as e:
             logger.error("Error occured: " + str(e))
 
