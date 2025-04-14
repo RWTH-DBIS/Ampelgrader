@@ -51,8 +51,10 @@ def login(request: http.HttpRequest):
 
 @receiver(user_logged_in)
 def store_sid(sender, request, user, **kwargs):
-    logger.info(f"request is {request.body}")
     keycloak_token = request.session.get('oidc_id_token', None)
+    logger.info(f'request.session: {request.session}')
+    keycloak_role = request.session.get('oidc_role', None)
+    logger.info(f"keycloak_role is {keycloak_role}")
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
