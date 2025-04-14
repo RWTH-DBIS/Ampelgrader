@@ -141,8 +141,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    # "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
-    "grader.auth.CustomOIDCAuthenticationBackend",
+    "mozilla_django_oidc.auth.OIDCAuthenticationBackend",
     # necessary for logging in via local admin password
     "django.contrib.auth.backends.ModelBackend",
 )
