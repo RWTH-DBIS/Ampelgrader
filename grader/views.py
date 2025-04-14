@@ -52,14 +52,32 @@ def login(request: http.HttpRequest):
 @receiver(user_logged_in)
 def store_sid(sender, request, user, **kwargs):
     keycloak_token = request.session.get('oidc_id_token', None)
-    logger.info(f'request.session: {request.session}')
-    keycloak_role = request.session.get('oidc_role', None)
-    logger.info(f"keycloak_role is {keycloak_role}")
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
+        logger.info(f"Decoded token: {decoded_token}")
         sid = decoded_token.get("sid")
 
+        # check if roles key is present in decoded token
+        if "roles" in decoded_token:
+            roles = decoded_token["roles"]
+            logger.info(f"Roles: {roles}")
+
+            # if user has role "ampel-testgroup" make the user to staff and superuser 
+            if "ampel-testgroup" in roles:
+                if not user.is_staff:
+                    user.is_staff = True
+                    user.save()
+                    logger.info(f"User {user.username} has been granted staff privileges.")
+                if not user.is_superuser:
+                    user.is_superuser = True
+                    user.save()
+                    logger.info(f"User {user.username} has been granted superuser privileges.")
+            else: 
+                user.is_staff = False
+                user.is_superuser = False
+                user.save()
+            
         # Update session key using keycloak sid
         try:
           with connection.cursor() as cursor:
