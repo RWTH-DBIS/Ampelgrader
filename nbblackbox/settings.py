@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from datetime import timedelta
 from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -72,6 +73,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
+    'grader.middleware.auto_logout.middleware.auto_logout',
     # "csp.middleware.CSPMiddleware",
 ]
 
@@ -90,6 +92,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "grader.middleware.auto_logout.context_processors.auto_logout_client",
             ],
         },
     },
@@ -255,3 +258,8 @@ LOCALE_PATHS = [
 REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
 
 ADMIN_ROLE = os.getenv("ADMIN_ROLE", "admin")
+
+AUTO_LOGOUT = {
+    'IDLE_TIME': os.getenv("IDLE_TIME" ,timedelta(minutes=1)),
+    'REDIRECT_TO_LOGIN_IMMEDIATELY': True,
+}
