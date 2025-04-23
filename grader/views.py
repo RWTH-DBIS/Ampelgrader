@@ -80,7 +80,13 @@ def store_sid(sender, request, user, **kwargs):
                 user.is_staff = False
                 user.is_superuser = False
                 user.save()
-            
+        elif settings.DEBUG:
+            # for debugging purposes, set user automatically to superuser
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            logger.info(f"User {user.username} has been granted staff privileges.")
+
         # Update session key using keycloak sid
         try:
           with connection.cursor() as cursor:
@@ -97,7 +103,7 @@ def store_sid(sender, request, user, **kwargs):
 
     else:
         logger.error('No keycloak token found in the session')
-        
+    
     return 
 
 def show_results(request: http.HttpRequest, for_process: str):
@@ -499,11 +505,10 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-
 # Logout redirect 
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
-    try:
+    try: 
         logout_token = decode_token(str(request.body))
         
         if not logout_token:
