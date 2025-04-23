@@ -37,6 +37,7 @@
         {% block content %}
 
         {% endblock %}   
+        {{ redirect_to_login_immediately }}
         <!-- Optional JavaScript -->
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -58,27 +59,6 @@
             }, 2000); 
             
             });
-
-            let idleTime = 0;
-            const idleLimit = 1 * 60 * 1000; // 15 minutes in milliseconds
-
-            function resetIdleTimer() {
-                idleTime = 0;
-            }
-
-            function checkIdleTime() {
-                idleTime += 1000;
-                if (idleTime >= idleLimit) {
-                    window.location.href = "{% url 'oidc_logout' %}";
-                }
-            }
-
-            document.addEventListener('mousemove', resetIdleTimer);
-            document.addEventListener('keypress', resetIdleTimer);
-            document.addEventListener('click', resetIdleTimer);
-            document.addEventListener('scroll', resetIdleTimer);
-
-            setInterval(checkIdleTime, 1000);
         </script>
     </body>
 </html>
