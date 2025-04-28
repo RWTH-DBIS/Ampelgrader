@@ -13,7 +13,7 @@ These components communicate through a postgres database, the datamodel is docum
 
 ## Workflow
 Short summary of the idea of nbgrader:
-1. The admin provides creates an exercise by providing the notebook for the students via ``/grader/autoprocess`` or by manual creation.
+1. The admin provides creates an exercise by providing the notebook for the students via ``/grader/autocreation`` or by manual creation.
 2. Here, the admin configures are time window, in which grading of the exercise is allowed
 3. A student who wishes to have a preliminary grading of their work submit the notebook to the service via the request form
 4. The request grading process is stored in the database
