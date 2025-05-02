@@ -358,7 +358,6 @@ Administration utilities
 from json import loads
 from .forms import AutoCreationForm
 
-
 def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]:
     """
     Parses a jupyter notebook to extract the association between subexercises and cell ids.
@@ -419,6 +418,7 @@ def autoprocess_notebook(request: http.HttpRequest):
     if form.is_valid():
         notebook_file_name = request.FILES["notebook"].name
         notebook_data = request.FILES["notebook"].read()
+        assets_files = request.FILES["assets"].read() if "assets" in request.FILES else None
         exercise_identifier = form.cleaned_data["exercise_identifier"]
         subexercise_dict = parse_notebook(loads(notebook_data))
         with transaction.atomic():
@@ -430,7 +430,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                 last_updated=datetime.now(),
             )
             ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, uploaded_at=datetime.now())
+            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
             nb.save()
             for subexercise_ident in subexercise_dict.keys():
                 sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
@@ -441,7 +441,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                         sub_exercise=sbe,
                         max_score=subexercise_dict[subexercise_ident][cell_id],
                     )
-                    cell.save()
+                    cell.save()                             
 
         # trigger nbgrader to update notebook and generate assignments
         asyncio.run(enqueue_notebook_update(notebook_file_name))

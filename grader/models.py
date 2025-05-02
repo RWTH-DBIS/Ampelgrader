@@ -73,6 +73,7 @@ class Notebook(models.Model):
         Exercise, on_delete=models.CASCADE, db_column="in_exercise"
     )
     data = models.BinaryField(db_column="data")
+    assets = models.BinaryField(db_column="assets", blank=True, null=True)
     uploaded_at = models.DateTimeField(db_column="uploaded_at", auto_now=True)
 
     class Meta:
