@@ -51,23 +51,59 @@ def login(request: http.HttpRequest):
 
 @receiver(user_logged_in)
 def store_sid(sender, request, user, **kwargs):
+    """
+    Store the keycloak session id in the database.
+    Check for user role to set user permissions.
+    """
     keycloak_token = request.session.get('oidc_id_token', None)
 
     if keycloak_token:
         decoded_token = decode_token(keycloak_token)
         sid = decoded_token.get("sid")
 
+        # check if roles key is present in decoded token
+        if "roles" in decoded_token:
+            roles = decoded_token["roles"]
+            admin_role = settings.ADMIN_ROLE
+
+            # if user has role "ampel-testgroup" make the user to staff and superuser 
+            if admin_role in roles:
+                if not user.is_staff:
+                    user.is_staff = True
+                    user.save()
+                    logger.info(f"User {user.username} has been granted staff privileges.")
+                if not user.is_superuser:
+                    user.is_superuser = True
+                    user.save()
+                    logger.info(f"User {user.username} has been granted superuser privileges.")
+            else: 
+                user.is_staff = False
+                user.is_superuser = False
+                user.save()
+        elif settings.DEBUG:
+            # for debugging purposes, set user automatically to superuser
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+            logger.info(f"User {user.username} has been granted staff privileges.")
+
         # Update session key using keycloak sid
         try:
           with connection.cursor() as cursor:
-              cursor.execute("INSERT INTO keycloak_session (keycloak_sid, django_sid) VALUES (%s, %s)", 
-                             [sid, request.session.session_key])
+              # Check if the session already exists
+              cursor.execute("SELECT * FROM keycloak_session WHERE keycloak_sid = %s", [sid])
+              if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO keycloak_session (keycloak_sid, django_sid) VALUES (%s, %s)", 
+                              [sid, request.session.session_key])
+              else:
+                cursor.execute("UPDATE keycloak_session SET django_sid = %s WHERE keycloak_sid = %s", 
+                              [request.session.session_key, sid])
         except Exception as e:
             logger.error("Error occured: " + str(e))
 
     else:
         logger.error('No keycloak token found in the session')
-        
+    
     return 
 
 def show_results(request: http.HttpRequest, for_process: str):
@@ -322,7 +358,6 @@ Administration utilities
 from json import loads
 from .forms import AutoCreationForm
 
-
 def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]:
     """
     Parses a jupyter notebook to extract the association between subexercises and cell ids.
@@ -383,6 +418,7 @@ def autoprocess_notebook(request: http.HttpRequest):
     if form.is_valid():
         notebook_file_name = request.FILES["notebook"].name
         notebook_data = request.FILES["notebook"].read()
+        assets_files = request.FILES["assets"].read() if "assets" in request.FILES else None
         exercise_identifier = form.cleaned_data["exercise_identifier"]
         subexercise_dict = parse_notebook(loads(notebook_data))
         with transaction.atomic():
@@ -394,7 +430,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                 last_updated=datetime.now(),
             )
             ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, uploaded_at=datetime.now())
+            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
             nb.save()
             for subexercise_ident in subexercise_dict.keys():
                 sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
@@ -405,7 +441,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                         sub_exercise=sbe,
                         max_score=subexercise_dict[subexercise_ident][cell_id],
                     )
-                    cell.save()
+                    cell.save()                             
 
         # trigger nbgrader to update notebook and generate assignments
         asyncio.run(enqueue_notebook_update(notebook_file_name))
@@ -469,11 +505,10 @@ async def enqueue_notebook_update(filename) -> None:
         [str(filename).encode()],
     )
 
-
 # Logout redirect 
 @csrf_exempt
 def keycloak_logout(request: http.HttpRequest):
-    try:
+    try: 
         logout_token = decode_token(str(request.body))
         
         if not logout_token:

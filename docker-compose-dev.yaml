@@ -4,10 +4,11 @@ services:
     depends_on:
       nbblackbox_postgres:
         condition: service_healthy
-    image: nbgrader:local
     ports:
       - "80:80"
-    build: "."
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
     environment:
       NBBB_DB_HOST: "database"
       NBBB_DB_PASSWD: "secret"
@@ -65,7 +66,7 @@ services:
   landing_page:
     build: 
       context: "."
-      dockerfile: "DockerfileLandingPage"
+      dockerfile: "DockerfileLanding"
     ports:
       - "3000:3000" 
     image: landing_page:local

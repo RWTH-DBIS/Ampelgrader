@@ -11,6 +11,7 @@ class DateInput(forms.DateTimeInput):
 
 class AutoCreationForm(forms.Form):
     notebook = forms.FileField(label="Notebook file")
+    assets = forms.FileField(label="Assets file as zip (Optional)", required=False)
     start_date = forms.DateTimeField(
         label="Start date of autograde period", widget=DateInput
     )

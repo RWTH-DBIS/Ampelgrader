@@ -20,6 +20,7 @@ from pgqueuer.db import AsyncpgDriver
 from pgqueuer.models import Job
 from pgqueuer.db import AsyncpgDriver
 from pgqueuer.executors import JobExecutor
+from zipfile import ZipFile
 
 from nbgrader.apps import NbGraderAPI
 from nbgrader.coursedir import CourseDirectory
@@ -266,7 +267,20 @@ class NotebookExecutor(JobExecutor):
                 with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
                     f.write(notebook['data'])
                     logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
-                
+
+                # if assets are present, store them as well
+                if notebook['assets'] is not None:
+                    with open(f"{SOURCE_PATH}/{folder_name}/assets.zip", "wb") as f:
+                        f.write(notebook['assets'])
+                        logger.info(f"Notebook assets.zip stored in {SOURCE_PATH}/{folder_name}")
+                    
+                    # unzip the assets.zip file
+                    with ZipFile(f"{SOURCE_PATH}/{folder_name}/assets.zip", "r") as zip_file:
+                        zip_file.extractall(f"{SOURCE_PATH}/{folder_name}")
+                        logger.info(f"Notebook assets unzipped in {SOURCE_PATH}/{folder_name}")
+            
+                    os.remove(f"{SOURCE_PATH}/{folder_name}/assets.zip")
+                    
                 try:
                     # generate the assignment 
                     # (store notebook in src dir to release and stripping all output cells)
@@ -507,6 +521,20 @@ async def update_notebook(notebook) -> None:
     with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
         f.write(notebook['data'])
         logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
+    
+    # if assets are present, store them as well
+    if notebook['assets'] is not None:
+        with open(f"{SOURCE_PATH}/{folder_name}/assets.zip", "wb") as f:
+            f.write(notebook['assets'])
+            logger.info(f"Notebook assets.zip stored in {SOURCE_PATH}/{folder_name}")
+        
+        # unzip the assets.zip file
+        with ZipFile(f"{SOURCE_PATH}/{folder_name}/assets.zip", "r") as zip_file:
+            zip_file.extractall(f"{SOURCE_PATH}/{folder_name}")
+            logger.info(f"Notebook assets unzipped in {SOURCE_PATH}/{folder_name}")
+
+        # delete the assets.zip file
+        os.remove(f"{SOURCE_PATH}/{folder_name}/assets.zip")
 
     try:
         # generate the assignment 
