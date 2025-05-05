@@ -252,7 +252,7 @@ class NotebookExecutor(JobExecutor):
                     notebook_name
                 )
 
-                folder_name = notebook_name.split(".")[0]
+                folder_name = notebook['in_exercise']
 
                 # Store notebook into course directory
                 SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
@@ -506,7 +506,7 @@ async def check_assignment(assignment: str) -> None:
 
 async def update_notebook(notebook) -> None:
     notebook_name = notebook['filename']
-    folder_name = notebook_name.split(".")[0]
+    folder_name = notebook['in_exercise']
 
     # Store notebook into course directory
     SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
