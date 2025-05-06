@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-10 19:10+0200\n"
+"POT-Creation-Date: 2025-05-06 13:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,12 +34,12 @@ msgstr ""
 msgid "Autocreation Zusammenfassung"
 msgstr ""
 
-#: grader/templates/grader/base.html:10
+#: grader/templates/grader/base.html:10 grader/templates/maintenance.html:9
 msgid "Übung Übersicht"
 msgstr ""
 
 #: grader/templates/grader/base.html:18 grader/templates/grader/login.html:19
-#: grader/templates/grader/logout.html:19
+#: grader/templates/grader/logout.html:19 grader/templates/maintenance.html:17
 msgid "Ampel"
 msgstr ""
 
@@ -164,15 +164,27 @@ msgstr ""
 msgid "Sie werden von uns hören. Ihre Prozess-ID lautet: "
 msgstr ""
 
-#: grader/views.py:220
+#: grader/templates/maintenance.html:30
+msgid "Wartungsarbeiten"
+msgstr ""
+
+#: grader/templates/maintenance.html:32
+msgid "Derzeit führen wir Wartungsarbeiten durch. "
+msgstr ""
+
+#: grader/templates/maintenance.html:33
+msgid "Wir informieren Sie sobald die Seite wieder verfügbar ist."
+msgstr ""
+
+#: grader/views.py:255
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:339
+#: grader/views.py:373
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:364
+#: grader/views.py:398
 msgid "Given dict has invalid format. Key error: "
 msgstr ""
 

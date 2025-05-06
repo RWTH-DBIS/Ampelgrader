@@ -29,6 +29,7 @@ services:
       YELLOW_PERCENTAGE: "0.7"
       REQUEST_TIME_LIMIT: "300"
       LANGUAGE_CODE: "en"
+      MAINTENANCE_MODE: "True"
     networks:
       - nbblackbox_database
   nbblackbox_postgres:
