@@ -1,0 +1,37 @@
+{% load i18n %}
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+    <head>
+        <meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- <title>{% translate "Übung Übersicht" %}</title> -->
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="{% static 'grader/styles.css' %}">
+    </head>
+    <body>
+        <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+            <a href="/grader/request/" class="navbar-brand">{% translate "Ampel"%}-Grader</a>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="rwth-logo d-flex justify-content-center">
+                <a href="/grader/request/">
+                    <img src="https://git.rwth-aachen.de/i5/teaching/dbis-raw/-/raw/main/dbis-logo.png" width="500"/>
+                </a>
+            </div>
+            
+            <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+              <!-- add margin to image bottom -->
+                <h2>{% translate "Wartungsarbeiten" %}</h1>
+                <img src="{% static 'grader/under_construction.png' %}" alt="Under Construction" width="300"/>
+                <p> {% translate "Derzeit führen wir Wartungsarbeiten durch. "%}</p>
+                <p> {% translate "Wir informieren Sie sobald die Seite wieder verfügbar ist." %}</p>
+            </div>
+        </div>
+    </body>
+</html>

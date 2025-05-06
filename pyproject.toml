@@ -14,4 +14,5 @@ dependencies = [
     "pgqueuer~=0.14.0",
     "whitenoise~=6.8.2",
     "django-csp~=3.8",
+    "django-maintenance-mode~=0.22.0"
 ]

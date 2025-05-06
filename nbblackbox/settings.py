@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "grader",
+    "maintenance_mode",
     # "csp",
 ]
 
@@ -74,6 +75,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     'grader.middleware.auto_logout.middleware.auto_logout',
+    'maintenance_mode.middleware.MaintenanceModeMiddleware',
     # "csp.middleware.CSPMiddleware",
 ]
 
@@ -265,3 +267,10 @@ AUTO_LOGOUT = {
     'IDLE_TIME': timedelta(minutes=int(IDLE_TIME_ENV)),
     'REDIRECT_TO_LOGIN_IMMEDIATELY': True,
 }
+
+MAINTENANCE_MODE = os.getenv("MAINTENANCE_MODE", "None")
+
+MAINTENANCE_MODE_IGNORE_ADMIN_SITE = True
+MAINTENANCE_MODE_IGNORE_SUPERUSER = True
+# MAINTENANCE_MODE_IGNORE_IP_ADDRESSES = ("137.226.232.*")
+MAINTENANCE_MODE_TEMPLATE = "maintenance.html"

@@ -43,7 +43,6 @@ def ping(request: http.HttpRequest):
 
     return http.HttpResponse(b"pong")
 
-
 def login(request: http.HttpRequest):
     translation.activate(settings.LANGUAGE_CODE)
 

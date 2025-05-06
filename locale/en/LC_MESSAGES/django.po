@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-10 19:12+0200\n"
+"POT-Creation-Date: 2025-05-06 13:23+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,12 +34,12 @@ msgstr "Autocreation of the exercise"
 msgid "Autocreation Zusammenfassung"
 msgstr "Autocreation overview"
 
-#: grader/templates/grader/base.html:10
+#: grader/templates/grader/base.html:10 grader/templates/maintenance.html:9
 msgid "Übung Übersicht"
 msgstr "Exercise Overview"
 
 #: grader/templates/grader/base.html:18 grader/templates/grader/login.html:19
-#: grader/templates/grader/logout.html:19
+#: grader/templates/grader/logout.html:19 grader/templates/maintenance.html:17
 msgid "Ampel"
 msgstr "Ample"
 
@@ -99,7 +99,9 @@ msgstr ""
 msgid ""
 "Eine Einreichung in den Ampel-Grader ersetzt <u>KEINE</u> Einreichung in "
 "Moodle!"
-msgstr "A submission to the Ample-Grader does <u>NOT</u> replace a submission in Moodle."
+msgstr ""
+"A submission to the Ample-Grader does <u>NOT</u> replace a submission in "
+"Moodle."
 
 #: grader/templates/grader/grading_error.html:13
 msgid ""
@@ -179,15 +181,27 @@ msgstr "Grading successfully requested!"
 msgid "Sie werden von uns hören. Ihre Prozess-ID lautet: "
 msgstr "You will hear from us. Your process ID is:"
 
-#: grader/views.py:220
+#: grader/templates/maintenance.html:30
+msgid "Wartungsarbeiten"
+msgstr "Under Construction"
+
+#: grader/templates/maintenance.html:32
+msgid "Derzeit führen wir Wartungsarbeiten durch. "
+msgstr "The site is currently under construction."
+
+#: grader/templates/maintenance.html:33
+msgid "Wir informieren Sie sobald die Seite wieder verfügbar ist."
+msgstr "We will inform you as soon as the website is available again."
+
+#: grader/views.py:255
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:339
+#: grader/views.py:373
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:364
+#: grader/views.py:398
 msgid "Given dict has invalid format. Key error: "
 msgstr ""
 
