@@ -2,8 +2,10 @@ from django.contrib import admin
 
 from .models import *
 
-# Register your models here.
+admin.site.site_header = "Nbgrader Admin Panel"
+admin.site.index_title = "Nbgrader Verwaltung"
 
+# Register your models here.
 
 class CellInline(admin.TabularInline):
     model = Cell
@@ -38,6 +40,10 @@ class ExerciseAdmin(admin.ModelAdmin):
     model = Exercise
     inlines = [NotebookAdmin]
     list_display = ["identifier", "start_date", "stop_date", "running", "last_updated"]
+    readonly_fields = ["identifier"]
+
+    def has_delete_permission(self, request, obj = None):
+        return False
 
 
 class ProcessAdmin(admin.ModelAdmin):
