@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-06 13:23+0200\n"
+"POT-Creation-Date: 2025-05-07 14:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,8 +27,16 @@ msgid "Zur Startseite"
 msgstr "Go to Homepage"
 
 #: grader/templates/grader/autocreation.html:11
-msgid "Autocreation von der Übung"
-msgstr "Autocreation of the exercise"
+#, fuzzy
+#| msgid "Autocreation von der Übung"
+msgid "Autocreation\\Bearbeiten von der Übung"
+msgstr "Autocreation\\Edit of the exercise"
+
+#: grader/templates/grader/autocreation.html:20
+msgid ""
+"^* Eine bestehende Übung kann bearbeitet werden, wenn der Name der Übung als "
+"Identifier angegeben wird."
+msgstr "An exercise can be edited if its name is defined in the identifier."
 
 #: grader/templates/grader/autocreation_result.html:12
 msgid "Autocreation Zusammenfassung"
