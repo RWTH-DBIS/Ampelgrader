@@ -20,9 +20,12 @@ class ErrorLogInline(admin.StackedInline):
     model = ErrorLog
 
 
-class StudentNotebookInline(admin.StackedInline):
+class StudentNotebookInline(admin.TabularInline):
     model = StudentNotebook
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.only("process", "notebook")
 
 class SubExercisesAdmin(admin.ModelAdmin):
     model = SubExercise

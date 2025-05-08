@@ -333,6 +333,7 @@ async def grade(
     grading_result = API.autograde(
         assignment, DUMMY_STUDENT_ID, force=True, create=True
     )
+    
     if not grading_result["success"]:
         logger.error(f"Grading error: {grading_result['error']}")
         logger.error(f"Log of Notebook:{str(grading_result['log'])}")
@@ -373,10 +374,10 @@ def cmd():
         API.coursedir.source_directory
     )
     # we assume every directory is an assignment
-    for assi in SOURCE_PATH.iterdir():
-        if assi.is_dir():
-            logger.info(f"Generate Assignment {assi.name}...")
-            API.generate_assignment(assi.name)
+    # for assi in SOURCE_PATH.iterdir():
+    #     if assi.is_dir():
+    #         logger.info(f"Generate Assignment {assi.name}...")
+    #         API.generate_assignment(assi.name)
     try:
         main()
     except KeyboardInterrupt:
