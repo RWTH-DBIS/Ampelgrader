@@ -330,9 +330,13 @@ async def grade(
     logger.info(f"Start grading for assignment {assignment}")
     # force: grade even if it is already autograded
     # create: create new student in the database if not already exist
-    grading_result = API.autograde(
-        assignment, DUMMY_STUDENT_ID, force=True, create=True
-    )
+    try: 
+      grading_result = API.autograde(
+          assignment, DUMMY_STUDENT_ID, force=True, create=True
+      )
+    except RuntimeError as e:
+        logger.error(f"Error while grading notebook: {str(e)}")
+        raise RuntimeError(f"Error while grading notebook: {str(e)}")
     
     if not grading_result["success"]:
         logger.error(f"Grading error: {grading_result['error']}")
