@@ -118,7 +118,6 @@ def grade(
     return cell_point_dict
 
 def handle_update_notebook():
-    cursor.execute(f"LISTEN update_notebook;")
     conn.poll()
     for notify in conn.notifies:
         logger.info(f"Received notification for update notebook: {notify.payload}")
@@ -127,7 +126,6 @@ def handle_update_notebook():
     conn.notifies.clear()
 
 def handle_grade_notebook():
-    cursor.execute(f"LISTEN grade_notebook;")
     conn.poll()
     for notify in conn.notifies:
         logger.info(f"Received notification for grading notebook: {notify.payload}")
@@ -420,6 +418,9 @@ def main():
     signal.signal(signal.SIGINT, k.kill)
     signal.signal(signal.SIGTERM, k.kill)
     while k.running:
+        cursor.execute(f"LISTEN update_notebook;")    
+        cursor.execute(f"LISTEN grade_notebook;")
+
         loop = asyncio.get_event_loop()
         loop.add_reader(conn, handle_update_notebook)
         loop.add_reader(conn, handle_grade_notebook)
