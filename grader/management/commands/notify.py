@@ -3,11 +3,8 @@ from django.core.management.base import BaseCommand
 from datetime import timedelta
 from django.core.mail import send_mail
 from django.conf import settings
-from pgqueuer.qm import QueueManager
-from pgqueuer.models import Job
-from pgqueuer.db import AsyncpgDriver
-from pgqueuer.executors import JobExecutor
-import asyncpg, asyncio, os
+import psycopg2, os, asyncio
+# import asyncpg, asyncio, os
 
 MAIL_TEMPLATE = lambda x: f"""Hallo,
 
@@ -36,64 +33,35 @@ HTML_MAIL_TEMPLATE = lambda x: f"""
 <br>
 <footer style="color: darkgrey; font_size: small;">Diese Email ist autogeneriert. Bitte antworten Sie nicht auf diese E-Mail. Bei Fragen wenden Sie sich bitte an dbis-ticket@dbis.rwth-aachen.de.</footer>
 """
+conn = psycopg2.connect(host=os.getenv("NBBB_DB_HOST", "localhost"), 
+                dbname=os.getenv("NBBB_DB_NAME", "grader"), 
+                user=os.getenv("NBBB_DB_USER", "user"), 
+                password=os.getenv("NBBB_DB_PASSWD", "password"))
+conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+
+cursor = conn.cursor()
+cursor.execute(f"LISTEN notify_student;")
 
 class Command(BaseCommand):
     # help = 'Flush emails to students to notify them of finished grading processes'
     # asyncio.run(notify_students())
+
     def handle(self, *args, **options):
-        asyncio.run(self.notify_students())
+        loop = asyncio.get_event_loop()
+        loop.add_reader(conn, self.handle_notify)
+        loop.run_forever()
 
-    async def notify_students(self):
-        connection = await asyncpg.connect(
-            host=os.getenv("NBBB_DB_HOST"),
-            database=os.getenv("NBBB_DB_NAME"),
-            user=os.getenv("NBBB_DB_USER"),
-            password=os.getenv("NBBB_DB_PASSWD")
-        )
+    def handle_notify(self):
+        conn.poll()
+        for notify in conn.notifies:
+            print(notify.payload)
+            process_id = notify.payload
+            self.send_mail_to_student(process_id)
+        conn.notifies.clear()
 
-        driver = AsyncpgDriver(connection)
-        qm = QueueManager(driver)
-
-        @qm.entrypoint("send_email", executor=NotificationExecutor)
-        async def notification_task(job: Job) -> None:
-            print(f"Executing notification job with ID: {job.id}")
-
-        await qm.run()
-
-class NotificationExecutor(JobExecutor):
-    def __init__(
-        self,
-        func,
-        requests_per_second: float = 2.0,
-        retry_timer: timedelta = timedelta(seconds=30),
-        serialized_dispatch: bool = True,
-        concurrency_limit: int = 5,
-    ):
-        super().__init__(func, requests_per_second, retry_timer, serialized_dispatch, concurrency_limit)
-
-    async def execute(self, job: Job) -> None:
-        if settings.EMAIL_ADDRESS is None:
-            print("No email adress set. Please set EMAIL_ADRESS in settings.py")
-            return
-                
-        # Extract notification type and message from job data
-        process_id = job.payload.decode()
-
-        await self.send_mail_to_student(process_id)
-
-        # Execute the original job function if required
-        # await self.func(job)
-
-    async def send_mail_to_student(self, process_id) -> None:
+    def send_mail_to_student(self, process_id) -> None:
         try:
-            connection = await asyncpg.connect(
-                host=os.getenv("NBBB_DB_HOST"),
-                database=os.getenv("NBBB_DB_NAME"),
-                user=os.getenv("NBBB_DB_USER"),
-                password=os.getenv("NBBB_DB_PASSWD")
-            )
-                            
-            process = await connection.fetchrow("""SELECT * FROM gradingprocess WHERE identifier = $1;""", str(process_id))
+            process = conn.fetchrow("""SELECT * FROM gradingprocess WHERE identifier = $1;""", str(process_id))
 
             if process is None:
                 print(f"Process with ID {process_id} not found.")
@@ -112,8 +80,5 @@ class NotificationExecutor(JobExecutor):
             print("Error while sending email:" + str(e))
         else:
             print(f"Notified {process['email']}\n") 
-            await connection.execute("""UPDATE gradingprocess SET notified = true WHERE identifier = $1; """, process['identifier'])
-        finally:
-            await connection.close()
-            print("Connection closed")
+            conn.execute("""UPDATE gradingprocess SET notified = true WHERE identifier = $1; """, process['identifier'])
 
