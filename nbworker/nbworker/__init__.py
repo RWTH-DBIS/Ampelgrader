@@ -117,22 +117,6 @@ def grade(
 
     return cell_point_dict
 
-def handle_update_notebook():
-    conn.poll()
-    for notify in conn.notifies:
-        logger.info(f"Received notification for update notebook: {notify.payload}")
-        filename = notify.payload
-        update_notebook(filename)
-    conn.notifies.clear()
-
-def handle_grade_notebook():
-    conn.poll()
-    for notify in conn.notifies:
-        logger.info(f"Received notification for grading notebook: {notify.payload}")
-        process_id = notify.payload
-        grade_notebook(process_id)
-    conn.notifies.clear()
-
 # Enqueue the successful graded assignment to the database for further processing
 def enqueue_graded(process_id) -> None:
     cursor.execute(f"NOTIFY notify_student, '{process_id}';")
@@ -170,7 +154,7 @@ def grade_notebook(process_id) -> None:
             )
 
         try:
-            logger.info("Fetching grading process")
+            # logger.info("Fetching grading process")
             cursor.execute(
             """
             SELECT gradingprocess.identifier, gradingprocess.requested_at, gradingprocess.for_exercise FROM gradingprocess WHERE identifier = %s;
@@ -180,7 +164,7 @@ def grade_notebook(process_id) -> None:
 
             grading_process = cursor.fetchone()
 
-            logger.info(f"Grading process: {grading_process}")
+            # logger.info(f"Grading process: {grading_process}")
 
             cursor.execute(
             """
@@ -293,7 +277,7 @@ def check_assignment(assignment: str) -> None:
                 f"Grading for Assignment {assignment} was requested but assignment was not found in release folder!"
             )
             API.generate_assignment(assignment)
-            logger.info(f"Assignment {assignment} generated in release folder")
+            # logger.info(f"Assignment {assignment} generated in release folder")
 
         # ensure each worker is uptodate with the newest assignment version, therefore check time of last update in directory
         RELEASE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
@@ -301,7 +285,7 @@ def check_assignment(assignment: str) -> None:
         )
 
         last_release_update = datetime.datetime.fromtimestamp(os.path.getmtime(f"{RELEASE_PATH}/{assignment}"), tz=datetime.timezone.utc)
-        logger.info(f"Last release updated at: {last_release_update}")
+        # logger.info(f"Last release updated at: {last_release_update}")
 
         cursor.execute("""
             SELECT * FROM notebook WHERE in_exercise = %s ORDER BY uploaded_at DESC LIMIT 1;
@@ -311,7 +295,7 @@ def check_assignment(assignment: str) -> None:
 
         last_notebook_v = cursor.fetchone()
 
-        logger.info(f"Last notebook version: {last_notebook_v[3]}")
+        # logger.info(f"Last notebook version: {last_notebook_v[3]}")
 
         if last_notebook_v[3] > last_release_update :
             logger.info(last_notebook_v[0])
@@ -397,6 +381,19 @@ def update_notebook(notebook_name) -> None:
     else:
         logger.info(f"Notebook {notebook_name} has been updated.")
 
+def handle_listener():
+    conn.poll()
+    while conn.notifies:
+        notify = conn.notifies.pop(0)
+        logger.info(f"Received notification: {notify.channel} - {notify.payload}")
+        if notify.channel == "update_notebook":
+            filename = notify.payload
+            update_notebook(filename)
+        elif notify.channel == "grade_notebook":
+            process_id = notify.payload
+            grade_notebook(process_id)
+        else:
+            logger.warning(f"Unknown notification channel: {notify.channel}")
 
 def main():
     """Main Loop"""
@@ -418,12 +415,11 @@ def main():
     signal.signal(signal.SIGINT, k.kill)
     signal.signal(signal.SIGTERM, k.kill)
     while k.running:
-        cursor.execute(f"LISTEN update_notebook;")    
+        cursor.execute(f"LISTEN update_notebook;")
         cursor.execute(f"LISTEN grade_notebook;")
 
         loop = asyncio.get_event_loop()
-        loop.add_reader(conn, handle_update_notebook)
-        loop.add_reader(conn, handle_grade_notebook)
+        loop.add_reader(conn, handle_listener)
         loop.run_forever()
 
 def cmd():
@@ -445,8 +441,10 @@ def cmd():
         main()
     except KeyboardInterrupt:
         try:
+            conn.close()
             sys.exit(0)
         except SystemExit:
+            conn.close()
             os._exit(0)
 
 if __name__ == "__main__":
