@@ -5,7 +5,7 @@ import re
 import os
 import base64
 import json
-
+import time 
 from collections import defaultdict
 from datetime import timedelta
 
@@ -25,11 +25,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from grader.models import *
 
-import asyncio
-import asyncpg
-
-from pgqueuer.qm import QueueManager
-from pgqueuer.db import AsyncpgDriver
+import psycopg2
 
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
@@ -38,6 +34,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+conn = psycopg2.connect(host=os.getenv("NBBB_DB_HOST", "localhost"), 
+                dbname=os.getenv("NBBB_DB_NAME", "grader"), 
+                user=os.getenv("NBBB_DB_USER", "user"), 
+                password=os.getenv("NBBB_DB_PASSWD", "password"))
+cursor = conn.cursor()
+conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
 def ping(request: http.HttpRequest):
 
@@ -201,7 +204,6 @@ def show_exercises(request):
 
     return render(request, "grader/exercise_overview.html", {"exercises": context_exercises, "id": id})
 
-
 def request_grading(request: http.HttpRequest, for_exercise: str):
     translation.activate(settings.LANGUAGE_CODE)
     if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
@@ -290,7 +292,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             )
             new_sn.save()
 
-        asyncio.run(enqueue_grading_request(new_gp.identifier))
+        enqueue_grading_request(new_gp.identifier)
 
             # we are done
         return HttpResponseRedirect("/grader/successful_request?id={}".format(new_gp.identifier))
@@ -443,7 +445,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                     cell.save()                             
 
         # trigger nbgrader to update notebook and generate assignments
-        asyncio.run(enqueue_notebook_update(notebook_file_name))
+        enqueue_notebook_update(notebook_file_name)
 
         # transform the result into a structure easier to use in django template engine:
         # you cannot straigthforward use variables content as keys to access a dictionary
@@ -465,44 +467,18 @@ def autoprocess_notebook(request: http.HttpRequest):
         )
     else:
         return http.HttpResponseBadRequest("Invalid form")
+    
+def enqueue_grading_request(process_id) -> None:
+    logger.info(f"Enqueuing grading request for process ID: {process_id}")
+    val = process_id
+    cursor.execute(f"NOTIFY grade_notebook, '{val}';")
+    time.sleep(1) 
 
-async def enqueue_grading_request(process_id) -> None:
-    # Establish a database connection; asyncpg and psycopg are supported.
-    connection = await asyncpg.connect(            
-            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
-            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
-            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
-            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
-    )
-
-    # Initialize a database driver
-    driver = AsyncpgDriver(connection)
-    # Create a QueueManager instance
-    qm = QueueManager(driver)
-
-    await qm.queries.enqueue(
-        ["grade_notebook"],
-        [str(process_id).encode()],
-    )
-
-async def enqueue_notebook_update(filename) -> None:
-    # Establish a database connection; asyncpg and psycopg are supported.
-    connection = await asyncpg.connect(            
-            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
-            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
-            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
-            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
-    )
-
-    # Initialize a database driver
-    driver = AsyncpgDriver(connection)
-    # Create a QueueManager instance
-    qm = QueueManager(driver)
-
-    await qm.queries.enqueue(
-        ["update_notebook"],
-        [str(filename).encode()],
-    )
+def enqueue_notebook_update(filename) -> None:
+    logger.info(f"Enqueuing notebook update for filename: {filename}")
+    val = str(filename)
+    cursor.execute(f"NOTIFY update_notebook, '{val}';")
+    time.sleep(1)
 
 # Logout redirect 
 @csrf_exempt

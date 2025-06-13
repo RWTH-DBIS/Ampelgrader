@@ -261,7 +261,7 @@ REQUEST_TIME_LIMIT = int(os.getenv("REQUEST_TIME_LIMIT", "300"))
 
 ADMIN_ROLE = os.getenv("ADMIN_ROLE", "admin")
 
-IDLE_TIME_ENV = os.getenv("IDLE_TIME_ENV", "1")
+IDLE_TIME_ENV = os.getenv("IDLE_TIME_ENV", "300")
 
 AUTO_LOGOUT = {
     'IDLE_TIME': timedelta(minutes=int(IDLE_TIME_ENV)),
