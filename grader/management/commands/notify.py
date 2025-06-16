@@ -69,10 +69,11 @@ class Command(BaseCommand):
 
     def send_mail_to_student(self, process_id) -> None:
         try:
-            process = conn.fetchrow("""SELECT * FROM gradingprocess WHERE identifier = $1;""", str(process_id))
+            cursor.execute("""SELECT * FROM gradingprocess WHERE identifier = %s;""", [process_id])
+            process = cursor.fetchone()
 
-            if process is None:
-                print(f"Process with ID {process_id} not found.")
+            if not process:
+                logger.warning(f"No process found for identifier: {process_id}")
                 return
             
             send_mail(
@@ -85,8 +86,9 @@ class Command(BaseCommand):
             
         except Exception as e:
         # to error handling?
-            print("Error while sending email:" + str(e))
+            logger.error(f"Error sending email for process {process_id}: {e}")
+            return
         else:
-            print(f"Notified {process['email']}\n") 
-            conn.execute("""UPDATE gradingprocess SET notified = true WHERE identifier = $1; """, process['identifier'])
+            logger.info(f"Sent email to {process['email']} for process {process_id}")
+            cursor.execute("""UPDATE gradingprocess SET notified = true WHERE identifier =%s; """, [process['identifier']])
 
