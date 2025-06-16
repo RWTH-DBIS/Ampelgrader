@@ -4,6 +4,8 @@ from datetime import timedelta
 from django.core.mail import send_mail
 from django.conf import settings
 import psycopg2, os, asyncio
+import logging
+
 # import asyncpg, asyncio, os
 
 MAIL_TEMPLATE = lambda x: f"""Hallo,
@@ -42,11 +44,17 @@ conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 cursor = conn.cursor()
 cursor.execute(f"LISTEN notify_student;")
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 class Command(BaseCommand):
     # help = 'Flush emails to students to notify them of finished grading processes'
     # asyncio.run(notify_students())
 
     def handle(self, *args, **options):
+        cursor.execute(f"LISTEN notify_student;")
+
         loop = asyncio.get_event_loop()
         loop.add_reader(conn, self.handle_notify)
         loop.run_forever()
@@ -54,7 +62,7 @@ class Command(BaseCommand):
     def handle_notify(self):
         conn.poll()
         for notify in conn.notifies:
-            print(notify.payload)
+            logger.info("Received notification for process: %s", notify.payload)
             process_id = notify.payload
             self.send_mail_to_student(process_id)
         conn.notifies.clear()

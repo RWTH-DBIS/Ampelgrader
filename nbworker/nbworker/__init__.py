@@ -119,6 +119,7 @@ def grade(
 
 # Enqueue the successful graded assignment to the database for further processing
 def enqueue_graded(process_id) -> None:
+    logger.info(f"Enqueuing graded notebook with process id {process_id} to notify the student.")
     cursor.execute(f"NOTIFY notify_student, '{process_id}';")
 
 def grade_notebook(process_id) -> None:
@@ -235,7 +236,7 @@ def grade_notebook(process_id) -> None:
             )
 
             enqueue_graded(process_id)
-        
+            
     except Exception as e:
     # to error handling?
         logger.info("Error while grading notebook:" + str(e))
@@ -394,6 +395,7 @@ def handle_listener():
             grade_notebook(process_id)
         else:
             logger.warning(f"Unknown notification channel: {notify.channel}")
+        conn.notifies.clear()
 
 def main():
     """Main Loop"""
