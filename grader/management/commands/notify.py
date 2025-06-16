@@ -69,8 +69,8 @@ class Command(BaseCommand):
 
     def send_mail_to_student(self, process_id) -> None:
         try:
-            cursor.execute("""SELECT * FROM gradingprocess WHERE identifier = %s;""", [str(process_id)])
-            process = dict(cursor.fetchone())
+            cursor.execute("""SELECT identifier, email FROM gradingprocess WHERE identifier = %s;""", [str(process_id)])
+            process = cursor.fetchone()
             
             if not process:
                 logger.warning(f"No process found for identifier: {process_id}")
@@ -78,10 +78,10 @@ class Command(BaseCommand):
             
             send_mail(
                 settings.EMAIL_HEADER,
-                settings.MAIL_TEMPLATE_RENDERER(process['identifier']),
+                settings.MAIL_TEMPLATE_RENDERER(process_id),
                 settings.EMAIL_ADDRESS,
-                [process['email']],
-                html_message=settings.MAIL_TEMPLATE_RENDERER(process['identifier'])
+                [process[1]],
+                html_message=settings.MAIL_TEMPLATE_RENDERER(process_id)
                 )
             
         except Exception as e:
