@@ -62,7 +62,7 @@ class Command(BaseCommand):
     def handle_notify(self):
         conn.poll()
         for notify in conn.notifies:
-            logger.info("Received notification for process: %s", notify.payload)
+            # logger.info("Received notification for process: %s", notify.payload)
             process_id = notify.payload
             self.send_mail_to_student(process_id)
         conn.notifies.clear()
