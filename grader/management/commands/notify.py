@@ -69,9 +69,9 @@ class Command(BaseCommand):
 
     def send_mail_to_student(self, process_id) -> None:
         try:
-            cursor.execute("""SELECT * FROM gradingprocess WHERE identifier = %s;""", [process_id])
-            process = cursor.fetchone()
-
+            cursor.execute("""SELECT * FROM gradingprocess WHERE identifier = %s;""", [str(process_id)])
+            process = dict(cursor.fetchone())
+            
             if not process:
                 logger.warning(f"No process found for identifier: {process_id}")
                 return
@@ -90,5 +90,5 @@ class Command(BaseCommand):
             return
         else:
             logger.info(f"Sent email to {process['email']} for process {process_id}")
-            cursor.execute("""UPDATE gradingprocess SET notified = true WHERE identifier =%s; """, [process['identifier']])
+            cursor.execute("""UPDATE gradingprocess SET notified = true WHERE identifier = %s; """, [process['identifier']])
 
