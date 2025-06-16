@@ -84,21 +84,19 @@ class Command(BaseCommand):
                 html_message=settings.MAIL_TEMPLATE_RENDERER(process_id)
                 )
             
-            self.update_counter(process[1])
-
         except Exception as e:
         # to error handling?
             logger.error(f"Error sending email for process {process_id}: {e}")
             return
         else:
-            cursor.execute("""UPDATE gradingprocess SET notified = true WHERE identifier = %s; """, [process['identifier']])
+            try:
+              cursor.execute("""
+                             UPDATE daily_contingent SET count = count + 1 WHERE user_email = %s; 
+                             UPDATE gradingprocess SET notified = true WHERE identifier = %s;""", 
+                             [process[1], process[0]]
+                             )
+            except Exception as e:
+                logger.error(f"Error updating tables: {e}")
+                return
+            logger.info(f"Sent email to {process[1]} for process {process_id}")
 
-    def update_counter(self, email):
-        try:
-            # Update the counter
-            cursor.execute("""UPDATE daily_contingent SET counter = counter + 1 WHERE id = %s;""", [email])
-        except Exception as e:
-            logger.error(f"Error updating counter for user {email}: {e}")
-        else:
-            logger.info(f"Updated counter for user with email {email}")
-            conn.commit()

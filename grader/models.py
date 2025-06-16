@@ -180,7 +180,7 @@ class StudentNotebook(models.Model):
     notebook = models.ForeignKey(
         Notebook, on_delete=models.CASCADE, db_column="notebook"
     )
-    process = models.ForeignKey(
+    process = models.OneToOneField(
         GradingProcess, on_delete=models.CASCADE, primary_key=True, db_column="process"
     )
 
@@ -196,3 +196,19 @@ class KeycloakSession(models.Model):
 
     class Meta:
         db_table = "keycloak_session" 
+
+
+"""
+Table to store the daily contingent of a user.
+"""
+class DailyContingent(models.Model):
+    user_email = models.EmailField(db_column="user_email", primary_key=True)
+    date = models.DateField(db_column="date", auto_now=True)
+    count = models.IntegerField(db_column="count", default=0)
+
+    class Meta:
+        db_table = "daily_contingent"
+
+    def __str__(self):
+        return f"Daily contingent for user {self.user_email} on {self.date}: {self.count}"
+    

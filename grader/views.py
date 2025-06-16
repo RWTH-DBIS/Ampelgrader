@@ -103,6 +103,22 @@ def store_sid(sender, request, user, **kwargs):
         except Exception as e:
             logger.error("Error occured: " + str(e))
 
+        # initialize daily contingent for the user
+        user_email = user.email 
+        try:
+          with connection.cursor() as cursor:
+              cursor.execute("SELECT * FROM daily_contingent WHERE user_email = %s", [user_email])
+              counter = cursor.fetchone()
+              if counter is None:
+                date = datetime.now()
+                cursor.execute("INSERT INTO daily_contingent (user_email, date, count) VALUES (%s, %s, 0)", [user_email, date])
+              else:
+                if counter[1] != datetime.now().date():
+                  # reset the counter for the new day
+                  cursor.execute("UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s", [datetime.now(), user_email])                      
+        except Exception as e:  
+            logger.error("Error occured while initializing daily contingent: " + str(e))
+
     else:
         logger.error('No keycloak token found in the session')
     
@@ -212,12 +228,40 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
         if not ex.running():
-            return render(request, "grader/grading_unavailable.html")
-            #return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
+            return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
+
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
+
+    # check if user contingent has reached the limit
+    with transaction.atomic():
+      counter = DailyContingent.objects.raw(
+          """
+          SELECT * FROM daily_contingent WHERE user_email = %s
+          """,
+          [user_email],
+      )
+    
+    # if date is one day before today, reset the counter
+    if counter[0].date != datetime.now().date():
+        # with connection.cursor() as cursor:
+        #     cursor.execute(
+        #         """
+        #         UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s
+        #         """,
+        #         [datetime.now(), user_email],
+        #     )
+        counter[0].count = 0
+        counter[0].date = datetime.now().date()
+
+    if counter[0].count >= settings.DAILY_LIMIT:
+        return render(
+            request,
+            "grader/grading_unavailable.html",
+            {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(settings.DAILY_LIMIT)},
+        )
 
     if request.method == "GET":
         # check if user has already a submission running
@@ -238,6 +282,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             "grader/request.html",
             {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id},
         )
+    
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
 
@@ -309,7 +354,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     if not ex.running():
-        return render(request, "grader/grading_unavailable.html")
+        return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 

@@ -68,3 +68,5 @@ admin.site.register(WorkerAssignment)
 admin.site.register(Grading)
 
 admin.site.register(ErrorLog)
+
+admin.site.register(DailyContingent)
