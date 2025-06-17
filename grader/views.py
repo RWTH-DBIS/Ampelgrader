@@ -244,6 +244,9 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
           [user_email],
       )
     
+    if not counter:
+        return render(request, "grader/grading_unavailable.html", {"message": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
+    
     # if date is one day before today, reset the counter
     if counter[0].date != datetime.now().date():
         # with connection.cursor() as cursor:
@@ -256,7 +259,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         counter[0].count = 0
         counter[0].date = datetime.now().date()
 
-    if counter[0].count >= settings.DAILY_LIMIT:
+    if counter[0].count >= int(settings.DAILY_LIMIT):
         return render(
             request,
             "grader/grading_unavailable.html",

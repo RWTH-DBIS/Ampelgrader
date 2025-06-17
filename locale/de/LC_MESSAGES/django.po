@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-16 13:29+0200\n"
+"POT-Creation-Date: 2025-06-17 16:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,45 +19,57 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:445
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:445
 msgid "open('foo"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:449
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:449
 msgid "open(\"foo"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:453
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:453
 #, python-format
 msgid "%ls foo"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:615
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:617
 msgid "a[0]."
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:622
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:624
 msgid "a[0].r"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:629
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:631
 msgid "a[0].from_"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:636
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:638
 msgid "assert str.star"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:643
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:645
 msgid "d['a b'].str"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:650
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:652
 msgid "a.app"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1650
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1672
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1675
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1687
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1709
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1712
 msgid "do not suppress"
 msgstr ""
 
@@ -65,23 +77,32 @@ msgstr ""
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1663
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1666
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1669
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1688
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1700
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1703
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1706
 msgid "suppress all"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1652
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1689
 msgid "suppress all but a"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1653
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1690
 msgid "suppress all but c"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1701
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1704
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1738
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1741
 msgid "---"
 msgstr ""
 
 #: env/lib/python3.10/site-packages/IPython/core/tests/test_completer.py:1707
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1744
 msgid "--"
 msgstr ""
 
@@ -2018,24 +2039,48 @@ msgstr ""
 msgid "Wir informieren Sie sobald die Seite wieder verfügbar ist."
 msgstr ""
 
-#: grader/views.py:225 grader/views.py:338
+#: grader/views.py:231 grader/views.py:360
 msgid "Zurzeit ist keine Bewertung für diese Übung verfügbar!"
 msgstr ""
 
-#: grader/views.py:244
+#: grader/views.py:248
+msgid "Etwas ist schief gelaufen. Bitte versuche es später noch einmal."
+msgstr ""
+
+#: grader/views.py:266
 msgid "Du hast dein tägliches Limit an {} Anfragen erreicht."
 msgstr ""
 
-#: grader/views.py:283
+#: grader/views.py:305
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:401
+#: grader/views.py:423
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:426
+#: grader/views.py:448
 msgid "Given dict has invalid format. Key error: "
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:659
+msgid "x.upper() == y."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:666
+msgid "(x.upper() == y."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:673
+msgid "(x.upper() == y)."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:680
+msgid "{'==', 'abc'}."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:687
+msgid "b + c."
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/db/models/fields/related.py:932
