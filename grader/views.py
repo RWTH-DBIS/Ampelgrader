@@ -227,7 +227,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     try:
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
-        if not ex.running():
+        if not ex.running() and not request.user.is_staff:
             return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
 
     except ObjectDoesNotExist:
