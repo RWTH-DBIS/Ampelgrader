@@ -54,12 +54,18 @@ class ProcessAdmin(admin.ModelAdmin):
     inlines = [GradingInline, StudentNotebookInline, ErrorLogInline]
     list_display = ["identifier", "email", "requested_at", "for_exercise", "processed"]
 
+class DailyContingentAdmin(admin.ModelAdmin):
+    model = DailyContingent
+    list_display = ["user_email", "date", "count"]
+    readonly_fields = ["user_email", "date"]
 
 admin.site.register(Exercise, ExerciseAdmin)
 
 admin.site.register(SubExercise, SubExercisesAdmin)
 
 admin.site.register(GradingProcess, ProcessAdmin)
+
+admin.site.register(DailyContingent, DailyContingentAdmin)
 
 admin.site.register(StudentNotebook)
 
@@ -68,5 +74,3 @@ admin.site.register(WorkerAssignment)
 admin.site.register(Grading)
 
 admin.site.register(ErrorLog)
-
-admin.site.register(DailyContingent)
