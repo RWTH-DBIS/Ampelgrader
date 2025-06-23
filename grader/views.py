@@ -569,8 +569,12 @@ def keycloak_logout(request: http.HttpRequest):
         return JsonResponse({"status": "error", "message": str(e)})
     
 def decode_token(token:str) -> dict:
-    parts = token.split(".")
-    payload = parts[1]
-    payload += '=' * (-len(payload) % 4)
-    decoded = base64.b64decode(payload).decode('utf-8')
-    return json.loads(decoded)
+    try:
+        parts = token.split(".")
+        payload = parts[1]
+        payload += '=' * (-len(payload) % 4)
+        decoded = base64.b64decode(payload).decode('utf-8')
+        return json.loads(decoded)
+    except Exception as e:
+        logger.error(f"Error decoding token: {e}")
+        return {}
