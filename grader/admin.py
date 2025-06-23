@@ -38,21 +38,21 @@ class SubExercisesAdmin(admin.ModelAdmin):
 class NotebookAdmin(admin.StackedInline):
     model = Notebook
 
-
 class ExerciseAdmin(admin.ModelAdmin):
     model = Exercise
     inlines = [NotebookAdmin]
     list_display = ["identifier", "start_date", "stop_date", "running", "last_updated"]
     readonly_fields = ["identifier"]
+    ordering = ["-start_date", "-last_updated"]
 
     def has_delete_permission(self, request, obj = None):
         return False
-
 
 class ProcessAdmin(admin.ModelAdmin):
     model = GradingProcess
     inlines = [GradingInline, StudentNotebookInline, ErrorLogInline]
     list_display = ["identifier", "email", "requested_at", "for_exercise", "processed"]
+    ordering = ["-requested_at"]
 
 class DailyContingentAdmin(admin.ModelAdmin):
     model = DailyContingent
