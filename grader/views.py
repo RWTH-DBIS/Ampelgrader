@@ -135,10 +135,13 @@ def show_results(request: http.HttpRequest, for_process: str):
     if not grading.exists():
         # Check if there was an error
         if ErrorLog.objects.filter(process=gq).exists():
-            return render(request, "grader/grading_error.html", {})
+            errorlog = str(ErrorLog.objects.get(process=gq).log)
+            logger.info(f"Grading process {gq.identifier} has an error: {errorlog}")
+            if 'convert_notebooks' in errorlog:
+                return render(request, "grader/grading_error.html", {"error": _("Ein Problem mit der Notebook-Konvertierung ist aufgetreten. Bitte lösche nicht die bestehenden Zellen im Notebook.")})
+            return render(request, "grader/grading_error.html", {"error": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
         else:
             return render(request, "grader/grading_processing.html", {})
-            #return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -244,27 +247,28 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
           [user_email],
       )
     
-    if not counter:
-        return render(request, "grader/grading_unavailable.html", {"message": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
-    
-    # if date is one day before today, reset the counter
-    if counter[0].date != datetime.now().date():
-        # with connection.cursor() as cursor:
-        #     cursor.execute(
-        #         """
-        #         UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s
-        #         """,
-        #         [datetime.now(), user_email],
-        #     )
-        counter[0].count = 0
-        counter[0].date = datetime.now().date()
+    if not request.user.is_staff:
+      if not counter:
+          return render(request, "grader/grading_unavailable.html", {"message": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
+      
+      # if date is one day before today, reset the counter
+      if counter[0].date != datetime.now().date():
+          # with connection.cursor() as cursor:
+          #     cursor.execute(
+          #         """
+          #         UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s
+          #         """,
+          #         [datetime.now(), user_email],
+          #     )
+          counter[0].count = 0
+          counter[0].date = datetime.now().date()
 
-    if counter[0].count >= int(settings.DAILY_LIMIT):
-        return render(
-            request,
-            "grader/grading_unavailable.html",
-            {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(settings.DAILY_LIMIT)},
-        )
+      if counter[0].count >= int(settings.DAILY_LIMIT):
+          return render(
+              request,
+              "grader/grading_unavailable.html",
+              {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(settings.DAILY_LIMIT)},
+          )
 
     if request.method == "GET":
         # check if user has already a submission running
