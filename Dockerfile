@@ -1,5 +1,5 @@
 FROM python:3.10
-LABEL authors="Laurenz Neumann"
+LABEL authors="Laurenz Neumann, Yue Yin"
 
 HEALTHCHECK --interval=10s --timeout=10s \
   CMD curl -f http://0.0.0.0/grader/ping || exit 1
