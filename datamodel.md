@@ -17,6 +17,7 @@ erDiagram
         string filename PK
         string in_exercise FK
         BLOB data
+        BLOB assets
         date uploaded_at
     }
     
@@ -42,8 +43,8 @@ erDiagram
     
     Grading {
         uuid processid FK
-        string cellId
-        integer grade
+        int cell
+        double points
     }
     
     ErrorLog {
