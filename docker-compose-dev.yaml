@@ -14,7 +14,7 @@ services:
       NBBB_DB_PASSWD: "secret"
       NBBB_DB_USER: "grader"
       OIDC_RP_CLIENT_ID: "dbis-nbgrader-blackbox"
-      OIDC_RP_CLIENT_SECRET: "KYUvsLeAzJMEyOKw8kwr96HROjdoDAbP"
+      OIDC_RP_CLIENT_SECRET: "oidc-rp-client-secret"
       OIDC_RP_SIGN_ALGO: "RS256"
       OIDC_OP_JWKS_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/certs"
       OIDC_OP_AUTHORIZATION_ENDPOINT: "https://auth.las2peer.org/auth/realms/main/protocol/openid-connect/auth"
