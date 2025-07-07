@@ -28,20 +28,20 @@
                 {% if user.is_staff %}
                 <div>
                     <p><b>Downloads:</b></p>
-                    {% for f in files %}
-                        {% if f %}
-                            <a href="{% url 'download_notebook' f.name %}">
-                                <li>{{ f.name }} ({{ f.updated_at }})</li>
+                    {% if files %}
+                      {% for f in files %}
+                        <a href="{% url 'download_notebook' f.name %}">
+                            <li>{{ f.name }} ({{ f.updated_at }})</li>
+                        </a>
+                        {% if f.assets %}
+                            <a href="{% url 'download_assets' f.name %}">
+                                <li>{{ f.assets }}</li>
                             </a>
-                            {% if f.assets %}
-                                <a href="{% url 'download_assets' f.name %}">
-                                    <li>{{ f.assets }}</li>
-                                </a>
-                            {% endif %}
-                        {% else %}
-                            <p>{% translate "Keine Dateien zum Herunterladen verfügbar." %}</p>
                         {% endif %}
-                    {% endfor %}
+                      {% endfor %}
+                    {% else %}
+                      <p>{% translate "Keine Dateien zum Herunterladen verfügbar." %}</p>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
