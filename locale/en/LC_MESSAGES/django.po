@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-26 12:30+0200\n"
+"POT-Creation-Date: 2025-07-07 13:24+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -154,6 +154,10 @@ msgstr ""
 "the Ample-Grader will under no circumstances influence your grade in the "
 "course."
 
+#: grader/templates/grader/request.html:42
+msgid "Keine Dateien zum Herunterladen verfügbar."
+msgstr "No files available for download."
+
 #: grader/templates/grader/result.html:13
 msgid "Auswertung"
 msgstr "Grading"
@@ -195,9 +199,11 @@ msgstr "We will inform you as soon as the website is available again."
 msgid ""
 "Ein Problem mit der Notebook-Konvertierung ist aufgetreten. Bitte lösche "
 "nicht die bestehenden Zellen im Notebook."
-msgstr "A problem has occurred with the notebook conversion. Please do not delete the existing cells in the notebook."
+msgstr ""
+"A problem has occurred with the notebook conversion. Please do not delete "
+"the existing cells in the notebook."
 
-#: grader/views.py:142 grader/views.py:251
+#: grader/views.py:142 grader/views.py:252
 #, fuzzy
 #| msgid ""
 #| "Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche "
@@ -205,23 +211,23 @@ msgstr "A problem has occurred with the notebook conversion. Please do not delet
 msgid "Etwas ist schief gelaufen. Bitte versuche es später noch einmal."
 msgstr "Something went wrong. Please check your notebook and try again."
 
-#: grader/views.py:234 grader/views.py:363
+#: grader/views.py:234 grader/views.py:374
 msgid "Zurzeit ist keine Bewertung für diese Übung verfügbar!"
 msgstr "There is currently no grading available for this exercise!"
 
-#: grader/views.py:269
+#: grader/views.py:270
 msgid "Du hast dein tägliches Limit an {} Anfragen erreicht."
 msgstr "You have reached your daily limit of {} requests."
 
-#: grader/views.py:308
+#: grader/views.py:319
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:426
+#: grader/views.py:466
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:451
+#: grader/views.py:491
 msgid "Given dict has invalid format. Key error: "
 msgstr ""
 
