@@ -287,7 +287,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
 
         id = gp[0].identifier if len(list(gp)) > 0 else None
         
-        if notebook:
+        if notebook and notebook.data:
           files.append({
               "name": notebook.filename if notebook.data else None,
               "assets": f"{notebook.filename}_assets" if notebook.assets else None,
@@ -514,26 +514,51 @@ def autoprocess_notebook(request: http.HttpRequest):
         exercise_identifier = form.cleaned_data["exercise_identifier"]
         subexercise_dict = parse_notebook(loads(notebook_data))
         with transaction.atomic():
-            # create the database entries
-            ex = Exercise(
-                exercise_identifier,
-                start_date=form.cleaned_data["start_date"],
-                stop_date=form.cleaned_data["stop_date"],
-                last_updated=datetime.now(),
-            )
-            ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
-            nb.save()
-            for subexercise_ident in subexercise_dict.keys():
-                sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
-                sbe.save()
-                for cell_id in subexercise_dict[subexercise_ident]:
-                    cell = Cell(
-                        cell_id=cell_id,
-                        sub_exercise=sbe,
-                        max_score=subexercise_dict[subexercise_ident][cell_id],
-                    )
-                    cell.save()                             
+            # check if exercise with the same identifier already exists
+            if Exercise.objects.filter(identifier=exercise_identifier).exists():
+                # update the existing exercise
+                ex = Exercise.objects.get(identifier=exercise_identifier)
+                ex.start_date = form.cleaned_data["start_date"]
+                ex.stop_date = form.cleaned_data["stop_date"]
+                ex.last_updated = datetime.now()
+                ex.save()
+
+                Notebook.objects.filter(in_exercise=ex).delete()
+
+                nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files)
+                nb.save()
+                for subexercise_ident in subexercise_dict.keys():
+                  sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
+                  sbe.save()
+                  for cell_id in subexercise_dict[subexercise_ident]:
+                      cell = Cell(
+                          cell_id=cell_id,
+                          sub_exercise=sbe,
+                          max_score=subexercise_dict[subexercise_ident][cell_id],
+                      )
+                      cell.save()   
+
+            else: 
+              # create the database entries
+              ex = Exercise(
+                  exercise_identifier,
+                  start_date=form.cleaned_data["start_date"],
+                  stop_date=form.cleaned_data["stop_date"],
+                  last_updated=datetime.now(),
+              )
+              ex.save()
+              nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
+              nb.save()
+              for subexercise_ident in subexercise_dict.keys():
+                  sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
+                  sbe.save()
+                  for cell_id in subexercise_dict[subexercise_ident]:
+                      cell = Cell(
+                          cell_id=cell_id,
+                          sub_exercise=sbe,
+                          max_score=subexercise_dict[subexercise_ident][cell_id],
+                      )
+                      cell.save()                             
 
         # trigger nbgrader to update notebook and generate assignments
         enqueue_notebook_update(notebook_file_name)
