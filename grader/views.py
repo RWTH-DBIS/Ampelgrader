@@ -286,12 +286,13 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             notebook = Notebook.objects.filter(in_exercise=ex).first()
 
         id = gp[0].identifier if len(list(gp)) > 0 else None
-
-        files.append({
-            "name": notebook.filename if notebook.data else None,
-            "assets": f"{notebook.filename}_assets" if notebook.assets else None,
-            "updated_at": notebook.uploaded_at.strftime("%d.%m.%Y %H:%M") if notebook else None,
-        })
+        
+        if notebook:
+          files.append({
+              "name": notebook.filename if notebook.data else None,
+              "assets": f"{notebook.filename}_assets" if notebook.assets else None,
+              "updated_at": notebook.uploaded_at.strftime("%d.%m.%Y %H:%M") if notebook else None,
+          })
 
         return render(
             request,
