@@ -10,7 +10,7 @@ from collections import defaultdict
 from datetime import timedelta
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
 from django.conf import settings
@@ -271,6 +271,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
           )
 
     if request.method == "GET":
+        files = list()
         # check if user has already a submission running
         with transaction.atomic():
             gp = GradingProcess.objects.raw(
@@ -282,12 +283,20 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
                 [user_email],
             )
 
+            notebook = Notebook.objects.filter(in_exercise=ex).first()
+
         id = gp[0].identifier if len(list(gp)) > 0 else None
+
+        files.append({
+            "name": notebook.filename if notebook.data else None,
+            "assets": f"{notebook.filename}_assets" if notebook.assets else None,
+            "updated_at": notebook.uploaded_at.strftime("%d.%m.%Y %H:%M") if notebook else None,
+        })
 
         return render(
             request,
             "grader/request.html",
-            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id},
+            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id, "files": files},
         )
     
     if request.method != "POST":
@@ -404,6 +413,35 @@ def successful_request(request: http.HttpRequest):
     return render(request, "grader/successful_request.html", {"id": id})
     #return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
 
+
+def download_notebook(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the notebook associated with the given exercise.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    response = http.HttpResponse(notebook.data, content_type="application/x-ipynb+json")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}"'
+
+    return response
+
+def download_assets(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the assets associated with the given notebook.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    if not notebook.assets:
+        return http.HttpResponseNotFound("No assets available for this notebook.")
+
+    response = http.HttpResponse(notebook.assets, content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
+
+    return response
 
 """
 Administration utilities
