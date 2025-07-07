@@ -21,7 +21,7 @@ The ⬛ `NBBlackbox` is a Django-based web application that serves as the main i
 - Handles high concurrency by offloading grading jobs to the 👷 NBworker via PostgreSQL notifications.
 
 **Workflow:**
-1. Lecturers create or update exercises by uploading notebooks (and optional assets) via the `/grader/autocreation` form or the Django admin interface. Subexercise tags are parsed automatically.
+1. Lecturers create or update exercises by uploading notebooks (and optional assets) via the `/grader/autocreation` form. Subexercise tags are parsed automatically.
 2. Lecturers configure grading time windows and exercise metadata.
 3. Students select an exercise at `/grader/request` and submit their notebook for grading. Daily and time-based limits are enforced per user.
 4. Grading requests and submissions are stored in the database and picked up by the 👷 NBworker for autograding.
