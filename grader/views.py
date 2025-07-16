@@ -272,6 +272,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
 
     if request.method == "GET":
         files = list()
+        release = {}
         # check if user has already a submission running
         with transaction.atomic():
             gp = GradingProcess.objects.raw(
@@ -293,11 +294,14 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
               "assets": f"{notebook.filename}_assets" if notebook.assets else None,
               "updated_at": notebook.uploaded_at.strftime("%d.%m.%Y %H:%M") if notebook else None,
           })
+        
+        if notebook and notebook.release_data:
+          release["filename"] = notebook.filename if notebook.release_data else None
 
         return render(
             request,
             "grader/request.html",
-            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id, "files": files},
+            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id, "files": files, "release": release},
         )
     
     if request.method != "POST":
@@ -414,6 +418,18 @@ def successful_request(request: http.HttpRequest):
     return render(request, "grader/successful_request.html", {"id": id})
     #return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
 
+def download_release(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the release of the exercise.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    response = http.HttpResponse(notebook.release_data, content_type="application/x-ipynb+json")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}"'
+    print(response)
+    return response
 
 def download_notebook(request: http.HttpRequest, for_notebook: str):
     """
@@ -422,10 +438,10 @@ def download_notebook(request: http.HttpRequest, for_notebook: str):
     translation.activate(settings.LANGUAGE_CODE)
 
     notebook = get_object_or_404(Notebook, filename=for_notebook)
-
+    
     response = http.HttpResponse(notebook.data, content_type="application/x-ipynb+json")
     response["Content-Disposition"] = f'attachment; filename="{notebook.filename}"'
-
+        
     return response
 
 def download_assets(request: http.HttpRequest, for_notebook: str):
@@ -437,7 +453,7 @@ def download_assets(request: http.HttpRequest, for_notebook: str):
     notebook = get_object_or_404(Notebook, filename=for_notebook)
 
     if not notebook.assets:
-        return http.HttpResponseNotFound("No assets available for this notebook.")
+        return render(request, "grader/grading_error.html", {"error": _("Ein Problem ist aufgetreten. Es sind keine Assets für dieses Notebook vorhanden. Bitte lade Dir die Assets in Moodle runter.")})
 
     response = http.HttpResponse(notebook.assets, content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
@@ -525,7 +541,7 @@ def autoprocess_notebook(request: http.HttpRequest):
 
                 Notebook.objects.filter(in_exercise=ex).delete()
 
-                nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files)
+                nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, release_data=None)
                 nb.save()
                 for subexercise_ident in subexercise_dict.keys():
                   sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
@@ -547,7 +563,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                   last_updated=datetime.now(),
               )
               ex.save()
-              nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
+              nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now(), release_data=None)
               nb.save()
               for subexercise_ident in subexercise_dict.keys():
                   sbe = SubExercise(label=subexercise_ident, in_notebook=nb)

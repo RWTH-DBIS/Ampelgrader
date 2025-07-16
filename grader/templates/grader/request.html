@@ -25,6 +25,12 @@
                         {% translate "Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO)." %}
                     </p>
                 </div>
+                <div>
+                {% if release %}
+                <p><b>Notebook:</b></p>
+                  <a href="{% url 'download_release' release.filename %}"> {{ release.filename }}</a>
+                {% endif %}
+                </div>
                 {% if user.is_staff %}
                 <div>
                     <p><b>Downloads:</b></p>

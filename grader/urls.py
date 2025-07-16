@@ -14,4 +14,5 @@ urlpatterns = [
     path("logout", views.keycloak_logout, name="keycloak_logout"),
     path("download/<str:for_notebook>", views.download_notebook, name="download_notebook"),
     path("download/<str:for_notebook>/assets", views.download_assets, name="download_assets"),
+    path("download_release/<str:for_notebook>", views.download_release, name="download_release"),
 ]

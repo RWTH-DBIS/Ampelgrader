@@ -10,7 +10,6 @@ import uuid
 import datetime
 import signal
 import asyncio
-import os
 
 from zipfile import ZipFile
 
@@ -313,6 +312,22 @@ def check_assignment(assignment: str) -> None:
 
     return
 
+def store_release_data(notebook_name: str, release_data: bytes) -> None:
+    """
+    Store the release data of a notebook in the database.
+    """
+    try:
+        cursor.execute("""
+            UPDATE notebook SET release_data = %s WHERE filename = %s;
+            """,
+            [release_data, notebook_name]
+        )
+        conn.commit()
+        logger.info(f"Release data for notebook {notebook_name} stored in database")
+    except Exception as e:
+        logger.error(f"Error while storing release data for notebook {notebook_name}: {str(e)}")
+        raise RuntimeError(f"Error while storing release data for notebook {notebook_name}")
+
 def update_notebook(notebook_name) -> None:
     try:
         try:
@@ -326,6 +341,10 @@ def update_notebook(notebook_name) -> None:
             notebook = cursor.fetchone()
             
             folder_name = notebook[1]
+
+            RELEASE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+                API.coursedir.release_directory
+            )
 
             # Store notebook into course directory
             SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
@@ -359,6 +378,15 @@ def update_notebook(notebook_name) -> None:
                 # (store notebook in src dir to release and stripping all output cells)
                 # https://nbgrader.readthedocs.io/en/stable/user_guide/what_is_nbgrader.html#nbgrader-generate-assignment
                 API.generate_assignment(folder_name)
+
+                release_notebook = API.get_assignment(folder_name, released=[folder_name])
+                if release_notebook is None:
+                    logger.error(f"Assignment {folder_name} could not be generated")
+                    raise RuntimeError(f"Assignment {folder_name} could not be generated")
+                else:
+                    data = _file_to_bytes(f"{RELEASE_PATH}/{folder_name}/{notebook_name}")
+                    store_release_data(notebook_name, data)
+                    logger.info(f"Release data for assignment {folder_name} stored in database")
             except:
                 logger.error(f"Error while generating assignment {folder_name}")
                 raise RuntimeError(f"Error while generating assignment {folder_name}")
@@ -382,6 +410,14 @@ def update_notebook(notebook_name) -> None:
     else:
         logger.info(f"Notebook {notebook_name} has been updated.")
 
+
+def _file_to_bytes(file_path: str) -> bytes:
+    """
+    Reads a file and returns its content as bytes.
+    """
+    with open(file_path, "rb") as f:
+        return f.read()
+    
 def handle_listener():
     conn.poll()
     while conn.notifies:
