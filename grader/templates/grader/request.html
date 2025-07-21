@@ -25,6 +25,25 @@
                         {% translate "Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO)." %}
                     </p>
                 </div>
+                {% if user.is_staff %}
+                <div>
+                    <p><b>Downloads:</b></p>
+                    {% if files %}
+                      {% for f in files %}
+                        <a href="{% url 'download_notebook' f.name %}">
+                            <li>{{ f.name }} ({{ f.updated_at }})</li>
+                        </a>
+                        {% if f.assets %}
+                            <a href="{% url 'download_assets' f.name %}">
+                                <li>{{ f.assets }}</li>
+                            </a>
+                        {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      <p>{% translate "Keine Dateien zum Herunterladen verfügbar." %}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
 
             

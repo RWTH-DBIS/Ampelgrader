@@ -6,20 +6,12 @@ import logging
 import pathlib
 import psycopg2
 import psycopg2.extras
-import time
 import uuid
 import datetime
 import signal
 import asyncio
-import asyncpg
 import os
-from datetime import timedelta
 
-from pgqueuer.qm import QueueManager
-from pgqueuer.db import AsyncpgDriver
-from pgqueuer.models import Job
-from pgqueuer.db import AsyncpgDriver
-from pgqueuer.executors import JobExecutor
 from zipfile import ZipFile
 
 from nbgrader.apps import NbGraderAPI
@@ -53,6 +45,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+conn = psycopg2.connect(host=POSTGRES_HOST, 
+                dbname=POSTGRES_DB, 
+                user=POSTGRES_USER, 
+                password=POSTGRES_PASSWORD)
+conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+cursor = conn.cursor()
 
 def dump_notebook(notebooks: typing.Dict[str, bytes], for_assignment: str):
     """Dumps the notebook into the submission folder for the given assignment of the dummy student"""
@@ -68,251 +66,8 @@ def dump_notebook(notebooks: typing.Dict[str, bytes], for_assignment: str):
         with sub_path.open("wb") as f:
             f.write(notebooks[notebook])
 
-
-def main():
-    """Main Loop"""
-    logger.info(f"NBWorker started with worker id {WORKER_ID}")
-    logger.info(f"Using Course Directory: {API.coursedir.root}")
-
-    # register a kill method
-    class Killswitch:
-        """A small class which is used for signal handling and termination of the main loop"""
-
-        def __init__(self):
-            self.running = True
-
-        def kill(self, *kwargs):
-            logger.info("Received term signal. Exiting...")
-            self.running = False
-
-    k = Killswitch()
-    signal.signal(signal.SIGINT, k.kill)
-    signal.signal(signal.SIGTERM, k.kill)
-    while k.running:
-        asyncio.run(grade_studentnotebook())
-
-class GradingExecutor(JobExecutor):
-    def __init__(
-        self,
-        func,
-        requests_per_second: float = 2.0,
-        retry_timer: timedelta = timedelta(seconds=30),
-        serialized_dispatch: bool = True,
-        concurrency_limit: int = 5,
-    ):
-        super().__init__(func, requests_per_second, retry_timer, serialized_dispatch, concurrency_limit)
-
-    async def execute(self, job: Job) -> None:
-                
-        # Extract notification type and message from job data
-        process_id = job.payload.decode()
-
-        await self.grade_notebook(process_id)
-
-    async def grade_notebook(self, process_id) -> None:
-        try:
-            connection = await asyncpg.connect(
-                host=os.getenv("POSTGRES_HOST"),
-                database=os.getenv("POSTGRES_DB"),
-                user=os.getenv("POSTGRES_USER"),
-                password=os.getenv("POSTGRES_PASSWORD")
-            )
-
-            driver = AsyncpgDriver(connection)
-            # Create a QueueManager instance
-            qm = QueueManager(driver)
-
-            try: 
-                logger.info("Fetching student notebook")
-                s_notebook = await connection.fetchrow("""
-                    SELECT * FROM
-                    studentnotebook WHERE process = $1; 
-                    """,
-                    process_id
-                )
-
-                notebook_filename = s_notebook["notebook"]
-                notebook_data = s_notebook["data"]
-
-            except Exception as e:
-                logger.info("Error while fetching notebook:" + str(e))
-
-                await connection.execute("""
-                INSERT INTO errorlog (process, log) VALUES($1, $2);
-                """,
-                    process_id, "Error while fetching notebook: " + str(e)
-                )
-
-            try:
-                logger.info("Fetching grading process")
-                grading_process = await connection.fetchrow("""SELECT * FROM gradingprocess WHERE identifier = $1;""", str(process_id))
-                await connection.execute("""
-                        INSERT INTO workerassignment (worker_id, process, assigned_at) VALUES($1, $2, $3);
-                        """,
-                        str(WORKER_ID), str(process_id), datetime.datetime.now()
-                        )
-                
-            except Exception as e:
-                logger.info("Error while fetching grading process and store workerassignment:" + str(e))
-                if grading_process is None:
-                    logger.info(f"Process with ID {process_id} not found.")
-                    return
-
-            try:
-                result = await grade(
-                    {notebook_filename: notebook_data},
-                    grading_process["for_exercise"],
-                    process_id,
-                )
-                logger.info(f"Achieved result: {str(result)}")
-
-            except RuntimeError as err:
-                logger.error("Grading error!")
-                await connection.execute("""
-                    INSERT INTO errorlog (process,log) VALUES($1, $2);
-                    """,
-                        process_id, f"Error through grading: {str(err)}"
-                    )
-                await enqueue_graded(process_id)
-            else:
-                notebook_filename = s_notebook["notebook"]
-                params = (
-                    (
-                        process_id,
-                        result[cell_id],
-                        grading_process["for_exercise"],
-                        notebook_filename,
-                        cell_id,
-                    )
-                    for cell_id in result.keys()
-                )
-                logger.info("Inserting result into the database...")
-                # We need the correct pk of the cell, as grading has a foreign key on the pk
-                # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
-                # for this we join the cell on subexercise on notebook on exercise
-                # and compare the cell_id in the cell table which holds the cell id as in the
-                # notebook
-                await connection.executemany("""
-                    INSERT INTO grading (process, cell, points)
-                        SELECT $1, cell.id, $2 FROM cell
-                            JOIN subexercise ON cell.sub_exercise = subexercise.id
-                            JOIN notebook ON subexercise.in_notebook = notebook.filename
-                            JOIN exercise ON notebook.in_exercise = exercise.identifier
-                        WHERE exercise.identifier = $3
-                            AND notebook.filename = $4
-                            AND cell.cell_id = $5;
-                """, params)
-
-                await qm.queries.enqueue(
-                    ["send_email"],
-                    [str(process_id).encode()],
-                )
-            
-        except Exception as e:
-        # to error handling?
-            logger.info("Error while grading notebook:" + str(e))
-        else:
-            logger.info(f"Grading process with ID {grading_process['identifier']} finished.")
-        finally:
-            await connection.close()
-            logger.info("Connection closed")
-
-class NotebookExecutor(JobExecutor):
-    def __init__(
-        self,
-        func,
-        requests_per_second: float = 2.0,
-        retry_timer: timedelta = timedelta(seconds=30),
-        serialized_dispatch: bool = True,
-        concurrency_limit: int = 5,
-    ):
-        super().__init__(func, requests_per_second, retry_timer, serialized_dispatch, concurrency_limit)
-
-    async def execute(self, job: Job) -> None:
-                
-        # Extract notification type and message from job data
-        notebook_name = job.payload.decode()
-
-        await self.update_notebook(notebook_name)
-
-    async def update_notebook(self, notebook_name) -> None:
-        try:
-            connection = await asyncpg.connect(
-                host=os.getenv("POSTGRES_HOST"),
-                database=os.getenv("POSTGRES_DB"),
-                user=os.getenv("POSTGRES_USER"),
-                password=os.getenv("POSTGRES_PASSWORD")
-            )
-
-            try:
-                # Retreive notebook from the database
-                notebook = await connection.fetchrow("""
-                    SELECT * FROM notebook WHERE filename = $1;
-                    """,
-                    notebook_name
-                )
-
-                folder_name = notebook['in_exercise']
-
-                # Store notebook into course directory
-                SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
-                    API.coursedir.source_directory
-                )
-
-                # create directory if not exist
-                if not os.path.exists(f"{SOURCE_PATH}/{folder_name}"):
-                    os.makedirs(f"{SOURCE_PATH}/{folder_name}")
-                    logger.info(f"Directory {SOURCE_PATH}/{folder_name} created")
-
-                with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
-                    f.write(notebook['data'])
-                    logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
-
-                # if assets are present, store them as well
-                if notebook['assets'] is not None:
-                    with open(f"{SOURCE_PATH}/{folder_name}/assets.zip", "wb") as f:
-                        f.write(notebook['assets'])
-                        logger.info(f"Notebook assets.zip stored in {SOURCE_PATH}/{folder_name}")
-                    
-                    # unzip the assets.zip file
-                    with ZipFile(f"{SOURCE_PATH}/{folder_name}/assets.zip", "r") as zip_file:
-                        zip_file.extractall(f"{SOURCE_PATH}/{folder_name}")
-                        logger.info(f"Notebook assets unzipped in {SOURCE_PATH}/{folder_name}")
-            
-                    os.remove(f"{SOURCE_PATH}/{folder_name}/assets.zip")
-                    
-                try:
-                    # generate the assignment 
-                    # (store notebook in src dir to release and stripping all output cells)
-                    # https://nbgrader.readthedocs.io/en/stable/user_guide/what_is_nbgrader.html#nbgrader-generate-assignment
-                    API.generate_assignment(folder_name)
-                except:
-                    logger.error(f"Error while generating assignment {folder_name}")
-                    raise RuntimeError(f"Error while generating assignment {folder_name}")
-                else:
-                    logger.info(f"Assignment {folder_name} generated")
-
-                    date_now = datetime.datetime.now()
-
-                    # update last_updated field in exercise table
-                    await connection.execute("""
-                            UPDATE exercise SET last_updated = $1 WHERE identifier = $2;
-                        """,
-                        date_now, folder_name
-                    )
-
-            except Exception as e:
-                logger.error("Error while checking if assignment exists:" + str(e))
-        except Exception as e:
-        # to error handling?
-            logger.info("Error while updating notebook:" + str(e))
-        else:
-            logger.info(f"Notebook {notebook_name} has been updated.")
-        finally:
-            await connection.close()
-            logger.info("Connection closed")
-    
-async def grade(
+   
+def grade(
     notebook: typing.Dict[str, bytes], assignment: str, id: str
 ) -> typing.Dict[str, str]:
     """
@@ -321,7 +76,7 @@ async def grade(
     """
     logging.info("Received assignment to grade")
 
-    await check_assignment(assignment)
+    check_assignment(assignment)
 
     # dump the notebook
     dump_notebook(notebook, assignment)
@@ -330,9 +85,14 @@ async def grade(
     logger.info(f"Start grading for assignment {assignment}")
     # force: grade even if it is already autograded
     # create: create new student in the database if not already exist
-    grading_result = API.autograde(
-        assignment, DUMMY_STUDENT_ID, force=True, create=True
-    )
+    try: 
+      grading_result = API.autograde(
+          assignment, DUMMY_STUDENT_ID, force=True, create=True
+      )
+    except RuntimeError as e:
+        logger.error(f"Error while grading notebook: {str(e)}")
+        raise RuntimeError(f"Error while grading notebook: {str(e)}")
+    
     if not grading_result["success"]:
         logger.error(f"Grading error: {grading_result['error']}")
         logger.error(f"Log of Notebook:{str(grading_result['log'])}")
@@ -357,6 +117,312 @@ async def grade(
 
     return cell_point_dict
 
+# Enqueue the successful graded assignment to the database for further processing
+def enqueue_graded(process_id) -> None:
+    logger.info(f"Enqueuing graded notebook with process id {process_id} to notify the student.")
+    cursor.execute(f"NOTIFY notify_student, '{process_id}';")
+
+def grade_notebook(process_id) -> None:
+    try:
+        try: 
+            logger.info(f"Fetching student notebook with process id {process_id}")
+            cursor.execute(
+              """
+              SELECT data, notebook FROM
+              studentnotebook WHERE process = %s; 
+              """,
+                  [process_id],
+              )
+            if cursor.rowcount == 0:
+                # we shouldnt be here
+                cursor.execute(
+                """
+                INSERT INTO errorlog(process, log) VALUES(%s,%s);
+                """,
+                    [process_id, "No uploaded notebook found"],
+                )
+                conn.commit()
+            (notebook_data, notebook_filename) = cursor.fetchone()
+
+        except Exception as e:
+            logger.info("Error while fetching notebook:" + str(e))
+
+            cursor.execute(
+            """
+              INSERT INTO errorlog(process, log) VALUES(%s,%s);
+            """,
+                [process_id, "No uploaded notebook found"],
+            )
+
+        try:
+            # logger.info("Fetching grading process")
+            cursor.execute(
+            """
+            SELECT gradingprocess.identifier, gradingprocess.requested_at, gradingprocess.for_exercise FROM gradingprocess WHERE identifier = %s;
+            """,
+              [process_id],
+            )
+
+            grading_process = cursor.fetchone()
+
+            # logger.info(f"Grading process: {grading_process}")
+
+            cursor.execute(
+            """
+            INSERT INTO workerassignment (worker_id, process, assigned_at)
+                VALUES(%s,%s,%s);
+            """,
+              [WORKER_ID, process_id, datetime.datetime.now()],
+            )
+            logger.info(f"Worker assignment for process {process_id} created.")
+
+        except Exception as e:
+            logger.info("Error while fetching grading process and store workerassignment:" + str(e))
+            if grading_process is None:
+                logger.info(f"Process with ID {process_id} not found.")
+                return
+
+        try:
+            logger.info("Starting grading process...")
+            result = grade(
+                {notebook_filename: notebook_data.tobytes()},
+                grading_process[2],
+                process_id,
+            )
+
+            logger.info(f"Achieved result: {str(result)}")
+
+        except RuntimeError as err:
+            logger.error("Grading error!")
+            cursor.execute(
+            """
+            INSERT INTO errorlog(process,log) VALUES(%s,%s);
+            """,
+            [process_id, f"Error through grading: {str(err)}"],
+            )
+
+            enqueue_graded(process_id)
+        else:
+            
+            params = (
+                (
+                    process_id,
+                    result[cell_id],
+                    grading_process[2],
+                    notebook_filename,
+                    cell_id,
+                )
+                for cell_id in result.keys()
+            )
+            logger.info("Inserting result into the database...")
+            # We need the correct pk of the cell, as grading has a foreign key on the pk
+            # of the cell, NOT ON THE CELL_ID AS IN THE NOTEBOOK
+            # for this we join the cell on subexercise on notebook on exercise
+            # and compare the cell_id in the cell table which holds the cell id as in the
+            # notebook
+            psycopg2.extras.execute_batch(
+                cursor,
+                """
+            INSERT INTO grading(process,cell,points)
+                SELECT %s, cell.id, %s FROM cell 
+                    JOIN subexercise ON cell.sub_exercise=subexercise.id
+                    JOIN notebook ON subexercise.in_notebook=notebook.filename
+                    JOIN exercise ON notebook.in_exercise=exercise.identifier
+                WHERE exercise.identifier=%s
+                    AND notebook.filename=%s
+                    AND cell.cell_id=%s
+            """,
+                params,
+            )
+
+            enqueue_graded(process_id)
+            
+    except Exception as e:
+    # to error handling?
+        logger.info("Error while grading notebook:" + str(e))
+    else:
+        logger.info(f"Grading process with ID {grading_process[0]} finished.")
+
+def check_assignment(assignment: str) -> None:
+    """
+    Sanity checking if the assignment exists and is the newest version in the source folder.
+    If not, the assignment will be updated.
+    """
+    try:
+        # check if the assignment exists
+        if API.get_assignment(assignment, released=[assignment]) is None:
+            # seems to return None if assignment does not exist: https://nbgrader.readthedocs.io/en/stable/_modules/nbgrader/apps/api.html#NbGraderAPI.get_assignment
+            logger.error(
+                f"Grading for Assignment {assignment} was requested but assignment was not found!"
+            )
+            cursor.execute("""
+                    SELECT * FROM notebook WHERE in_exercise=%s;
+                """,
+                [assignment]
+            )
+            # check if there is a notebook for the assignment in the database
+            notebook = cursor.fetchone()
+
+            if notebook is None:
+                logger.error(
+                    f"Notebook for assignment {assignment} was not found in the database!"
+                )
+                raise RuntimeError('Assignment for grading not found')
+            else:
+                update_notebook(notebook[0])
+                logger.info(f"Notebook for assignment {assignment} updated") 
+
+        # check if assignment also exist in release folder
+        elif not os.path.exists(f"{COURSE_DIRECTORY}/{API.coursedir.release_directory}/{assignment}"):
+            logger.error(
+                f"Grading for Assignment {assignment} was requested but assignment was not found in release folder!"
+            )
+            API.generate_assignment(assignment)
+            # logger.info(f"Assignment {assignment} generated in release folder")
+
+        # ensure each worker is uptodate with the newest assignment version, therefore check time of last update in directory
+        RELEASE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+            API.coursedir.release_directory
+        )
+
+        last_release_update = datetime.datetime.fromtimestamp(os.path.getmtime(f"{RELEASE_PATH}/{assignment}"), tz=datetime.timezone.utc)
+        # logger.info(f"Last release updated at: {last_release_update}")
+
+        cursor.execute("""
+            SELECT * FROM notebook WHERE in_exercise = %s ORDER BY uploaded_at DESC LIMIT 1;
+            """,
+            [assignment]
+        )
+
+        last_notebook_v = cursor.fetchone()
+
+        # logger.info(f"Last notebook version: {last_notebook_v[3]}")
+
+        if last_notebook_v[3] > last_release_update :
+            logger.info(last_notebook_v[0])
+            update_notebook(last_notebook_v[0])
+            logger.info(f"Notebook for assignment {assignment} updated")
+        else: 
+            logger.info(f"Notebook for assignment {assignment} is the newest version")
+            
+    except Exception as e:
+        logger.error(f"Error while checking notebook version: {str(e)}")
+        raise RuntimeError('Error while checking notebook version')
+    else:
+        logger.info(f"Notebook is the newest version")
+
+    return
+
+def update_notebook(notebook_name) -> None:
+    try:
+        try:
+            # Retreive the last updated notebook from the database
+            cursor.execute("""
+                SELECT * FROM notebook WHERE filename = %s ORDER BY uploaded_at DESC LIMIT 1;
+                """,
+                [notebook_name]
+            )
+
+            notebook = cursor.fetchone()
+            
+            folder_name = notebook[1]
+
+            # Store notebook into course directory
+            SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
+                API.coursedir.source_directory
+            )
+
+            # create directory if not exist
+            if not os.path.exists(f"{SOURCE_PATH}/{folder_name}"):
+                os.makedirs(f"{SOURCE_PATH}/{folder_name}")
+                logger.info(f"Directory {SOURCE_PATH}/{folder_name} created")
+
+            with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
+                f.write(notebook[2])
+                logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
+
+            # if assets are present, store them as well
+            if notebook[4] is not None:
+                with open(f"{SOURCE_PATH}/{folder_name}/assets.zip", "wb") as f:
+                    f.write(notebook[4])
+                    logger.info(f"Notebook assets.zip stored in {SOURCE_PATH}/{folder_name}")
+                
+                # unzip the assets.zip file
+                with ZipFile(f"{SOURCE_PATH}/{folder_name}/assets.zip", "r") as zip_file:
+                    zip_file.extractall(f"{SOURCE_PATH}/{folder_name}")
+                    logger.info(f"Notebook assets unzipped in {SOURCE_PATH}/{folder_name}")
+        
+                os.remove(f"{SOURCE_PATH}/{folder_name}/assets.zip")
+                
+            try:
+                # generate the assignment 
+                # (store notebook in src dir to release and stripping all output cells)
+                # https://nbgrader.readthedocs.io/en/stable/user_guide/what_is_nbgrader.html#nbgrader-generate-assignment
+                API.generate_assignment(folder_name)
+            except:
+                logger.error(f"Error while generating assignment {folder_name}")
+                raise RuntimeError(f"Error while generating assignment {folder_name}")
+            else:
+                logger.info(f"Assignment {folder_name} generated")
+
+                date_now = datetime.datetime.now()
+
+                # update last_updated field in exercise table
+                cursor.execute("""
+                        UPDATE exercise SET last_updated = %s WHERE identifier = %s;
+                    """,
+                    [date_now, folder_name]
+                )
+
+        except Exception as e:
+            logger.error("Error while checking if assignment exists:" + str(e))
+    except Exception as e:
+    # to error handling?
+        logger.info("Error while updating notebook:" + str(e))
+    else:
+        logger.info(f"Notebook {notebook_name} has been updated.")
+
+def handle_listener():
+    conn.poll()
+    while conn.notifies:
+        notify = conn.notifies.pop(0)
+        logger.info(f"Received notification: {notify.channel} - {notify.payload}")
+        if notify.channel == "update_notebook":
+            filename = notify.payload
+            update_notebook(filename)
+        elif notify.channel == "grade_notebook":
+            process_id = notify.payload
+            grade_notebook(process_id)
+        else:
+            logger.warning(f"Unknown notification channel: {notify.channel}")
+        conn.notifies.clear()
+
+def main():
+    """Main Loop"""
+    logger.info(f"NBWorker started with worker id {WORKER_ID}")
+    logger.info(f"Using Course Directory: {API.coursedir.root}")
+
+    # register a kill method
+    class Killswitch:
+        """A small class which is used for signal handling and termination of the main loop"""
+
+        def __init__(self):
+            self.running = True
+
+        def kill(self, *kwargs):
+            logger.info("Received term signal. Exiting...")
+            self.running = False
+
+    k = Killswitch()
+    signal.signal(signal.SIGINT, k.kill)
+    signal.signal(signal.SIGTERM, k.kill)
+    while k.running:
+        cursor.execute(f"LISTEN update_notebook;")
+        cursor.execute(f"LISTEN grade_notebook;")
+
+        loop = asyncio.get_event_loop()
+        loop.add_reader(conn, handle_listener)
+        loop.run_forever()
 
 def cmd():
     GRADEBOOK = API.gradebook
@@ -372,181 +438,16 @@ def cmd():
     SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
         API.coursedir.source_directory
     )
-    # we assume every directory is an assignment
-    for assi in SOURCE_PATH.iterdir():
-        if assi.is_dir():
-            logger.info(f"Generate Assignment {assi.name}...")
-            API.generate_assignment(assi.name)
+
     try:
         main()
     except KeyboardInterrupt:
         try:
+            conn.close()
             sys.exit(0)
         except SystemExit:
+            conn.close()
             os._exit(0)
-
-# https://pgqueuer.readthedocs.io/en/latest/ for the QueueManager
-async def grade_studentnotebook():
-    """
-    Main function to grade the student notebook and update new notebooks.
-    """
-    connection = await asyncpg.connect(
-        host=os.getenv("POSTGRES_HOST"),
-        database=os.getenv("POSTGRES_DB"),
-        user=os.getenv("POSTGRES_USER"),
-        password=os.getenv("POSTGRES_PASSWORD")
-    )
-
-    driver = AsyncpgDriver(connection)
-    qm = QueueManager(driver)
-
-    @qm.entrypoint("grade_notebook", executor=GradingExecutor)
-    async def grading_task(job: Job) -> None:
-        logger.info(f"Executing grading job with ID: {job.id}")
-
-    @qm.entrypoint("update_notebook", executor=NotebookExecutor)
-    async def update_task(job: Job) -> None:
-        logger.info(f"Executing update job with ID: {job.id}")
-    await qm.run()    
-
-# Enqueue the successful graded assignment to the database for further processing
-async def enqueue_graded(process_id) -> None:
-    # Establish a database connection; asyncpg and psycopg are supported.
-    connection = await asyncpg.connect(            
-            host=os.getenv("POSTGRES_HOST"),  # Replace with your host
-            database=os.getenv("POSTGRES_DB"),  # Replace with your database name
-            user=os.getenv("POSTGRES_USER"),  # Replace with your username
-            password=os.getenv("POSTGRES_PASSWORD")  # Replace with your password)
-    )
-    # Initialize a database driver
-    driver = AsyncpgDriver(connection)
-    # Create a QueueManager instance
-    qm = QueueManager(driver)
-    await qm.queries.enqueue(
-        ["send_email"],
-        [str(process_id).encode()],
-    )
-
-
-async def check_assignment(assignment: str) -> None:
-    """
-    Sanity checking if the assignment exists and is the newest version in the source folder.
-    If not, the assignment will be updated.
-    """
-    try:
-        connection = await asyncpg.connect(
-            host=os.getenv("POSTGRES_HOST"),
-            database=os.getenv("POSTGRES_DB"),
-            user=os.getenv("POSTGRES_USER"),
-            password=os.getenv("POSTGRES_PASSWORD")
-    )
-        # check if the assignment exists
-        if API.get_assignment(assignment, released=[assignment]) is None:
-            # seems to return None if assignment does not exist: https://nbgrader.readthedocs.io/en/stable/_modules/nbgrader/apps/api.html#NbGraderAPI.get_assignment
-            logger.error(
-                f"Grading for Assignment {assignment} was requested but assignment was not found!"
-            )
-
-            # check if there is a notebook for the assignment in the database
-            notebook = await connection.fetchrow("""
-                    SELECT * FROM notebook WHERE in_exercise=$1;
-                """,
-                assignment
-            )
-
-            if notebook is None:
-                logger.error(
-                    f"Notebook for assignment {assignment} was not found in the database!"
-                )
-                raise RuntimeError('Assignment for grading not found')
-            else:
-                await update_notebook(notebook)
-                logger.info(f"Notebook for assignment {assignment} updated") 
-
-        # check if assignment also exist in release folder
-        elif not os.path.exists(f"{COURSE_DIRECTORY}/{API.coursedir.release_directory}/{assignment}"):
-            logger.error(
-                f"Grading for Assignment {assignment} was requested but assignment was not found in release folder!"
-            )
-            API.generate_assignment(assignment)
-
-        # ensure each worker is uptodate with the newest assignment version, therefore check time of last update in directory
-        RELEASE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
-            API.coursedir.release_directory
-        )
-
-        last_release_update = datetime.datetime.fromtimestamp(os.path.getmtime(f"{RELEASE_PATH}/{assignment}"), tz=datetime.timezone.utc)
-        logger.info(f"Last release updated at: {last_release_update}")
-
-        last_notebook_v = await connection.fetchrow("""
-            SELECT * FROM notebook WHERE in_exercise = $1 ORDER BY uploaded_at DESC LIMIT 1;
-            """,
-            assignment
-        )
-
-        logger.info(f"Last notebook version: {last_notebook_v['uploaded_at']}")
-
-        if last_notebook_v['uploaded_at'] > last_release_update :
-            logger.info(last_notebook_v['filename'] )
-            await update_notebook(last_notebook_v)
-            logger.info(f"Notebook for assignment {assignment} updated")
-        else: 
-            logger.info(f"Notebook for assignment {assignment} is the newest version")
-            
-    except Exception as e:
-        logger.error(f"Error while checking notebook version: {str(e)}")
-        raise RuntimeError('Error while checking notebook version')
-    else:
-        logger.info(f"Notebook is the newest version")
-    finally:
-        await connection.close()
-        logger.info("Connection closed")
-    
-    return
-
-async def update_notebook(notebook) -> None:
-    notebook_name = notebook['filename']
-    folder_name = notebook['in_exercise']
-
-    # Store notebook into course directory
-    SOURCE_PATH = pathlib.Path(COURSE_DIRECTORY) / pathlib.Path(
-        API.coursedir.source_directory
-    )
-
-    # create directory if not exist
-    if not os.path.exists(f"{SOURCE_PATH}/{folder_name}"):
-        os.makedirs(f"{SOURCE_PATH}/{folder_name}")
-        logger.info(f"Directory {SOURCE_PATH}/{folder_name} created")
-
-    with open(f"{SOURCE_PATH}/{folder_name}/{notebook_name}", "wb") as f:
-        f.write(notebook['data'])
-        logger.info(f"Notebook {notebook_name} stored in {SOURCE_PATH}/{folder_name}")
-    
-    # if assets are present, store them as well
-    if notebook['assets'] is not None:
-        with open(f"{SOURCE_PATH}/{folder_name}/assets.zip", "wb") as f:
-            f.write(notebook['assets'])
-            logger.info(f"Notebook assets.zip stored in {SOURCE_PATH}/{folder_name}")
-        
-        # unzip the assets.zip file
-        with ZipFile(f"{SOURCE_PATH}/{folder_name}/assets.zip", "r") as zip_file:
-            zip_file.extractall(f"{SOURCE_PATH}/{folder_name}")
-            logger.info(f"Notebook assets unzipped in {SOURCE_PATH}/{folder_name}")
-
-        # delete the assets.zip file
-        os.remove(f"{SOURCE_PATH}/{folder_name}/assets.zip")
-
-    try:
-        # generate the assignment 
-        # (store notebook in src dir to release and stripping all output cells)
-        # https://nbgrader.readthedocs.io/en/stable/user_guide/what_is_nbgrader.html#nbgrader-generate-assignment
-        API.generate_assignment(folder_name)
-    except:
-        # error handling for multiple workers? 
-        logger.error(f"Error while generating assignment {folder_name}")
-        raise RuntimeError(f"Error while generating assignment {folder_name}")
-    else:
-        logger.info(f"Assignment {folder_name} generated")
 
 if __name__ == "__main__":
     cmd()

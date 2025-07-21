@@ -1,5 +1,5 @@
 # NB Blackbox data model
-**This is for overview only, when in doubt always refer to the schema defined in grader/model.py**
+**This is for overview only, when in doubt always refer to the schema defined in grader/models.py**
 ```mermaid
 ---
 title: NB Blackbox ER
@@ -17,6 +17,7 @@ erDiagram
         string filename PK
         string in_exercise FK
         BLOB data
+        BLOB assets
         date uploaded_at
     }
     
@@ -42,8 +43,8 @@ erDiagram
     
     Grading {
         uuid processid FK
-        string cellId
-        integer grade
+        int cell
+        double points
     }
     
     ErrorLog {
@@ -61,6 +62,17 @@ erDiagram
         BLOB data
         string notebook FK
         uuid process FK
+    }
+
+    DailyContigent {
+        string user_email PK
+        date date
+        int count
+    }
+
+    KeycloakSession {
+        string keycloak_sid
+        string django_sid
     }
         
     Exercise ||--|| Notebook: has
