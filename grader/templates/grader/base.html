@@ -30,6 +30,9 @@
                     {% csrf_token %}
                     <input type="submit" value="Logout">
                     </form>
+                    {% if user.is_staff %}
+                    <a href="/admin/" class="btn btn-primary">Admin Panel</a>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

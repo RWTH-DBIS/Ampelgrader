@@ -18,7 +18,7 @@ These points are then entered into the database.
 **DUMMY_STUDENT_ID**: The id of the dummy student which is used for nbgrader (default "d")
 
 ### Database
-The worker assumes the schema as defined in ../grader/models.py present in the database-.
+The worker assumes the schema as defined in ../grader/models.py present in the database.
 
 The following environment variables are supported for configuration of the database access:
 

@@ -7,7 +7,6 @@ from datetime import datetime
 """
 Models an assignment
 """
-
 class Exercise(models.Model):
     identifier = models.CharField(
         max_length=255, primary_key=True, db_column="identifier"
@@ -37,7 +36,9 @@ class Exercise(models.Model):
     class Meta:
         db_table = "exercise"
 
-
+"""
+Models a grading process
+"""
 class GradingProcess(models.Model):
     identifier = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False, db_column="identifier"
@@ -65,8 +66,6 @@ Describes a Notebook in an Exercise, having multiple subexercises
 Currently, we associate notebook and Exercise with a 1-1 mapping.
 However, we leave notebook as its own entity to maybe support multiple notebooks in the future
 """
-
-
 class Notebook(models.Model):
     filename = models.CharField(max_length=255, primary_key=True, db_column="filename")
     in_exercise = models.OneToOneField(
@@ -87,8 +86,6 @@ class Notebook(models.Model):
 Describes a subexercise in the Notebook (such as 2). This defines the coarsness of the grading presented to the studies
 For each of these SubExercises, the student will see how good they were
 """
-
-
 class SubExercise(models.Model):
     label = models.CharField(max_length=255, db_column="label")
     in_notebook = models.ForeignKey(
@@ -105,8 +102,6 @@ class SubExercise(models.Model):
 """
 Describes a single cell in a notebook and its maxscore and to which subexercise it belongs
 """
-
-
 class Cell(models.Model):
     cell_id = models.CharField(max_length=255, db_column="cell_id")
     sub_exercise = models.ForeignKey(
@@ -149,8 +144,6 @@ class Grading(models.Model):
 Models an error happened throughout the grading process.
 Is used to indicate that a grading process was finished but resulted in an error.
 """
-
-
 class ErrorLog(models.Model):
     process = models.OneToOneField(
         GradingProcess, on_delete=models.CASCADE, db_column="process"
@@ -164,8 +157,6 @@ class ErrorLog(models.Model):
 """
 Models the assignment to workers
 """
-
-
 class WorkerAssignment(models.Model):
     worker_id = models.UUIDField(
         default=uuid.uuid4, editable=False, db_column="worker_id"
@@ -184,14 +175,12 @@ class WorkerAssignment(models.Model):
 """
 Models a notebook uploaded by a student
 """
-
-
 class StudentNotebook(models.Model):
     data = models.BinaryField(db_column="data")
     notebook = models.ForeignKey(
         Notebook, on_delete=models.CASCADE, db_column="notebook"
     )
-    process = models.ForeignKey(
+    process = models.OneToOneField(
         GradingProcess, on_delete=models.CASCADE, primary_key=True, db_column="process"
     )
 
@@ -207,3 +196,19 @@ class KeycloakSession(models.Model):
 
     class Meta:
         db_table = "keycloak_session" 
+
+
+"""
+Table to store the daily contingent of a user.
+"""
+class DailyContingent(models.Model):
+    user_email = models.EmailField(db_column="user_email", primary_key=True)
+    date = models.DateField(db_column="date", auto_now=True)
+    count = models.IntegerField(db_column="count", default=0)
+
+    class Meta:
+        db_table = "daily_contingent"
+
+    def __str__(self):
+        return f"Daily contingent for user {self.user_email} on {self.date}: {self.count}"
+    

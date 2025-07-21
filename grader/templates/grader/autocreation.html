@@ -8,7 +8,7 @@
             </div>
                 
             <div class="container-content">
-                <h2>{% translate "Autocreation von der Übung" %} {{ exercise_identifier }}</h2>
+                <h2>{% translate "Autocreation\Bearbeiten von der Übung" %} {{ exercise_identifier }}</h2>
 
                 <div class="form-row-last">
                     <form enctype="multipart/form-data" action="/grader/autocreation" method="post">
@@ -17,6 +17,7 @@
                         <input type="submit" value="Submit">
                     </form>
                 </div>
+                <p class="text-center"><b> {% translate "^* Eine bestehende Übung kann bearbeitet werden, wenn der Name der Übung als Identifier angegeben wird." %}</b></p>
             </div>
         </div>
 

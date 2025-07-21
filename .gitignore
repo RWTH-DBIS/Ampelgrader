@@ -467,3 +467,5 @@ public
 
 # MacOS files
 .DS_Store
+
+postgres-data/

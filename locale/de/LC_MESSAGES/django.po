@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-06 13:23+0200\n"
+"POT-Creation-Date: 2025-07-07 13:25+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,13 @@ msgid "Zur Startseite"
 msgstr ""
 
 #: grader/templates/grader/autocreation.html:11
-msgid "Autocreation von der Übung"
+msgid "Autocreation\\Bearbeiten von der Übung"
+msgstr ""
+
+#: grader/templates/grader/autocreation.html:20
+msgid ""
+"^* Eine bestehende Übung kann bearbeitet werden, wenn der Name der Übung als "
+"Identifier angegeben wird."
 msgstr ""
 
 #: grader/templates/grader/autocreation_result.html:12
@@ -94,12 +100,6 @@ msgid ""
 "Moodle!"
 msgstr ""
 
-#: grader/templates/grader/grading_error.html:13
-msgid ""
-"Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche es "
-"nochmal."
-msgstr ""
-
 #: grader/templates/grader/grading_processing.html:13
 msgid ""
 "Bewertungsprozess noch nicht abgeschlossen. Vielen Dank für Ihre Geduld!"
@@ -107,10 +107,6 @@ msgstr ""
 
 #: grader/templates/grader/grading_processing.html:17
 msgid "Seite neu laden"
-msgstr ""
-
-#: grader/templates/grader/grading_unavailable.html:14
-msgid "Zurzeit ist keine Bewertung für diese Übung verfügbar!"
 msgstr ""
 
 #: grader/templates/grader/request.html:14
@@ -139,6 +135,10 @@ msgstr ""
 msgid ""
 "Mit der Nutzung dieses Dienstes stimmen Sie der Speicherung Ihrer E-Mail-"
 "Adresse zu gemäß den Bestimmungen der Datenschutz-Grundverordnung (DSGVO)."
+msgstr ""
+
+#: grader/templates/grader/request.html:42
+msgid "Keine Dateien zum Herunterladen verfügbar."
 msgstr ""
 
 #: grader/templates/grader/result.html:13
@@ -176,16 +176,121 @@ msgstr ""
 msgid "Wir informieren Sie sobald die Seite wieder verfügbar ist."
 msgstr ""
 
-#: grader/views.py:255
+#: grader/views.py:141
+msgid ""
+"Ein Problem mit der Notebook-Konvertierung ist aufgetreten. Bitte lösche "
+"nicht die bestehenden Zellen im Notebook."
+msgstr ""
+
+#: grader/views.py:142 grader/views.py:252
+msgid "Etwas ist schief gelaufen. Bitte versuche es später noch einmal."
+msgstr ""
+
+#: grader/views.py:234 grader/views.py:374
+msgid "Zurzeit ist keine Bewertung für diese Übung verfügbar!"
+msgstr ""
+
+#: grader/views.py:270
+msgid "Du hast dein tägliches Limit an {} Anfragen erreicht."
+msgstr ""
+
+#: grader/views.py:319
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:373
+#: grader/views.py:466
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:398
+#: grader/views.py:491
 msgid "Given dict has invalid format. Key error: "
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:445
+msgid "open('foo"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:449
+msgid "open(\"foo"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:453
+#, python-format
+msgid "%ls foo"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:617
+msgid "a[0]."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:624
+msgid "a[0].r"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:631
+msgid "a[0].from_"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:638
+msgid "assert str.star"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:645
+msgid "d['a b'].str"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:652
+msgid "a.app"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:659
+msgid "x.upper() == y."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:666
+msgid "(x.upper() == y."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:673
+msgid "(x.upper() == y)."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:680
+msgid "{'==', 'abc'}."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:687
+msgid "b + c."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1687
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1709
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1712
+msgid "do not suppress"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1688
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1700
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1703
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1706
+msgid "suppress all"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1689
+msgid "suppress all but a"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1690
+msgid "suppress all but c"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1738
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1741
+msgid "---"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/IPython/core/tests/test_completer.py:1744
+msgid "--"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/contrib/messages/apps.py:16
@@ -464,8 +569,8 @@ msgstr ""
 #: venv/lib/python3.13/site-packages/django/db/models/fields/__init__.py:1556
 #, python-format
 msgid ""
-"“%(value)s” value has an invalid format. It must be in YYYY-MM-DD HH:MM[:ss[."
-"uuuuuu]][TZ] format."
+"“%(value)s” value has an invalid format. It must be in YYYY-MM-DD "
+"HH:MM[:ss[.uuuuuu]][TZ] format."
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/db/models/fields/__init__.py:1564
@@ -491,8 +596,8 @@ msgstr ""
 #: venv/lib/python3.13/site-packages/django/db/models/fields/__init__.py:1859
 #, python-format
 msgid ""
-"“%(value)s” value has an invalid format. It must be in [DD] [[HH:]MM:]ss[."
-"uuuuuu] format."
+"“%(value)s” value has an invalid format. It must be in [DD] "
+"[[HH:]MM:]ss[.uuuuuu] format."
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/db/models/fields/__init__.py:1863
@@ -910,30 +1015,37 @@ msgid "noon"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:7
+#: venv/lib/python3.13/site-packages/tornado/locale.py:295
 msgid "Monday"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:8
+#: venv/lib/python3.13/site-packages/tornado/locale.py:296
 msgid "Tuesday"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:9
+#: venv/lib/python3.13/site-packages/tornado/locale.py:297
 msgid "Wednesday"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:10
+#: venv/lib/python3.13/site-packages/tornado/locale.py:298
 msgid "Thursday"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:11
+#: venv/lib/python3.13/site-packages/tornado/locale.py:299
 msgid "Friday"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:12
+#: venv/lib/python3.13/site-packages/tornado/locale.py:300
 msgid "Saturday"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:13
+#: venv/lib/python3.13/site-packages/tornado/locale.py:301
 msgid "Sunday"
 msgstr ""
 
@@ -966,50 +1078,62 @@ msgid "Sun"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:25
+#: venv/lib/python3.13/site-packages/tornado/locale.py:281
 msgid "January"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:26
+#: venv/lib/python3.13/site-packages/tornado/locale.py:282
 msgid "February"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:27
+#: venv/lib/python3.13/site-packages/tornado/locale.py:283
 msgid "March"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:28
+#: venv/lib/python3.13/site-packages/tornado/locale.py:284
 msgid "April"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:29
+#: venv/lib/python3.13/site-packages/tornado/locale.py:285
 msgid "May"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:30
+#: venv/lib/python3.13/site-packages/tornado/locale.py:286
 msgid "June"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:31
+#: venv/lib/python3.13/site-packages/tornado/locale.py:287
 msgid "July"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:32
+#: venv/lib/python3.13/site-packages/tornado/locale.py:288
 msgid "August"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:33
+#: venv/lib/python3.13/site-packages/tornado/locale.py:289
 msgid "September"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:34
+#: venv/lib/python3.13/site-packages/tornado/locale.py:290
 msgid "October"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:35
+#: venv/lib/python3.13/site-packages/tornado/locale.py:291
 msgid "November"
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/utils/dates.py:36
+#: venv/lib/python3.13/site-packages/tornado/locale.py:292
 msgid "December"
 msgstr ""
 
@@ -1323,8 +1447,8 @@ msgstr ""
 #: venv/lib/python3.13/site-packages/django/views/generic/dates.py:652
 #, python-format
 msgid ""
-"Future %(verbose_name_plural)s not available because %(class_name)s."
-"allow_future is False."
+"Future %(verbose_name_plural)s not available because "
+"%(class_name)s.allow_future is False."
 msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/views/generic/dates.py:692
@@ -1410,4 +1534,200 @@ msgstr ""
 
 #: venv/lib/python3.13/site-packages/django/views/templates/default_urlconf.html:236
 msgid "Connect, get help, or contribute"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:55
+msgid "extra language server specs, keyed by implementation, from conf.d"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:60
+msgid "a dict of language server specs, keyed by implementation"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:66
+msgid "try to find known language servers in sys.prefix (and elsewhere)"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:266
+msgid ""
+"Failed to load language server spec finder `{}`: \n"
+"{}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:283
+msgid ""
+"Failed to fetch commands from language server spec finder `{}`:\n"
+"{}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:296
+msgid ""
+"Failed to validate commands from language server spec finder `{}`:\n"
+"{}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:307
+msgid "Skipped non-installed server(s): {}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:202
+msgid "path to nodejs executable"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:207
+msgid "absolute paths in which to seek node_modules"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:213
+msgid "additional absolute paths to seek node_modules first"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1857
+#, python-format
+msgid "No such directory: '%r'"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1869
+msgid ""
+"Preferred starting directory to use for notebooks and kernels. "
+"ServerApp.preferred_dir is deprecated in jupyter-server 2.0. Use "
+"FileContentsManager.preferred_dir instead"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1881
+#, python-format
+msgid "No such preferred dir: '%r'"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2837
+#, python-format
+msgid "Shutting down %d kernel"
+msgid_plural "Shutting down %d kernels"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2848
+#, python-format
+msgid "Shutting down %d extension"
+msgid_plural "Shutting down %d extensions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2858
+#, python-format
+msgid "%d active kernel"
+msgid_plural "%d active kernels"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server_terminals/app.py:121
+#, python-format
+msgid "Shutting down %d terminal"
+msgid_plural "Shutting down %d terminals"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:262
+msgid "The following plugins cannot be disabled as they are locked: "
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:288
+msgid "The following plugins cannot be enabled as they are locked: "
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:63
+msgid "Extension installation not supported."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:81
+msgid "Extension removal not supported."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:377
+msgid "1 second ago"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:383
+msgid "1 minute ago"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:388
+msgid "1 hour ago"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:391
+#, python-format
+msgid "%(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:393
+msgid "yesterday"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:393
+#, python-format
+msgid "yesterday at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:395
+#, python-format
+msgid "%(weekday)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:395
+#, python-format
+msgid "%(weekday)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:398
+#: venv/lib/python3.13/site-packages/tornado/locale.py:451
+#, python-format
+msgid "%(month_name)s %(day)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:400
+#, python-format
+msgid "%(month_name)s %(day)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:405
+#, python-format
+msgid "%(month_name)s %(day)s, %(year)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:407
+#, python-format
+msgid "%(month_name)s %(day)s, %(year)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:445
+#, python-format
+msgid "%(weekday)s, %(month_name)s %(day)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:468
+#, python-format
+msgid "%(commas)s and %(last)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:68
+msgctxt "law"
+msgid "right"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:69
+msgctxt "good"
+msgid "right"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:70
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:72
+msgctxt "organization"
+msgid "club"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:74
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:75
+msgctxt "stick"
+msgid "club"
 msgstr ""

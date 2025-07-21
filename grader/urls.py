@@ -12,4 +12,6 @@ urlpatterns = [
     path("successful_request", views.successful_request, name="successful_request"),
     path("autocreation", views.autoprocess_notebook, name="autocreate"),
     path("logout", views.keycloak_logout, name="keycloak_logout"),
+    path("download/<str:for_notebook>", views.download_notebook, name="download_notebook"),
+    path("download/<str:for_notebook>/assets", views.download_assets, name="download_assets"),
 ]

@@ -5,12 +5,12 @@ import re
 import os
 import base64
 import json
-
+import time 
 from collections import defaultdict
 from datetime import timedelta
 
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
 from django.conf import settings
@@ -25,11 +25,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from grader.models import *
 
-import asyncio
-import asyncpg
-
-from pgqueuer.qm import QueueManager
-from pgqueuer.db import AsyncpgDriver
+import psycopg2
 
 from django.contrib.auth.signals import user_logged_in
 from django.dispatch import receiver
@@ -38,6 +34,13 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+conn = psycopg2.connect(host=os.getenv("NBBB_DB_HOST", "localhost"), 
+                dbname=os.getenv("NBBB_DB_NAME", "grader"), 
+                user=os.getenv("NBBB_DB_USER", "user"), 
+                password=os.getenv("NBBB_DB_PASSWD", "password"))
+cursor = conn.cursor()
+conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
 
 def ping(request: http.HttpRequest):
 
@@ -100,6 +103,22 @@ def store_sid(sender, request, user, **kwargs):
         except Exception as e:
             logger.error("Error occured: " + str(e))
 
+        # initialize daily contingent for the user
+        user_email = user.email 
+        try:
+          with connection.cursor() as cursor:
+              cursor.execute("SELECT * FROM daily_contingent WHERE user_email = %s", [user_email])
+              counter = cursor.fetchone()
+              if counter is None:
+                date = datetime.now()
+                cursor.execute("INSERT INTO daily_contingent (user_email, date, count) VALUES (%s, %s, 0)", [user_email, date])
+              else:
+                if counter[1] != datetime.now().date():
+                  # reset the counter for the new day
+                  cursor.execute("UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s", [datetime.now(), user_email])                      
+        except Exception as e:  
+            logger.error("Error occured while initializing daily contingent: " + str(e))
+
     else:
         logger.error('No keycloak token found in the session')
     
@@ -116,10 +135,13 @@ def show_results(request: http.HttpRequest, for_process: str):
     if not grading.exists():
         # Check if there was an error
         if ErrorLog.objects.filter(process=gq).exists():
-            return render(request, "grader/grading_error.html", {})
+            errorlog = str(ErrorLog.objects.get(process=gq).log)
+            logger.info(f"Grading process {gq.identifier} has an error: {errorlog}")
+            if 'convert_notebooks' in errorlog:
+                return render(request, "grader/grading_error.html", {"error": _("Ein Problem mit der Notebook-Konvertierung ist aufgetreten. Bitte lösche nicht die bestehenden Zellen im Notebook.")})
+            return render(request, "grader/grading_error.html", {"error": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
         else:
             return render(request, "grader/grading_processing.html", {})
-            #return http.HttpResponseNotFound("Grading process not finished. Thank you for your patience")
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -201,7 +223,6 @@ def show_exercises(request):
 
     return render(request, "grader/exercise_overview.html", {"exercises": context_exercises, "id": id})
 
-
 def request_grading(request: http.HttpRequest, for_exercise: str):
     translation.activate(settings.LANGUAGE_CODE)
     if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
@@ -209,15 +230,48 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     try:
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
-        if not ex.running():
-            return render(request, "grader/grading_unavailable.html")
-            #return http.HttpResponseForbidden("At this time, no grading for this exercise is provided. Please go away.")
+        if not ex.running() and not request.user.is_staff:
+            return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
+
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
+    # check if user contingent has reached the limit
+    with transaction.atomic():
+      counter = DailyContingent.objects.raw(
+          """
+          SELECT * FROM daily_contingent WHERE user_email = %s
+          """,
+          [user_email],
+      )
+    
+    if not request.user.is_staff:
+      if not counter:
+          return render(request, "grader/grading_unavailable.html", {"message": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
+      
+      # if date is one day before today, reset the counter
+      if counter[0].date != datetime.now().date():
+          # with connection.cursor() as cursor:
+          #     cursor.execute(
+          #         """
+          #         UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s
+          #         """,
+          #         [datetime.now(), user_email],
+          #     )
+          counter[0].count = 0
+          counter[0].date = datetime.now().date()
+
+      if counter[0].count >= int(settings.DAILY_LIMIT):
+          return render(
+              request,
+              "grader/grading_unavailable.html",
+              {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(settings.DAILY_LIMIT)},
+          )
+
     if request.method == "GET":
+        files = list()
         # check if user has already a submission running
         with transaction.atomic():
             gp = GradingProcess.objects.raw(
@@ -229,13 +283,23 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
                 [user_email],
             )
 
+            notebook = Notebook.objects.filter(in_exercise=ex).first()
+
         id = gp[0].identifier if len(list(gp)) > 0 else None
+        
+        if notebook and notebook.data:
+          files.append({
+              "name": notebook.filename if notebook.data else None,
+              "assets": f"{notebook.filename}_assets" if notebook.assets else None,
+              "updated_at": notebook.uploaded_at.strftime("%d.%m.%Y %H:%M") if notebook else None,
+          })
 
         return render(
             request,
             "grader/request.html",
-            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id},
+            {"form": NoteBookForm(), "for_exercise": for_exercise, "id": id, "files": files},
         )
+    
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
 
@@ -290,7 +354,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             )
             new_sn.save()
 
-        asyncio.run(enqueue_grading_request(new_gp.identifier))
+        enqueue_grading_request(new_gp.identifier)
 
             # we are done
         return HttpResponseRedirect("/grader/successful_request?id={}".format(new_gp.identifier))
@@ -307,7 +371,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     if not ex.running():
-        return render(request, "grader/grading_unavailable.html")
+        return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
@@ -350,6 +414,35 @@ def successful_request(request: http.HttpRequest):
     return render(request, "grader/successful_request.html", {"id": id})
     #return http.HttpResponse(f"Grading was requested. You will hear from us. Your process ID is: {request.GET.get('id', default='UNKNOWN')}")
 
+
+def download_notebook(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the notebook associated with the given exercise.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    response = http.HttpResponse(notebook.data, content_type="application/x-ipynb+json")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}"'
+
+    return response
+
+def download_assets(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the assets associated with the given notebook.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    if not notebook.assets:
+        return http.HttpResponseNotFound("No assets available for this notebook.")
+
+    response = http.HttpResponse(notebook.assets, content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
+
+    return response
 
 """
 Administration utilities
@@ -421,29 +514,54 @@ def autoprocess_notebook(request: http.HttpRequest):
         exercise_identifier = form.cleaned_data["exercise_identifier"]
         subexercise_dict = parse_notebook(loads(notebook_data))
         with transaction.atomic():
-            # create the database entries
-            ex = Exercise(
-                exercise_identifier,
-                start_date=form.cleaned_data["start_date"],
-                stop_date=form.cleaned_data["stop_date"],
-                last_updated=datetime.now(),
-            )
-            ex.save()
-            nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
-            nb.save()
-            for subexercise_ident in subexercise_dict.keys():
-                sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
-                sbe.save()
-                for cell_id in subexercise_dict[subexercise_ident]:
-                    cell = Cell(
-                        cell_id=cell_id,
-                        sub_exercise=sbe,
-                        max_score=subexercise_dict[subexercise_ident][cell_id],
-                    )
-                    cell.save()                             
+            # check if exercise with the same identifier already exists
+            if Exercise.objects.filter(identifier=exercise_identifier).exists():
+                # update the existing exercise
+                ex = Exercise.objects.get(identifier=exercise_identifier)
+                ex.start_date = form.cleaned_data["start_date"]
+                ex.stop_date = form.cleaned_data["stop_date"]
+                ex.last_updated = datetime.now()
+                ex.save()
+
+                Notebook.objects.filter(in_exercise=ex).delete()
+
+                nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files)
+                nb.save()
+                for subexercise_ident in subexercise_dict.keys():
+                  sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
+                  sbe.save()
+                  for cell_id in subexercise_dict[subexercise_ident]:
+                      cell = Cell(
+                          cell_id=cell_id,
+                          sub_exercise=sbe,
+                          max_score=subexercise_dict[subexercise_ident][cell_id],
+                      )
+                      cell.save()   
+
+            else: 
+              # create the database entries
+              ex = Exercise(
+                  exercise_identifier,
+                  start_date=form.cleaned_data["start_date"],
+                  stop_date=form.cleaned_data["stop_date"],
+                  last_updated=datetime.now(),
+              )
+              ex.save()
+              nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, uploaded_at=datetime.now())
+              nb.save()
+              for subexercise_ident in subexercise_dict.keys():
+                  sbe = SubExercise(label=subexercise_ident, in_notebook=nb)
+                  sbe.save()
+                  for cell_id in subexercise_dict[subexercise_ident]:
+                      cell = Cell(
+                          cell_id=cell_id,
+                          sub_exercise=sbe,
+                          max_score=subexercise_dict[subexercise_ident][cell_id],
+                      )
+                      cell.save()                             
 
         # trigger nbgrader to update notebook and generate assignments
-        asyncio.run(enqueue_notebook_update(notebook_file_name))
+        enqueue_notebook_update(notebook_file_name)
 
         # transform the result into a structure easier to use in django template engine:
         # you cannot straigthforward use variables content as keys to access a dictionary
@@ -465,44 +583,18 @@ def autoprocess_notebook(request: http.HttpRequest):
         )
     else:
         return http.HttpResponseBadRequest("Invalid form")
+    
+def enqueue_grading_request(process_id) -> None:
+    logger.info(f"Enqueuing grading request for process ID: {process_id}")
+    val = process_id
+    cursor.execute(f"NOTIFY grade_notebook, '{val}';")
+    time.sleep(1) 
 
-async def enqueue_grading_request(process_id) -> None:
-    # Establish a database connection; asyncpg and psycopg are supported.
-    connection = await asyncpg.connect(            
-            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
-            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
-            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
-            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
-    )
-
-    # Initialize a database driver
-    driver = AsyncpgDriver(connection)
-    # Create a QueueManager instance
-    qm = QueueManager(driver)
-
-    await qm.queries.enqueue(
-        ["grade_notebook"],
-        [str(process_id).encode()],
-    )
-
-async def enqueue_notebook_update(filename) -> None:
-    # Establish a database connection; asyncpg and psycopg are supported.
-    connection = await asyncpg.connect(            
-            host=os.getenv("NBBB_DB_HOST"),  # Replace with your host
-            database=os.getenv("NBBB_DB_NAME"),  # Replace with your database name
-            user=os.getenv("NBBB_DB_USER"),  # Replace with your username
-            password=os.getenv("NBBB_DB_PASSWD")  # Replace with your password)
-    )
-
-    # Initialize a database driver
-    driver = AsyncpgDriver(connection)
-    # Create a QueueManager instance
-    qm = QueueManager(driver)
-
-    await qm.queries.enqueue(
-        ["update_notebook"],
-        [str(filename).encode()],
-    )
+def enqueue_notebook_update(filename) -> None:
+    logger.info(f"Enqueuing notebook update for filename: {filename}")
+    val = str(filename)
+    cursor.execute(f"NOTIFY update_notebook, '{val}';")
+    time.sleep(1)
 
 # Logout redirect 
 @csrf_exempt
@@ -545,8 +637,12 @@ def keycloak_logout(request: http.HttpRequest):
         return JsonResponse({"status": "error", "message": str(e)})
     
 def decode_token(token:str) -> dict:
-    parts = token.split(".")
-    payload = parts[1]
-    payload += '=' * (-len(payload) % 4)
-    decoded = base64.b64decode(payload).decode('utf-8')
-    return json.loads(decoded)
+    try:
+        parts = token.split(".")
+        payload = parts[1]
+        payload += '=' * (-len(payload) % 4)
+        decoded = base64.b64decode(payload).decode('utf-8')
+        return json.loads(decoded)
+    except Exception as e:
+        logger.error(f"Error decoding token: {e}")
+        return {}
