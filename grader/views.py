@@ -161,7 +161,6 @@ def show_results(request: http.HttpRequest, for_process: str):
             return render(request, "grader/grading_error.html", {"error": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
         else:
             return render(request, "grader/grading_processing.html", {})
-
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -476,6 +475,35 @@ def download_assets(request: http.HttpRequest, for_notebook: str):
 
     if not notebook.assets:
         return render(request, "grader/grading_error.html", {"error": _("Ein Problem ist aufgetreten. Es sind keine Assets für dieses Notebook vorhanden. Bitte lade Dir die Assets in Moodle runter.")})
+
+    response = http.HttpResponse(notebook.assets, content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
+
+    return response
+
+def download_notebook(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the notebook associated with the given exercise.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    response = http.HttpResponse(notebook.data, content_type="application/x-ipynb+json")
+    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}"'
+
+    return response
+
+def download_assets(request: http.HttpRequest, for_notebook: str):
+    """
+    Downloads the assets associated with the given notebook.
+    """
+    translation.activate(settings.LANGUAGE_CODE)
+
+    notebook = get_object_or_404(Notebook, filename=for_notebook)
+
+    if not notebook.assets:
+        return http.HttpResponseNotFound("No assets available for this notebook.")
 
     response = http.HttpResponse(notebook.assets, content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
