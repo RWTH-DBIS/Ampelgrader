@@ -185,7 +185,9 @@ def show_results(request: http.HttpRequest, for_process: str):
             red = red_percentage*100
             yellow = yellow_percentage*100
 
-    return render(request, "grader/result.html", {"result": result, "red": red, "yellow": yellow})
+            allred = all(elem['t_light_colour'] == 'red' for elem in result)
+
+    return render(request, "grader/result.html", {"result": result, "red": red, "yellow": yellow, "allred": allred})
 
 
 """

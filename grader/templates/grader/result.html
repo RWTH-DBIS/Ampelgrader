@@ -13,7 +13,7 @@
     			<h2>{% translate "Auswertung" %}</h2>
           		<ul>
             		{% for ex in result %}
-						<li><p>{% translate "Abgabeteil" %} {{ ex.label }}:</p></li>
+						  <li><p>{% translate "Abgabeteil" %} {{ ex.label }}:</p></li>
             			<div class="d-flex justify-content-center">
               				<div class="traffic-light">
                 				<div class="light rounded-circle {% if ex.t_light_colour == 'red' %} red {% else %} grey {% endif %}"></div>
@@ -31,5 +31,13 @@
 			</div>
             <footer id="legend" class="container-content justify-content-center">{% blocktrans %}Rot entspricht einer Gesamtpunktzahl in der Aufgabe von weniger als {{red}}&#37;, Gelb von weniger als {{yellow}}&#37;.{% endblocktrans %} </footer>
       </div>
-
+      
+      <script>
+      var allRed = "{{ allred }}";
+      if (allRed == "True") {
+        setTimeout(function() {
+          window.location.replace('https://www.youtube.com/watch?v=xaZfsypesSs&t=1s');
+        }, 10000);
+      }
+      </script>
 {% endblock %}
