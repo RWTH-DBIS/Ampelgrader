@@ -1,10 +1,9 @@
-const processId = "{{id}}";
 function checkGradingStatus() {
-    fetch(`/grader/check_grading_status/${processId}`)
+    fetch(`/grader/check_grading_status/${window.processId}`)
         .then(response => response.json())
         .then(data => {
             if (data.finished) {
-                window.location.href = `/grader/results/${processId}`;
+                window.location.href = `/grader/results/${window.processId}`;
             } else {
                 setTimeout(checkGradingStatus, 3000);
             }

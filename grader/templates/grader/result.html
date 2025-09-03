@@ -30,6 +30,6 @@
 			</div>
             <footer id="legend" class="container-content justify-content-center">{% blocktrans %}Rot entspricht einer Gesamtpunktzahl in der Aufgabe von weniger als {{red}}&#37;, Gelb von weniger als {{yellow}}&#37;.{% endblocktrans %} </footer>
       </div>
-
+      <script> window.allRed = "{{ allred }}"; </script>
       <script src="/static/grader/js/easteregg.js"></script>
 {% endblock %}
