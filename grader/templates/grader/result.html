@@ -24,10 +24,9 @@
             		{% endfor %}
           		</ul>
 
-        <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+        <div class="text-center" style="margin-top: 30px; margin-bottom: 20px;"> 
           <button onclick="location.href='/grader/request/'" class="btn btn-primary">{% translate "Zurück" %}</button>
         </div>
-
 			</div>
             <footer id="legend" class="container-content justify-content-center">{% blocktrans %}Rot entspricht einer Gesamtpunktzahl in der Aufgabe von weniger als {{red}}&#37;, Gelb von weniger als {{yellow}}&#37;.{% endblocktrans %} </footer>
       </div>
@@ -37,7 +36,7 @@
       if (allRed == "True") {
         setTimeout(function() {
           window.location.replace('https://www.youtube.com/watch?v=xaZfsypesSs&t=1s');
-        }, 30000);
+        }, 50000);
       }
       </script>
 {% endblock %}
