@@ -124,9 +124,28 @@ def store_sid(sender, request, user, **kwargs):
     
     return 
 
+def check_grading_status(request: http.HttpRequest, for_process: str):
+    if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
+        return http.HttpResponseRedirect("../login")
+    try:
+        gq = GradingProcess.objects.get(identifier=for_process)
+    except GradingProcess.DoesNotExist:
+        return http.HttpResponseNotFound("Not found")
+    grading = Grading.objects.filter(process=gq)
+    if not grading.exists():
+        finished = False
+    else:
+        finished = True
+
+    response = http.HttpResponse(json.dumps({"finished": finished}), content_type="application/json")
+    return response
+
 def show_results(request: http.HttpRequest, for_process: str):
     translation.activate(settings.LANGUAGE_CODE)
 
+    if settings.NEED_GRADING_AUTH and not request.user.is_authenticated:
+        return http.HttpResponseRedirect("../login")
+    
     try:
         gq = GradingProcess.objects.get(identifier=for_process)
     except GradingProcess.DoesNotExist:
@@ -142,6 +161,7 @@ def show_results(request: http.HttpRequest, for_process: str):
             return render(request, "grader/grading_error.html", {"error": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
         else:
             return render(request, "grader/grading_processing.html", {})
+
     result = list()
     with connection.cursor() as cursor:
         cursor.execute("""
@@ -376,7 +396,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
         ex = Exercise.objects.get(identifier=for_exercise)
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
-    if not ex.running():
+    if not ex.running() and not request.user.is_staff:
         return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
