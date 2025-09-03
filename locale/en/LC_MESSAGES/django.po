@@ -60,8 +60,6 @@ msgid "Letzte Einreichung"
 msgstr "Last submit"
 
 #: grader/templates/grader/counter.html:18
-#, fuzzy
-#| msgid "Bewertung für Aufgabe"
 msgid "Countdown für Aufgabe"
 msgstr "Request grading for exercise"
 
@@ -180,14 +178,10 @@ msgid "Bewertung erfolgreich angefordert!"
 msgstr "Grading successfully requested!"
 
 #: grader/templates/grader/successful_request.html:14
-#, fuzzy
-#| msgid "Wenn die Bewertung abgeschlossen ist, wird eine E-Mail an"
 msgid "Wenn das Grading abgeschlossen ist, werden Sie automatisch weitergeleitet."
 msgstr "You will be automatically redirected when the grading is finished."
 
 #: grader/templates/grader/successful_request.html:18
-#, fuzzy
-#| msgid "Sie werden von uns hören. Ihre Prozess-ID lautet: "
 msgid "Ihre Prozess-ID lautet: "
 msgstr "Your process ID is:"
 
@@ -212,10 +206,6 @@ msgstr ""
 "the existing cells in the notebook."
 
 #: grader/views.py:161 grader/views.py:274
-#, fuzzy
-#| msgid ""
-#| "Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche "
-#| "es nochmal."
 msgid "Etwas ist schief gelaufen. Bitte versuche es später noch einmal."
 msgstr "Something went wrong. Please check your notebook and try again."
 

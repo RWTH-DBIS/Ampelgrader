@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 13:10+0200\n"
+"POT-Creation-Date: 2025-09-03 14:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -57,25 +57,25 @@ msgstr ""
 msgid "Letzte Einreichung"
 msgstr ""
 
-#: grader/templates/grader/counter.html:18
+#: grader/templates/grader/counter.html:19
 msgid "Countdown für Aufgabe"
 msgstr ""
 
-#: grader/templates/grader/counter.html:25
+#: grader/templates/grader/counter.html:26
 msgid "Um Überlastung zu vermeiden, ist eine Abgabe nur alle"
 msgstr ""
 
-#: grader/templates/grader/counter.html:26
+#: grader/templates/grader/counter.html:27
 msgid ""
 "Minuten möglich. Bitte warten Sie mit der nächsten Abgabe, bis der Countdown "
 "abgelaufen ist."
 msgstr ""
 
-#: grader/templates/grader/counter.html:28
+#: grader/templates/grader/counter.html:29
 #: grader/templates/grader/grading_error.html:17
 #: grader/templates/grader/grading_unavailable.html:18
-#: grader/templates/grader/result.html:28
-#: grader/templates/grader/successful_request.html:24
+#: grader/templates/grader/result.html:29
+#: grader/templates/grader/successful_request.html:25
 msgid "Zurück"
 msgstr ""
 
@@ -141,31 +141,31 @@ msgstr ""
 msgid "Keine Dateien zum Herunterladen verfügbar."
 msgstr ""
 
-#: grader/templates/grader/result.html:13
+#: grader/templates/grader/result.html:14
 msgid "Auswertung"
 msgstr ""
 
-#: grader/templates/grader/result.html:16
+#: grader/templates/grader/result.html:17
 msgid "Abgabeteil"
 msgstr ""
 
-#: grader/templates/grader/result.html:31
+#: grader/templates/grader/result.html:32
 #, python-format
 msgid ""
 "Rot entspricht einer Gesamtpunktzahl in der Aufgabe von weniger als "
 "%(red)s&#37;, Gelb von weniger als %(yellow)s&#37;."
 msgstr ""
 
-#: grader/templates/grader/successful_request.html:13
+#: grader/templates/grader/successful_request.html:14
 msgid "Bewertung erfolgreich angefordert!"
 msgstr ""
 
-#: grader/templates/grader/successful_request.html:14
+#: grader/templates/grader/successful_request.html:15
 msgid ""
 "Wenn das Grading abgeschlossen ist, werden Sie automatisch weitergeleitet."
 msgstr ""
 
-#: grader/templates/grader/successful_request.html:18
+#: grader/templates/grader/successful_request.html:19
 msgid "Ihre Prozess-ID lautet: "
 msgstr ""
 
