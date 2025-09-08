@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 13:10+0200\n"
+"POT-Creation-Date: 2025-09-08 14:44+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -59,15 +59,15 @@ msgstr "signed in as"
 msgid "Letzte Einreichung"
 msgstr "Last submit"
 
-#: grader/templates/grader/counter.html:18
+#: grader/templates/grader/counter.html:19
 msgid "Countdown für Aufgabe"
 msgstr "Request grading for exercise"
 
-#: grader/templates/grader/counter.html:25
+#: grader/templates/grader/counter.html:26
 msgid "Um Überlastung zu vermeiden, ist eine Abgabe nur alle"
 msgstr "To avoid overloading, submission is only possible every"
 
-#: grader/templates/grader/counter.html:26
+#: grader/templates/grader/counter.html:27
 msgid ""
 "Minuten möglich. Bitte warten Sie mit der nächsten Abgabe, bis der Countdown "
 "abgelaufen ist."
@@ -75,11 +75,11 @@ msgstr ""
 "minutes. Please wait until the countdown has expired before submitting your "
 "notebook."
 
-#: grader/templates/grader/counter.html:28
+#: grader/templates/grader/counter.html:29
 #: grader/templates/grader/grading_error.html:17
 #: grader/templates/grader/grading_unavailable.html:18
-#: grader/templates/grader/result.html:28
-#: grader/templates/grader/successful_request.html:24
+#: grader/templates/grader/result.html:29
+#: grader/templates/grader/successful_request.html:25
 msgid "Zurück"
 msgstr "Back"
 
@@ -156,15 +156,15 @@ msgstr ""
 msgid "Keine Dateien zum Herunterladen verfügbar."
 msgstr "No files available for download."
 
-#: grader/templates/grader/result.html:13
+#: grader/templates/grader/result.html:14
 msgid "Auswertung"
 msgstr "Grading"
 
-#: grader/templates/grader/result.html:16
+#: grader/templates/grader/result.html:17
 msgid "Abgabeteil"
 msgstr "Submission part"
 
-#: grader/templates/grader/result.html:31
+#: grader/templates/grader/result.html:32
 #, python-format
 msgid ""
 "Rot entspricht einer Gesamtpunktzahl in der Aufgabe von weniger als "
@@ -173,15 +173,16 @@ msgstr ""
 "Red corresponds to a total score in the task of less than %(red)s&#37;, "
 "Yellow to less than %(yellow)s&#37;."
 
-#: grader/templates/grader/successful_request.html:13
+#: grader/templates/grader/successful_request.html:14
 msgid "Bewertung erfolgreich angefordert!"
 msgstr "Grading successfully requested!"
 
-#: grader/templates/grader/successful_request.html:14
-msgid "Wenn das Grading abgeschlossen ist, werden Sie automatisch weitergeleitet."
+#: grader/templates/grader/successful_request.html:15
+msgid ""
+"Wenn das Grading abgeschlossen ist, werden Sie automatisch weitergeleitet."
 msgstr "You will be automatically redirected when the grading is finished."
 
-#: grader/templates/grader/successful_request.html:18
+#: grader/templates/grader/successful_request.html:19
 msgid "Ihre Prozess-ID lautet: "
 msgstr "Your process ID is:"
 
@@ -205,436 +206,34 @@ msgstr ""
 "A problem has occurred with the notebook conversion. Please do not delete "
 "the existing cells in the notebook."
 
-#: grader/views.py:161 grader/views.py:274
+#: grader/views.py:161 grader/views.py:273
 msgid "Etwas ist schief gelaufen. Bitte versuche es später noch einmal."
 msgstr "Something went wrong. Please check your notebook and try again."
 
-#: grader/views.py:256 grader/views.py:400
+#: grader/views.py:255 grader/views.py:399
 msgid "Zurzeit ist keine Bewertung für diese Übung verfügbar!"
 msgstr "There is currently no grading available for this exercise!"
 
-#: grader/views.py:292
+#: grader/views.py:291
 msgid "Du hast dein tägliches Limit an {} Anfragen erreicht."
 msgstr "You have reached your daily limit of {} requests."
 
-#: grader/views.py:345
+#: grader/views.py:344
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:478
+#: grader/views.py:477
 msgid ""
 "Ein Problem ist aufgetreten. Es sind keine Assets für dieses Notebook "
 "vorhanden. Bitte lade Dir die Assets in Moodle runter."
 msgstr ""
 
-#: grader/views.py:504
+#: grader/views.py:503
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:529
+#: grader/views.py:528
 msgid "Given dict has invalid format. Key error: "
-msgstr ""
-
-#~ msgid ""
-#~ "Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche "
-#~ "es nochmal."
-#~ msgstr "Something went wrong. Please check your notebook and try again."
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:55
-msgid "extra language server specs, keyed by implementation, from conf.d"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:60
-msgid "a dict of language server specs, keyed by implementation"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:66
-msgid "try to find known language servers in sys.prefix (and elsewhere)"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:266
-msgid ""
-"Failed to load language server spec finder `{}`: \n"
-"{}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:283
-msgid ""
-"Failed to fetch commands from language server spec finder `{}`:\n"
-"{}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:296
-msgid ""
-"Failed to validate commands from language server spec finder `{}`:\n"
-"{}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:307
-msgid "Skipped non-installed server(s): {}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:202
-msgid "path to nodejs executable"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:207
-msgid "absolute paths in which to seek node_modules"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:213
-msgid "additional absolute paths to seek node_modules first"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1857
-#, python-format
-msgid "No such directory: '%r'"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1869
-msgid ""
-"Preferred starting directory to use for notebooks and kernels. "
-"ServerApp.preferred_dir is deprecated in jupyter-server 2.0. Use "
-"FileContentsManager.preferred_dir instead"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1881
-#, python-format
-msgid "No such preferred dir: '%r'"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2837
-#, python-format
-msgid "Shutting down %d kernel"
-msgid_plural "Shutting down %d kernels"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2848
-#, python-format
-msgid "Shutting down %d extension"
-msgid_plural "Shutting down %d extensions"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2858
-#, python-format
-msgid "%d active kernel"
-msgid_plural "%d active kernels"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server_terminals/app.py:121
-#, python-format
-msgid "Shutting down %d terminal"
-msgid_plural "Shutting down %d terminals"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:262
-msgid "The following plugins cannot be disabled as they are locked: "
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:288
-msgid "The following plugins cannot be enabled as they are locked: "
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:63
-msgid "Extension installation not supported."
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:81
-msgid "Extension removal not supported."
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:377
-msgid "1 second ago"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:383
-msgid "1 minute ago"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:388
-msgid "1 hour ago"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:391
-#, python-format
-msgid "%(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:393
-msgid "yesterday"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:393
-#, python-format
-msgid "yesterday at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:395
-#, python-format
-msgid "%(weekday)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:395
-#, python-format
-msgid "%(weekday)s at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:398
-#: venv/lib/python3.13/site-packages/tornado/locale.py:451
-#, python-format
-msgid "%(month_name)s %(day)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:400
-#, python-format
-msgid "%(month_name)s %(day)s at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:405
-#, python-format
-msgid "%(month_name)s %(day)s, %(year)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:407
-#, python-format
-msgid "%(month_name)s %(day)s, %(year)s at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:445
-#, python-format
-msgid "%(weekday)s, %(month_name)s %(day)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:468
-#, python-format
-msgid "%(commas)s and %(last)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:68
-msgctxt "law"
-msgid "right"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:69
-msgctxt "good"
-msgid "right"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:70
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:72
-msgctxt "organization"
-msgid "club"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:74
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:75
-msgctxt "stick"
-msgid "club"
-msgstr ""
-
-#~ msgid ""
-#~ "Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche "
-#~ "es nochmal."
-#~ msgstr "Something went wrong. Please check your notebook and try again."
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:55
-msgid "extra language server specs, keyed by implementation, from conf.d"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:60
-msgid "a dict of language server specs, keyed by implementation"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:66
-msgid "try to find known language servers in sys.prefix (and elsewhere)"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:266
-msgid ""
-"Failed to load language server spec finder `{}`: \n"
-"{}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:283
-msgid ""
-"Failed to fetch commands from language server spec finder `{}`:\n"
-"{}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:296
-msgid ""
-"Failed to validate commands from language server spec finder `{}`:\n"
-"{}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:307
-msgid "Skipped non-installed server(s): {}"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:202
-msgid "path to nodejs executable"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:207
-msgid "absolute paths in which to seek node_modules"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:213
-msgid "additional absolute paths to seek node_modules first"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1857
-#, python-format
-msgid "No such directory: '%r'"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1869
-msgid ""
-"Preferred starting directory to use for notebooks and kernels. "
-"ServerApp.preferred_dir is deprecated in jupyter-server 2.0. Use "
-"FileContentsManager.preferred_dir instead"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1881
-#, python-format
-msgid "No such preferred dir: '%r'"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2837
-#, python-format
-msgid "Shutting down %d kernel"
-msgid_plural "Shutting down %d kernels"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2848
-#, python-format
-msgid "Shutting down %d extension"
-msgid_plural "Shutting down %d extensions"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2858
-#, python-format
-msgid "%d active kernel"
-msgid_plural "%d active kernels"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyter_server_terminals/app.py:121
-#, python-format
-msgid "Shutting down %d terminal"
-msgid_plural "Shutting down %d terminals"
-msgstr[0] ""
-msgstr[1] ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:262
-msgid "The following plugins cannot be disabled as they are locked: "
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:288
-msgid "The following plugins cannot be enabled as they are locked: "
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:63
-msgid "Extension installation not supported."
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:81
-msgid "Extension removal not supported."
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:377
-msgid "1 second ago"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:383
-msgid "1 minute ago"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:388
-msgid "1 hour ago"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:391
-#, python-format
-msgid "%(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:393
-msgid "yesterday"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:393
-#, python-format
-msgid "yesterday at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:395
-#, python-format
-msgid "%(weekday)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:395
-#, python-format
-msgid "%(weekday)s at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:398
-#: venv/lib/python3.13/site-packages/tornado/locale.py:451
-#, python-format
-msgid "%(month_name)s %(day)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:400
-#, python-format
-msgid "%(month_name)s %(day)s at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:405
-#, python-format
-msgid "%(month_name)s %(day)s, %(year)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:407
-#, python-format
-msgid "%(month_name)s %(day)s, %(year)s at %(time)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:445
-#, python-format
-msgid "%(weekday)s, %(month_name)s %(day)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/locale.py:468
-#, python-format
-msgid "%(commas)s and %(last)s"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:68
-msgctxt "law"
-msgid "right"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:69
-msgctxt "good"
-msgid "right"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:70
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:72
-msgctxt "organization"
-msgid "club"
-msgstr ""
-
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:74
-#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:75
-msgctxt "stick"
-msgid "club"
 msgstr ""
 
 #~ msgid ""
