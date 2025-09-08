@@ -73,6 +73,7 @@ class Notebook(models.Model):
     )
     data = models.BinaryField(db_column="data")
     assets = models.BinaryField(db_column="assets", blank=True, null=True)
+    release_data = models.BinaryField(db_column="release_data", blank=True, null=True)
     uploaded_at = models.DateTimeField(db_column="uploaded_at", auto_now=True)
 
     class Meta:

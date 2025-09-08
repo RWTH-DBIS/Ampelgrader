@@ -4,6 +4,7 @@ exercises are not currently activated for grading,
 e.g. through deactivated links          		-->
 {% extends "./base.html" %}
 {% load i18n %}
+{% load static %}
 {% block content %}
 
     <div class="container">
@@ -29,20 +30,6 @@ e.g. through deactivated links          		-->
             </div>
         </div>
     </div>
-    <script>
-        function updateCountdown() {
-            fetch(window.location.pathname)
-                .then(response => response.text())
-                .then(html => {
-                    if (document.querySelector('.counter').innerText === '00 : 00 : 00') {
-                        path = window.location.pathname.replace('/counter', '');
-                        window.location.href = path;
-                    } else {
-                        document.body.innerHTML = html;
-                    }
-                });
-        }
+    <script src="{% static 'grader/js/counter.js' %}"></script>
 
-        setInterval(updateCountdown, 1000);
-    </script>
 {% endblock %}
