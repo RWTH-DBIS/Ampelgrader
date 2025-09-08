@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 14:20+0200\n"
+"POT-Creation-Date: 2025-09-08 14:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -187,32 +187,32 @@ msgid ""
 "nicht die bestehenden Zellen im Notebook."
 msgstr ""
 
-#: grader/views.py:161 grader/views.py:274
+#: grader/views.py:161 grader/views.py:273
 msgid "Etwas ist schief gelaufen. Bitte versuche es später noch einmal."
 msgstr ""
 
-#: grader/views.py:256 grader/views.py:400
+#: grader/views.py:255 grader/views.py:399
 msgid "Zurzeit ist keine Bewertung für diese Übung verfügbar!"
 msgstr ""
 
-#: grader/views.py:292
+#: grader/views.py:291
 msgid "Du hast dein tägliches Limit an {} Anfragen erreicht."
 msgstr ""
 
-#: grader/views.py:345
+#: grader/views.py:344
 msgid "A grading was already requested by this student."
 msgstr ""
 
-#: grader/views.py:478
+#: grader/views.py:477
 msgid ""
 "Ein Problem ist aufgetreten. Es sind keine Assets für dieses Notebook "
 "vorhanden. Bitte lade Dir die Assets in Moodle runter."
 msgstr ""
 
-#: grader/views.py:504
+#: grader/views.py:503
 msgid "Given dict does not contain the necessary top-level 'cells' field"
 msgstr ""
 
-#: grader/views.py:529
+#: grader/views.py:528
 msgid "Given dict has invalid format. Key error: "
 msgstr ""
