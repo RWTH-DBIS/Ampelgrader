@@ -387,6 +387,7 @@ def update_notebook(notebook_name) -> None:
                     data = _file_to_bytes(f"{RELEASE_PATH}/{folder_name}/{notebook_name}")
                     store_release_data(notebook_name, data)
                     logger.info(f"Release data for assignment {folder_name} stored in database")
+
             except:
                 logger.error(f"Error while generating assignment {folder_name}")
                 raise RuntimeError(f"Error while generating assignment {folder_name}")
@@ -410,14 +411,13 @@ def update_notebook(notebook_name) -> None:
     else:
         logger.info(f"Notebook {notebook_name} has been updated.")
 
-
 def _file_to_bytes(file_path: str) -> bytes:
     """
     Reads a file and returns its content as bytes.
     """
     with open(file_path, "rb") as f:
         return f.read()
-    
+
 def handle_listener():
     conn.poll()
     while conn.notifies:

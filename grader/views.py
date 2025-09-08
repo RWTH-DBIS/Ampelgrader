@@ -481,35 +481,6 @@ def download_assets(request: http.HttpRequest, for_notebook: str):
 
     return response
 
-def download_notebook(request: http.HttpRequest, for_notebook: str):
-    """
-    Downloads the notebook associated with the given exercise.
-    """
-    translation.activate(settings.LANGUAGE_CODE)
-
-    notebook = get_object_or_404(Notebook, filename=for_notebook)
-
-    response = http.HttpResponse(notebook.data, content_type="application/x-ipynb+json")
-    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}"'
-
-    return response
-
-def download_assets(request: http.HttpRequest, for_notebook: str):
-    """
-    Downloads the assets associated with the given notebook.
-    """
-    translation.activate(settings.LANGUAGE_CODE)
-
-    notebook = get_object_or_404(Notebook, filename=for_notebook)
-
-    if not notebook.assets:
-        return http.HttpResponseNotFound("No assets available for this notebook.")
-
-    response = http.HttpResponse(notebook.assets, content_type="application/zip")
-    response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
-
-    return response
-
 """
 Administration utilities
 """
@@ -592,6 +563,7 @@ def autoprocess_notebook(request: http.HttpRequest):
                 Notebook.objects.filter(in_exercise=ex).delete()
 
                 nb = Notebook(filename=notebook_file_name, in_exercise=ex, data=notebook_data, assets=assets_files, release_data=None)
+
                 nb.save()
                 for subexercise_ident in subexercise_dict.keys():
                   sbe = SubExercise(label=subexercise_ident, in_notebook=nb)

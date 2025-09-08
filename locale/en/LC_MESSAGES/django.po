@@ -441,6 +441,207 @@ msgstr ""
 #~ "es nochmal."
 #~ msgstr "Something went wrong. Please check your notebook and try again."
 
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:55
+msgid "extra language server specs, keyed by implementation, from conf.d"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:60
+msgid "a dict of language server specs, keyed by implementation"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:66
+msgid "try to find known language servers in sys.prefix (and elsewhere)"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:266
+msgid ""
+"Failed to load language server spec finder `{}`: \n"
+"{}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:283
+msgid ""
+"Failed to fetch commands from language server spec finder `{}`:\n"
+"{}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:296
+msgid ""
+"Failed to validate commands from language server spec finder `{}`:\n"
+"{}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/manager.py:307
+msgid "Skipped non-installed server(s): {}"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:202
+msgid "path to nodejs executable"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:207
+msgid "absolute paths in which to seek node_modules"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_lsp/types.py:213
+msgid "additional absolute paths to seek node_modules first"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1857
+#, python-format
+msgid "No such directory: '%r'"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1869
+msgid ""
+"Preferred starting directory to use for notebooks and kernels. "
+"ServerApp.preferred_dir is deprecated in jupyter-server 2.0. Use "
+"FileContentsManager.preferred_dir instead"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:1881
+#, python-format
+msgid "No such preferred dir: '%r'"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2837
+#, python-format
+msgid "Shutting down %d kernel"
+msgid_plural "Shutting down %d kernels"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2848
+#, python-format
+msgid "Shutting down %d extension"
+msgid_plural "Shutting down %d extensions"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server/serverapp.py:2858
+#, python-format
+msgid "%d active kernel"
+msgid_plural "%d active kernels"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyter_server_terminals/app.py:121
+#, python-format
+msgid "Shutting down %d terminal"
+msgid_plural "Shutting down %d terminals"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:262
+msgid "The following plugins cannot be disabled as they are locked: "
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/manager.py:288
+msgid "The following plugins cannot be enabled as they are locked: "
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:63
+msgid "Extension installation not supported."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/jupyterlab/extensions/readonly.py:81
+msgid "Extension removal not supported."
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:377
+msgid "1 second ago"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:383
+msgid "1 minute ago"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:388
+msgid "1 hour ago"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:391
+#, python-format
+msgid "%(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:393
+msgid "yesterday"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:393
+#, python-format
+msgid "yesterday at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:395
+#, python-format
+msgid "%(weekday)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:395
+#, python-format
+msgid "%(weekday)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:398
+#: venv/lib/python3.13/site-packages/tornado/locale.py:451
+#, python-format
+msgid "%(month_name)s %(day)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:400
+#, python-format
+msgid "%(month_name)s %(day)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:405
+#, python-format
+msgid "%(month_name)s %(day)s, %(year)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:407
+#, python-format
+msgid "%(month_name)s %(day)s, %(year)s at %(time)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:445
+#, python-format
+msgid "%(weekday)s, %(month_name)s %(day)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/locale.py:468
+#, python-format
+msgid "%(commas)s and %(last)s"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:68
+msgctxt "law"
+msgid "right"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:69
+msgctxt "good"
+msgid "right"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:70
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:72
+msgctxt "organization"
+msgid "club"
+msgstr ""
+
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:74
+#: venv/lib/python3.13/site-packages/tornado/test/locale_test.py:75
+msgctxt "stick"
+msgid "club"
+msgstr ""
+
+#~ msgid ""
+#~ "Etwas ist schief gelaufen. Bitte überprüfe deinen Notebook und versuche "
+#~ "es nochmal."
+#~ msgstr "Something went wrong. Please check your notebook and try again."
+
 #~ msgid "Einreichung in Moodle!"
 #~ msgstr "a submission in Moodle"
 
