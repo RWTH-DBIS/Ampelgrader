@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% load i18n %}
+{% load static %}
 {% block content %}
 
         <div class="container">
@@ -11,15 +12,19 @@
             
             <div class="container-content">
                 <h2>{% translate "Bewertung erfolgreich angefordert!" %}</h2>
-                <p>{% translate "Sie werden von uns hören. Ihre Prozess-ID lautet: "%}</p>
+                <p>{% translate "Wenn das Grading abgeschlossen ist, werden Sie automatisch weitergeleitet." %}</p>
+                <div class="loader-container">
+                    <div class="loader"></div>
+                </div>
+                <p>{% translate "Ihre Prozess-ID lautet: "%}</p>
                 <div class="alert alert-dark text-center" role="alert">
                     <a href="{%url 'grading_results' id%}">{{id}}</a>
                 </div>
             </div>
-
-            <div class="text-center" style="margin-top: 20px; margin-bottom: 20px;"> 
+            <div class="text-center" style="margin-bottom: 20px;"> 
                 <button onclick="location.href='/grader/request/'" class="btn btn-primary">{% translate "Zurück" %}</button>
             </div>
         </div>
-
+        <script>window.processId = "{{ id }}";</script>
+        <script src="{% static 'grader/js/loader.js' %}"></script>
 {% endblock %}
