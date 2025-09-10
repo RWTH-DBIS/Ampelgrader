@@ -132,8 +132,11 @@ def check_grading_status(request: http.HttpRequest, for_process: str):
     except GradingProcess.DoesNotExist:
         return http.HttpResponseNotFound("Not found")
     grading = Grading.objects.filter(process=gq)
+
     if not grading.exists():
         finished = False
+        if ErrorLog.objects.filter(process=gq).exists():
+            finished = True
     else:
         finished = True
 
@@ -259,21 +262,14 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
-    # check if user contingent has reached the limit
-    with transaction.atomic():
-      counter = DailyContingent.objects.raw(
-          """
-          SELECT * FROM daily_contingent WHERE user_email = %s
-          """,
-          [user_email],
-      )
+    counter = DailyContingent.objects.get(user_email=user_email)
     
     if not request.user.is_staff:
       if not counter:
           return render(request, "grader/grading_unavailable.html", {"message": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
       
       # if date is one day before today, reset the counter
-      if counter[0].date != datetime.now().date():
+      if counter.date != datetime.now().date():
           # with connection.cursor() as cursor:
           #     cursor.execute(
           #         """
@@ -281,10 +277,10 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
           #         """,
           #         [datetime.now(), user_email],
           #     )
-          counter[0].count = 0
-          counter[0].date = datetime.now().date()
+          counter.count = 0
+          counter.date = datetime.now().date()
 
-      if counter[0].count >= int(settings.DAILY_LIMIT):
+      if counter.count >= int(settings.DAILY_LIMIT):
           return render(
               request,
               "grader/grading_unavailable.html",
@@ -331,18 +327,16 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     # check if user has already a submission running
     with transaction.atomic():
         gp = GradingProcess.objects.raw(
-            """
-        SELECT identifier, email FROM gradingprocess WHERE 
-        identifier NOT IN (SELECT process FROM grading) AND identifier NOT IN (SELECT process FROM errorlog)
-        AND email = %s LIMIT 1
+        """
+          SELECT identifier, email FROM gradingprocess WHERE 
+          identifier NOT IN (SELECT process FROM grading) AND identifier NOT IN (SELECT process FROM errorlog)
+          AND email = %s LIMIT 1;
         """,
             [user_email],
         )
         # .exist() does not exist for RawQuerySet(lul)
         if len(list(gp)) > 0:
-            return http.HttpResponseForbidden(
-                _("A grading was already requested by this student.")
-            )
+            return render(request, "grader/grading_unavailable.html", {"message": _("Du hast bereits eine Bewertung angefragt. Bitte warte, bis diese abgeschlossen ist.")})
         
     with transaction.atomic():
         gp_time = GradingProcess.objects.raw(
@@ -381,7 +375,6 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
 
         enqueue_grading_request(new_gp.identifier)
 
-            # we are done
         return HttpResponseRedirect("/grader/successful_request?id={}".format(new_gp.identifier))
     else:
         return http.HttpResponseBadRequest("Invalid form")
