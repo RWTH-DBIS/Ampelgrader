@@ -330,7 +330,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         """
           SELECT identifier, email FROM gradingprocess WHERE 
           identifier NOT IN (SELECT process FROM grading) AND identifier NOT IN (SELECT process FROM errorlog)
-          AND email = %s LIMIT 1;
+          AND email = %s LIMIT 1
         """,
             [user_email],
         )
@@ -340,7 +340,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         
     with transaction.atomic():
         gp_time = GradingProcess.objects.raw(
-            """
+        """
         SELECT identifier, requested_at FROM gradingprocess WHERE 
         identifier NOT IN (SELECT process FROM errorlog) 
         AND email = %s AND for_exercise = %s ORDER BY requested_at DESC LIMIT 1
