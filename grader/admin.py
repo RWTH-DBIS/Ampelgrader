@@ -54,10 +54,10 @@ class ProcessAdmin(admin.ModelAdmin):
     list_display = ["identifier", "email", "requested_at", "for_exercise", "processed"]
     ordering = ["-requested_at"]
 
-class DailyContingentAdmin(admin.ModelAdmin):
-    model = DailyContingent
-    list_display = ["user_email", "date", "count"]
-    readonly_fields = ["user_email", "date"]
+class DailyLimitAdmin(admin.ModelAdmin):
+    model = DailyLimit
+    list_display = ["user_id", "limit"]
+    readonly_fields = ["user_id"]
 
 admin.site.register(Exercise, ExerciseAdmin)
 
@@ -65,7 +65,7 @@ admin.site.register(SubExercise, SubExercisesAdmin)
 
 admin.site.register(GradingProcess, ProcessAdmin)
 
-admin.site.register(DailyContingent, DailyContingentAdmin)
+admin.site.register(DailyLimit, DailyLimitAdmin)
 
 admin.site.register(StudentNotebook)
 

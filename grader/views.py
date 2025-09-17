@@ -103,22 +103,6 @@ def store_sid(sender, request, user, **kwargs):
         except Exception as e:
             logger.error("Error occured: " + str(e))
 
-        # initialize daily contingent for the user
-        user_email = user.email 
-        try:
-          with connection.cursor() as cursor:
-              cursor.execute("SELECT * FROM daily_contingent WHERE user_email = %s", [user_email])
-              counter = cursor.fetchone()
-              if counter is None:
-                date = datetime.now()
-                cursor.execute("INSERT INTO daily_contingent (user_email, date, count) VALUES (%s, %s, 0)", [user_email, date])
-              else:
-                if counter[1] != datetime.now().date():
-                  # reset the counter for the new day
-                  cursor.execute("UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s", [datetime.now(), user_email])                      
-        except Exception as e:  
-            logger.error("Error occured while initializing daily contingent: " + str(e))
-
     else:
         logger.error('No keycloak token found in the session')
     
@@ -260,32 +244,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     
-    user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
-
-    counter = DailyContingent.objects.get(user_email=user_email)
-    
-    if not request.user.is_staff:
-      if not counter:
-          return render(request, "grader/grading_unavailable.html", {"message": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
-      
-      # if date is one day before today, reset the counter
-      if counter.date != datetime.now().date():
-          # with connection.cursor() as cursor:
-          #     cursor.execute(
-          #         """
-          #         UPDATE daily_contingent SET count = 0, date = %s WHERE user_email = %s
-          #         """,
-          #         [datetime.now(), user_email],
-          #     )
-          counter.count = 0
-          counter.date = datetime.now().date()
-
-      if counter.count >= int(settings.DAILY_LIMIT):
-          return render(
-              request,
-              "grader/grading_unavailable.html",
-              {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(settings.DAILY_LIMIT)},
-          )
+    user = request.user if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
     if request.method == "GET":
         files = list()
@@ -298,7 +257,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             identifier NOT IN (SELECT process FROM errorlog)
             AND email = %s ORDER BY requested_at DESC LIMIT 1
             """,
-                [user_email],
+                [user.email],
             )
 
             notebook = Notebook.objects.filter(in_exercise=ex).first()
@@ -323,29 +282,39 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     
     if request.method != "POST":
         return http.HttpResponseNotAllowed("Method not allowed")
-
-    # check if user has already a submission running
+    
     with transaction.atomic():
+        # check if user has reached his daily limit
+        userlimit = DailyLimit.objects.get(user_id=user).limit
+        process_count = GradingProcess(email=user.email).count_grading_per_day()
+        if process_count >= userlimit:
+            return render(
+                request,
+                "grader/grading_unavailable.html",
+                {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(userlimit)},
+            )
+      
+        # check if user has already a submission running
         gp = GradingProcess.objects.raw(
         """
           SELECT identifier, email FROM gradingprocess WHERE 
           identifier NOT IN (SELECT process FROM grading) AND identifier NOT IN (SELECT process FROM errorlog)
           AND email = %s LIMIT 1
         """,
-            [user_email],
+            [user.email],
         )
         # .exist() does not exist for RawQuerySet(lul)
         if len(list(gp)) > 0:
             return render(request, "grader/grading_unavailable.html", {"message": _("Du hast bereits eine Bewertung angefragt. Bitte warte, bis diese abgeschlossen ist.")})
-        
-    with transaction.atomic():
+    
+        # check if user has made a request in the last 5 minutes
         gp_time = GradingProcess.objects.raw(
         """
         SELECT identifier, requested_at FROM gradingprocess WHERE 
         identifier NOT IN (SELECT process FROM errorlog) 
         AND email = %s AND for_exercise = %s ORDER BY requested_at DESC LIMIT 1
         """,
-            [user_email, for_exercise],
+            [user.email, for_exercise],
         )
 
         # check if the last request was less than 5 minutes ago
@@ -366,7 +335,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         valid_nb = ex.notebook
         # we have all the data we need to create the grading process
         with transaction.atomic():
-            new_gp = GradingProcess(email=user_email, for_exercise=ex)
+            new_gp = GradingProcess(email=user.email, for_exercise=ex)
             new_gp.save()
             new_sn = StudentNotebook(
                 data=notebook_data, process=new_gp, notebook=valid_nb

@@ -2,6 +2,8 @@ import uuid
 from django.db import models
 from django.contrib import admin
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import User
+from django.conf import settings
 from datetime import datetime
 
 """
@@ -59,6 +61,11 @@ class GradingProcess(models.Model):
 
     class Meta:
         db_table = "gradingprocess"
+    
+    def count_grading_per_day(self):
+        start_of_day = datetime.combine(datetime.now().date(), datetime.min.time(), tzinfo=datetime.now().tzinfo)
+        end_of_day = datetime.combine(datetime.now().date(), datetime.max.time(), tzinfo=datetime.now().tzinfo)
+        return GradingProcess.objects.filter(email=self.email, requested_at__range=(start_of_day, end_of_day)).count()
 
 
 """
@@ -200,16 +207,16 @@ class KeycloakSession(models.Model):
 
 
 """
-Table to store the daily contingent of a user.
+Table to store the daily limits of a user. Initially all users have a default limit set in the environment variable.
 """
-class DailyContingent(models.Model):
-    user_email = models.EmailField(db_column="user_email", primary_key=True)
-    date = models.DateField(db_column="date", auto_now=True)
-    count = models.IntegerField(db_column="count", default=0)
+class DailyLimit(models.Model):
+    user_id = models.OneToOneField(
+        User, on_delete=models.CASCADE, db_column="user_id", primary_key=True
+    )
+    limit = models.IntegerField(db_column="limit", default=settings.DAILY_LIMIT)
 
     class Meta:
-        db_table = "daily_contingent"
+        db_table = "daily_limit"
 
     def __str__(self):
-        return f"Daily contingent for user {self.user_email} on {self.date}: {self.count}"
-    
+        return f"Daily limit for user {self.user_id}: {self.limit}"
