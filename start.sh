@@ -1,5 +1,6 @@
 #!/bin/bash
 python3 manage.py migrate
+python3 manage.py set_limits
 python3 manage.py compilemessages
 if [ "$NBBB_DEBUG" = 'true' ]; then
   echo "STARTING SERVER IN DEBUG MODE! DO NOT USE IN PRODUCTION!"
