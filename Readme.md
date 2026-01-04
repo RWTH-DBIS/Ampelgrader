@@ -87,6 +87,10 @@ For 👷 NBworker:
 - `POSTGRES_USER`: Database user (default: "grader")
 - `POSTGRES_PASSWORD`: Database password (default: "secret")
 
+🔑 Keycloak setup: \
+To integrate the service with Keycloak, create a new client in the Keycloak administration console and obtain the corresponding Client ID and Client Secret.
+Ensure that the Redirect URI is configured correctly, matching the service’s redirection endpoint. Pay close attention to the URL scheme (http vs. https), as it must align with the environment configuration.
+
 ### Running bare metal for developement
 
 There are two ways of running the software throughout developement.

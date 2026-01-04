@@ -177,6 +177,12 @@ def grade_notebook(process_id) -> None:
 
         except Exception as e:
             logger.info("Error while fetching grading process and store workerassignment:" + str(e))
+            cursor.execute(
+            """
+              INSERT INTO errorlog(process, log) VALUES(%s,%s);
+            """,
+                [process_id, "Error while fetching grading process" + str(e)],
+            )
             if grading_process is None:
                 logger.info(f"Process with ID {process_id} not found.")
                 return
@@ -239,6 +245,12 @@ def grade_notebook(process_id) -> None:
     except Exception as e:
     # to error handling?
         logger.info("Error while grading notebook:" + str(e))
+        cursor.execute(
+        """
+          INSERT INTO errorlog(process, log) VALUES(%s,%s);
+        """,
+            [process_id, "Error while grading notebook: " + str(e)],
+        )
     else:
         logger.info(f"Grading process with ID {grading_process[0]} finished.")
 
