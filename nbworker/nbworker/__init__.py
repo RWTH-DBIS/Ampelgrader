@@ -443,7 +443,7 @@ def handle_listener():
             grade_notebook(process_id)
         else:
             logger.warning(f"Unknown notification channel: {notify.channel}")
-        conn.notifies.clear()
+    conn.notifies.clear()
 
 def main():
     """Main Loop"""
