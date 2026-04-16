@@ -285,7 +285,8 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
     
     with transaction.atomic():
         # check if user has reached his daily limit
-        userlimit = DailyLimit.objects.get(user_id=user).limit
+        daily_limit, _ = DailyLimit.objects.get_or_create(user_id=user, defaults={"limit": settings.DAILY_LIMIT})
+        userlimit = daily_limit.limit
         process_count = GradingProcess(email=user.email).count_grading_per_day()
         if process_count >= userlimit:
             return render(

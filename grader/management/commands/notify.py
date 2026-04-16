@@ -91,9 +91,8 @@ class Command(BaseCommand):
         else:
             try:
               cursor.execute("""
-                             UPDATE daily_contingent SET count = count + 1 WHERE user_email = %s; 
-                             UPDATE gradingprocess SET notified = true WHERE identifier = %s;""", 
-                             [process[1], process[0]]
+                             UPDATE gradingprocess SET notified = true WHERE identifier = %s;""",
+                             [process[0]]
                              )
             except Exception as e:
                 logger.error(f"Error updating tables: {e}")
