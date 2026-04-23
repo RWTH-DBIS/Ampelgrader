@@ -136,11 +136,11 @@ def grade_notebook(process_id) -> None:
                 # we shouldnt be here
                 cursor.execute(
                 """
-                INSERT INTO errorlog(process, log) VALUES(%s,%s);
+                INSERT INTO errorlog(process, log) VALUES(%s,%s) ON CONFLICT (process) DO NOTHING;
                 """,
                     [process_id, "No uploaded notebook found"],
                 )
-                conn.commit()
+                return
             (notebook_data, notebook_filename) = cursor.fetchone()
 
         except Exception as e:
@@ -148,11 +148,12 @@ def grade_notebook(process_id) -> None:
 
             cursor.execute(
             """
-              INSERT INTO errorlog(process, log) VALUES(%s,%s);
+              INSERT INTO errorlog(process, log) VALUES(%s,%s) ON CONFLICT (process) DO NOTHING;
             """,
                 [process_id, "No uploaded notebook found"],
             )
 
+        grading_process = None
         try:
             # logger.info("Fetching grading process")
             cursor.execute(
@@ -179,7 +180,7 @@ def grade_notebook(process_id) -> None:
             logger.info("Error while fetching grading process and store workerassignment:" + str(e))
             cursor.execute(
             """
-              INSERT INTO errorlog(process, log) VALUES(%s,%s);
+              INSERT INTO errorlog(process, log) VALUES(%s,%s) ON CONFLICT (process) DO NOTHING;
             """,
                 [process_id, "Error while fetching grading process" + str(e)],
             )
@@ -201,7 +202,7 @@ def grade_notebook(process_id) -> None:
             logger.error("Grading error!")
             cursor.execute(
             """
-            INSERT INTO errorlog(process,log) VALUES(%s,%s);
+            INSERT INTO errorlog(process,log) VALUES(%s,%s) ON CONFLICT (process) DO NOTHING;
             """,
             [process_id, f"Error through grading: {str(err)}"],
             )
@@ -247,7 +248,7 @@ def grade_notebook(process_id) -> None:
         logger.info("Error while grading notebook:" + str(e))
         cursor.execute(
         """
-          INSERT INTO errorlog(process, log) VALUES(%s,%s);
+          INSERT INTO errorlog(process, log) VALUES(%s,%s) ON CONFLICT (process) DO NOTHING;
         """,
             [process_id, "Error while grading notebook: " + str(e)],
         )
@@ -435,14 +436,15 @@ def handle_listener():
     while conn.notifies:
         notify = conn.notifies.pop(0)
         logger.info(f"Received notification: {notify.channel} - {notify.payload}")
-        if notify.channel == "update_notebook":
-            filename = notify.payload
-            update_notebook(filename)
-        elif notify.channel == "grade_notebook":
-            process_id = notify.payload
-            grade_notebook(process_id)
-        else:
-            logger.warning(f"Unknown notification channel: {notify.channel}")
+        try:
+            if notify.channel == "update_notebook":
+                update_notebook(notify.payload)
+            elif notify.channel == "grade_notebook":
+                grade_notebook(notify.payload)
+            else:
+                logger.warning(f"Unknown notification channel: {notify.channel}")
+        except Exception as e:
+            logger.error(f"Unhandled exception while processing notification [{notify.channel} / {notify.payload}]: {e}")
     conn.notifies.clear()
 
 def main():
