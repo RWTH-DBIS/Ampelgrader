@@ -14,7 +14,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction, connection
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext
 from django.utils import translation
 from django.utils import timezone
 from django.contrib.sessions.models import Session
@@ -144,8 +144,8 @@ def show_results(request: http.HttpRequest, for_process: str):
             errorlog = str(ErrorLog.objects.get(process=gq).log)
             logger.info(f"Grading process {gq.identifier} has an error: {errorlog}")
             if 'convert_notebooks' in errorlog:
-                return render(request, "grader/grading_error.html", {"error": _("Ein Problem mit der Notebook-Konvertierung ist aufgetreten. Bitte lösche nicht die bestehenden Zellen im Notebook.")})
-            return render(request, "grader/grading_error.html", {"error": _("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
+                return render(request, "grader/grading_error.html", {"error": gettext("Ein Problem mit der Notebook-Konvertierung ist aufgetreten. Bitte lösche nicht die bestehenden Zellen im Notebook.")})
+            return render(request, "grader/grading_error.html", {"error": gettext("Etwas ist schief gelaufen. Bitte versuche es später noch einmal.")})
         else:
             return render(request, "grader/grading_processing.html", {})
     result = list()
@@ -239,7 +239,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         ex = Exercise.objects.get(identifier=for_exercise)
         # first of all, check whether it is currently allowed to process this
         if not ex.running() and not request.user.is_staff:
-            return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
+            return render(request, "grader/grading_unavailable.html", {"message": gettext("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
 
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
@@ -292,7 +292,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
             return render(
                 request,
                 "grader/grading_unavailable.html",
-                {"message": _("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(userlimit)},
+                {"message": gettext("Du hast dein tägliches Limit an {} Anfragen erreicht.").format(userlimit)},
             )
       
         # check if user has already a submission running
@@ -306,7 +306,7 @@ def request_grading(request: http.HttpRequest, for_exercise: str):
         )
         # .exist() does not exist for RawQuerySet(lul)
         if len(list(gp)) > 0:
-            return render(request, "grader/grading_unavailable.html", {"message": _("Du hast bereits eine Bewertung angefragt. Bitte warte, bis diese abgeschlossen ist.")})
+            return render(request, "grader/grading_unavailable.html", {"message": gettext("Du hast bereits eine Bewertung angefragt. Bitte warte, bis diese abgeschlossen ist.")})
     
         # check if user has made a request in the last 5 minutes
         gp_time = GradingProcess.objects.raw(
@@ -359,7 +359,7 @@ def counter(request: http.HttpRequest, for_exercise: str):
     except ObjectDoesNotExist:
         return http.HttpResponseNotFound("Exercise not found")
     if not ex.running() and not request.user.is_staff:
-        return render(request, "grader/grading_unavailable.html", {"message": _("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
+        return render(request, "grader/grading_unavailable.html", {"message": gettext("Zurzeit ist keine Bewertung für diese Übung verfügbar!")})
     
     user_email = request.user.email if settings.NEED_GRADING_AUTH else "donotusemeinproduction@example.org"
 
@@ -437,7 +437,7 @@ def download_assets(request: http.HttpRequest, for_notebook: str):
     notebook = get_object_or_404(Notebook, filename=for_notebook)
 
     if not notebook.assets:
-        return render(request, "grader/grading_error.html", {"error": _("Ein Problem ist aufgetreten. Es sind keine Assets für dieses Notebook vorhanden. Bitte lade Dir die Assets in Moodle runter.")})
+        return render(request, "grader/grading_error.html", {"error": gettext("Ein Problem ist aufgetreten. Es sind keine Assets für dieses Notebook vorhanden. Bitte lade Dir die Assets in Moodle runter.")})
 
     response = http.HttpResponse(notebook.assets, content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{notebook.filename}_assets.zip"'
@@ -463,7 +463,7 @@ def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]
     subexercise_identifier_re = re.compile("""\A#subexercise:(.+)""")
     if "cells" not in nb:
         raise ValueError(
-            _("Given dict does not contain the necessary top-level 'cells' field")
+            gettext("Given dict does not contain the necessary top-level 'cells' field")
         )
     res = defaultdict(lambda: dict())
     cells_array: typing.List[typing.Dict] = nb["cells"]
@@ -488,7 +488,7 @@ def parse_notebook(nb: typing.Dict) -> typing.Dict[str, typing.Dict[str, float]]
                         sub_exericse_identifier = m.group(1)
                         res[sub_exericse_identifier][cell_id] = max_points
         except KeyError as e:
-            raise ValueError(_("Given dict has invalid format. Key error: ") + str(e))
+            raise ValueError(gettext("Given dict has invalid format. Key error: ") + str(e))
     return res
 
 
